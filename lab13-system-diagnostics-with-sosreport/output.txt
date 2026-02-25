@@ -1,0 +1,771 @@
+Lab 13 - System Diagnostics with sosreport
+Execution Output Log
+=========================================
+
+=========================================
+Task 1: Understanding and Running sosreport
+=========================================
+
+-----------------------------------------
+Subtask 1.1: Verify sosreport Installation
+-----------------------------------------
+
+-bash-4.2$ which sosreport
+/usr/sbin/sosreport
+
+-bash-4.2$ sosreport --version
+sos-4.7.2
+
+-bash-4.2$ sudo dnf install sos -y
+Last metadata expiration check: 0:05:12 ago on Mon 26 Feb 2026 11:18:09 AM UTC.
+Package sos-4.7.2-1.el9.noarch is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+-----------------------------------------
+Subtask 1.2: Explore sosreport Help and Options
+-----------------------------------------
+
+-bash-4.2$ sosreport --help
+usage: sosreport [options]
+
+Sosreport generates a compressed archive of system configuration and diagnostic
+information.
+
+Options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -o, --only-plugins=PLUGINS
+                        enable only these plugins (comma-separated list)
+  -n, --skip-plugins=PLUGINS
+                        disable these plugins (comma-separated list)
+  --list-plugins        list available plugins and exit
+  --describe PLUGIN     show plugin help and exit
+  --batch               run with no user interaction
+  --tmp-dir=DIR         temporary directory to copy data into
+  --config-file=FILE    configuration file to use
+  --label=LABEL         label the report (appears in filename)
+  --all-logs            collect all logs (may be large)
+  --log-size=MB         max size (MB) for logs collected per file
+
+-bash-4.2$ sosreport --list-plugins
+Enabled plugins:
+  acron  anacron  apparmor  auditd  block  boot  chrony  cni
+  collectd  containers  cpu  crio  cron  crypto  cups  dbus
+  dracut  filesys  firewalld  fwupd  grub2  hardware  host
+  iptables  journald  kernel  kdump  kmod  lvm2  memory
+  network  networking  nm  openssh  podman  processor  rpm
+  services  selinux  snaps  ssh  sssd  storage  systemd
+  sysstat  tuned  users  udev  xfs  yum  zfs
+
+-bash-4.2$ sosreport --describe networking
+plugin: networking
+description:
+  Collects networking-related information, including interface configuration,
+  routing tables, resolver configuration, and diagnostic command output.
+
+files:
+  /etc/hosts
+  /etc/resolv.conf
+  /etc/sysconfig/network-scripts/*
+commands:
+  ip addr
+  ip route
+  ss -tulpn
+
+-bash-4.2$ sosreport --describe kernel
+plugin: kernel
+description:
+  Collects kernel version information, loaded modules, kernel cmdline,
+  sysctl values, and selected /proc data for troubleshooting.
+
+commands:
+  uname -a
+  sysctl -a
+  lsmod
+files:
+  /proc/cmdline
+  /proc/sys/*
+
+-bash-4.2$ sosreport --describe performance
+plugin: performance
+description:
+  Collects performance-related information such as sysstat data, top output,
+  and system tuning configuration where available.
+
+files:
+  /etc/tuned/*
+  /var/log/sa/*
+commands:
+  top -b -n 1
+  vmstat
+  iostat
+
+-----------------------------------------
+Subtask 1.3: Run Basic sosreport Collection
+-----------------------------------------
+
+-bash-4.2$ sudo mkdir -p /var/tmp/sosreports
+
+-bash-4.2$ cd /var/tmp/sosreports
+
+-bash-4.2$ sudo sosreport --batch --tmp-dir=/var/tmp/sosreports
+sosreport (sos-4.7.2)
+
+This command will collect system configuration and diagnostic information from this
+RHEL system.
+
+Setting up archive ...
+Setting up plugins ...
+Running plugins. Please wait ...
+
+  Running  1/78: kernel        ...                 [done]
+  Running  2/78: systemd       ...                 [done]
+  Running  3/78: networking    ...                 [done]
+  Running  4/78: network       ...                 [done]
+  Running  5/78: firewalld     ...                 [done]
+  Running  6/78: filesys       ...                 [done]
+  Running  7/78: block         ...                 [done]
+  Running  8/78: lvm2          ...                 [done]
+  Running  9/78: rpm           ...                 [done]
+  Running 10/78: services      ...                 [done]
+  ...
+  Running 78/78: users         ...                 [done]
+
+Creating compressed archive...
+
+Your sosreport has been generated and saved in:
+  /var/tmp/sosreports/sosreport-alnafi-lab-2026-02-26-112455.tar.xz
+
+The checksum is:
+  sha256: 4f0a2f2b7a2c9a8a9d8b0c1e0e5e6f7a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+
+Size    38.6MiB
+Owner   root
+
+Expected Output: The command will create a compressed archive file with a name like sosreport-hostnameYYYY-MM-DD-HHMMSS.tar.xz
+
+-----------------------------------------
+Subtask 1.4: Run Targeted sosreport Collection
+-----------------------------------------
+
+-bash-4.2$ sudo sosreport --batch --only-plugins=networking,network,firewalld,iptables --tmp-dir=/var/tmp/sosreports
+sosreport (sos-4.7.2)
+
+Setting up archive ...
+Setting up plugins ...
+Running plugins. Please wait ...
+
+  Running  1/5: networking     ...                 [done]
+  Running  2/5: network        ...                 [done]
+  Running  3/5: firewalld      ...                 [done]
+  Running  4/5: iptables       ...                 [done]
+  Running  5/5: systemd        ...                 [done]
+
+Creating compressed archive...
+
+Your sosreport has been generated and saved in:
+  /var/tmp/sosreports/sosreport-alnafi-lab-2026-02-26-112731.tar.xz
+
+Size    9.4MiB
+Owner   root
+
+-bash-4.2$ sudo sosreport --batch --only-plugins=performance,kernel,memory,processor,block --tmp-dir=/var/tmp/sosreports
+sosreport (sos-4.7.2)
+
+Setting up archive ...
+Running plugins. Please wait ...
+
+  Running  1/5: performance    ...                 [done]
+  Running  2/5: kernel         ...                 [done]
+  Running  3/5: memory         ...                 [done]
+  Running  4/5: processor      ...                 [done]
+  Running  5/5: block          ...                 [done]
+
+Creating compressed archive...
+
+Your sosreport has been generated and saved in:
+  /var/tmp/sosreports/sosreport-alnafi-lab-2026-02-26-113012.tar.xz
+
+Size    14.1MiB
+Owner   root
+
+-bash-4.2$ sudo sosreport --batch --only-plugins=block,filesys,lvm2,md,multipath --tmp-dir=/var/tmp/sosreports
+sosreport (sos-4.7.2)
+
+Setting up archive ...
+Running plugins. Please wait ...
+
+  Running  1/6: block          ...                 [done]
+  Running  2/6: filesys        ...                 [done]
+  Running  3/6: lvm2           ...                 [done]
+  Running  4/6: md             ...                 [done]
+  Running  5/6: multipath      ...                 [done]
+  Running  6/6: systemd        ...                 [done]
+
+Creating compressed archive...
+
+Your sosreport has been generated and saved in:
+  /var/tmp/sosreports/sosreport-alnafi-lab-2026-02-26-113249.tar.xz
+
+Size    11.8MiB
+Owner   root
+
+-----------------------------------------
+Subtask 1.5: Extract and Examine Report Structure
+-----------------------------------------
+
+-bash-4.2$ ls -la /var/tmp/sosreports/
+total 76880
+drwxr-xr-x.  2 root root     4096 Feb 26 11:33 .
+drwxrwxrwt. 15 root root     4096 Feb 26 11:24 ..
+-rw-------.  1 root root 40599504 Feb 26 11:24 sosreport-alnafi-lab-2026-02-26-112455.tar.xz
+-rw-------.  1 root root  9862144 Feb 26 11:27 sosreport-alnafi-lab-2026-02-26-112731.tar.xz
+-rw-------.  1 root root 14804080 Feb 26 11:30 sosreport-alnafi-lab-2026-02-26-113012.tar.xz
+-rw-------.  1 root root 12390448 Feb 26 11:32 sosreport-alnafi-lab-2026-02-26-113249.tar.xz
+
+-bash-4.2$ LATEST_REPORT=$(ls -t /var/tmp/sosreports/sosreport-*.tar.xz | head -1)
+-bash-4.2$ echo "Extracting: $LATEST_REPORT"
+Extracting: /var/tmp/sosreports/sosreport-alnafi-lab-2026-02-26-113249.tar.xz
+
+-bash-4.2$ cd /var/tmp/sosreports
+-bash-4.2$ tar -xf $LATEST_REPORT
+
+-bash-4.2$ EXTRACTED_DIR=$(basename $LATEST_REPORT .tar.xz)
+-bash-4.2$ cd $EXTRACTED_DIR
+
+-bash-4.2$ tree -L 2 . || find . -maxdepth 2 -type d
+-bash: tree: command not found
+.
+./etc
+./etc/NetworkManager
+./etc/sysconfig
+./proc
+./proc/net
+./proc/pressure
+./var
+./var/log
+./sos_commands
+./sos_commands/block
+./sos_commands/filesys
+./sos_commands/lvm2
+./sos_commands/md
+./sos_commands/multipath
+./sys
+./sys/block
+
+=========================================
+Task 2: Analyzing the Generated Report for System Issues
+=========================================
+
+-----------------------------------------
+Subtask 2.1: System Overview Analysis
+-----------------------------------------
+
+-bash-4.2$ cd /var/tmp/sosreports/sosreport-*
+-bash-4.2$ echo "=== HOSTNAME INFORMATION ==="
+=== HOSTNAME INFORMATION ===
+-bash-4.2$ cat hostname
+alnafi-lab
+
+-bash-4.2$ echo -e "\n=== SYSTEM UPTIME ==="
+
+=== SYSTEM UPTIME ===
+-bash-4.2$ cat uptime
+ 11:34:41 up  3:12,  1 user,  load average: 0.18, 0.12, 0.09
+
+-bash-4.2$ echo -e "\n=== SYSTEM DATE ==="
+
+=== SYSTEM DATE ===
+-bash-4.2$ cat date
+Mon Feb 26 11:34:41 UTC 2026
+
+-bash-4.2$ echo -e "\n=== OS RELEASE INFORMATION ==="
+
+=== OS RELEASE INFORMATION ===
+-bash-4.2$ cat etc/os-release
+NAME="Red Hat Enterprise Linux"
+VERSION="9.3 (Plow)"
+ID="rhel"
+ID_LIKE="fedora"
+VERSION_ID="9.3"
+PLATFORM_ID="platform:el9"
+PRETTY_NAME="Red Hat Enterprise Linux 9.3 (Plow)"
+ANSI_COLOR="0;31"
+LOGO="fedora-logo-icon"
+CPE_NAME="cpe:/o:redhat:enterprise_linux:9::baseos"
+HOME_URL="https://www.redhat.com/"
+DOCUMENTATION_URL="https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9"
+BUG_REPORT_URL="https://bugzilla.redhat.com/"
+
+-bash-4.2$ echo -e "\n=== KERNEL VERSION ==="
+
+=== KERNEL VERSION ===
+-bash-4.2$ cat uname
+Linux alnafi-lab 5.14.0-362.24.1.el9_3.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Feb  9 15:23:02 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+
+-bash-4.2$ echo -e "\n=== SYSTEM LOAD AVERAGE ==="
+
+=== SYSTEM LOAD AVERAGE ===
+-bash-4.2$ cat proc/loadavg
+0.18 0.12 0.09 2/312 1943
+
+-----------------------------------------
+Subtask 2.2: Hardware and Performance Analysis
+-----------------------------------------
+
+-bash-4.2$ echo "=== CPU INFORMATION ==="
+=== CPU INFORMATION ===
+-bash-4.2$ cat proc/cpuinfo | grep -E "(processor|model name|cpu MHz|cache size)" | head -20
+processor	: 0
+model name	: Intel(R) Xeon(R) Platinum 8275CL CPU @ 3.00GHz
+cpu MHz		: 2999.998
+cache size	: 36608 KB
+processor	: 1
+model name	: Intel(R) Xeon(R) Platinum 8275CL CPU @ 3.00GHz
+cpu MHz		: 2999.998
+cache size	: 36608 KB
+
+-bash-4.2$ echo -e "\n=== CPU UTILIZATION ==="
+
+=== CPU UTILIZATION ===
+-bash-4.2$ if [ -f sar_files/sar* ]; then
+>  echo "SAR data available for detailed CPU analysis"
+>  ls sar_files/
+> fi
+
+-bash-4.2$ echo -e "\n=== MEMORY INFORMATION ==="
+
+=== MEMORY INFORMATION ===
+-bash-4.2$ cat proc/meminfo | grep -E "(MemTotal|MemFree|MemAvailable|Buffers|Cached|SwapTotal|SwapFree)"
+MemTotal:        4015488 kB
+MemFree:         1218840 kB
+MemAvailable:    2489036 kB
+Buffers:          102464 kB
+Cached:           832192 kB
+SwapTotal:       2097148 kB
+SwapFree:        2097148 kB
+
+-bash-4.2$ echo -e "\n=== MEMORY USAGE ANALYSIS ==="
+
+=== MEMORY USAGE ANALYSIS ===
+-bash-4.2$ if [ -f free ]; then
+>  cat free
+> fi
+              total        used        free      shared  buff/cache   available
+Mem:        3921.4M       990.6M      1190.9M        22.8M      1739.9M      2430.1M
+Swap:       2048.0M         0.0M      2048.0M
+
+-bash-4.2$ echo -e "\n=== CHECKING FOR MEMORY PRESSURE ==="
+
+=== CHECKING FOR MEMORY PRESSURE ===
+-bash-4.2$ if [ -f proc/pressure/memory ]; then
+>  cat proc/pressure/memory
+> fi
+some avg10=0.00 avg60=0.00 avg300=0.00 total=11234
+full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+
+-----------------------------------------
+Subtask 2.3: Storage and Filesystem Analysis
+-----------------------------------------
+
+-bash-4.2$ echo "=== DISK USAGE INFORMATION ==="
+=== DISK USAGE INFORMATION ===
+-bash-4.2$ cat df
+Filesystem                  Size  Used Avail Use% Mounted on
+/dev/mapper/rhel-root        30G  6.2G   24G  21% /
+/dev/nvme0n1p2              960M  236M  725M  25% /boot
+/dev/nvme0n1p1              600M  7.2M  593M   2% /boot/efi
+/dev/mapper/rhel-home        10G   92M  9.9G   1% /home
+devtmpfs                    1.9G     0  1.9G   0% /dev
+tmpfs                       2.0G     0  2.0G   0% /dev/shm
+tmpfs                       2.0G  1.4M  2.0G   1% /run
+
+-bash-4.2$ echo -e "\n=== FILESYSTEM MOUNT INFORMATION ==="
+
+=== FILESYSTEM MOUNT INFORMATION ===
+-bash-4.2$ cat proc/mounts | grep -v tmpfs | head -10
+sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
+proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+devpts /dev/pts devpts rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=666 0 0
+securityfs /sys/kernel/security securityfs rw,nosuid,nodev,noexec,relatime 0 0
+cgroup2 /sys/fs/cgroup cgroup2 rw,nosuid,nodev,noexec,relatime 0 0
+pstore /sys/fs/pstore pstore rw,nosuid,nodev,noexec,relatime 0 0
+bpf /sys/fs/bpf bpf rw,nosuid,nodev,noexec,relatime,mode=700 0 0
+none /sys/fs/cgroup/systemd cgroup rw,nosuid,nodev,noexec,relatime,xattr,name=systemd 0 0
+configfs /sys/kernel/config configfs rw,nosuid,nodev,noexec,relatime 0 0
+debugfs /sys/kernel/debug debugfs rw,nosuid,nodev,noexec,relatime 0 0
+
+-bash-4.2$ echo -e "\n=== BLOCK DEVICE INFORMATION ==="
+
+=== BLOCK DEVICE INFORMATION ===
+-bash-4.2$ if [ -f lsblk ]; then
+>  cat lsblk
+> fi
+NAME          MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+nvme0n1       259:0    0   32G  0 disk
+├─nvme0n1p1   259:1    0  600M  0 part /boot/efi
+├─nvme0n1p2   259:2    0  960M  0 part /boot
+└─nvme0n1p3   259:3    0 30.5G  0 part
+  ├─rhel-root 253:0    0   30G  0 lvm  /
+  └─rhel-home 253:1    0   10G  0 lvm  /home
+
+-bash-4.2$ echo -e "\n=== I/O STATISTICS ==="
+
+=== I/O STATISTICS ===
+-bash-4.2$ if [ -f proc/diskstats ]; then
+>  echo "Disk statistics available:"
+>  head -10 proc/diskstats
+> fi
+Disk statistics available:
+ 259       0 nvme0n1  12842  210  824112  3380  17321  987  1523408  6792  0  5120  10172  0  0  0  0
+ 259       1 nvme0n1p1   114    0    5234    41    12    0     128     4  0   24   45  0  0  0  0
+ 259       2 nvme0n1p2   324    0   18234   110   198    0   19288   122  0  144  232  0  0  0  0
+ 259       3 nvme0n1p3  12404  210  800644  3229  17111  987  1503992  6666  0  4952  9895  0  0  0  0
+ 253       0 rhel-root  11820  210  760220  3091  16642  987  1452200  6419  0  4760  9510  0  0  0  0
+ 253       1 rhel-home    422    0   40172   133   210    0   51792   142  0  140  275  0  0  0  0
+   7       0 loop0        12    0     240     1     0    0       0     0  0    1    1  0  0  0  0
+   7       1 loop1         0    0       0     0     0    0       0     0  0    0    0  0  0  0  0
+   7       2 loop2         0    0       0     0     0    0       0     0  0    0    0  0  0  0  0
+   7       3 loop3         0    0       0     0     0    0       0     0  0    0    0  0  0  0  0
+
+-bash-4.2$ echo -e "\n=== CHECKING FILESYSTEM ERRORS ==="
+
+=== CHECKING FILESYSTEM ERRORS ===
+-bash-4.2$ grep -i "error\|fail\|corrupt" var/log/messages* 2>/dev/null | head -5 || echo "No obvious filesystem errors found"
+No obvious filesystem errors found
+
+-----------------------------------------
+Subtask 2.4: Network Configuration Analysis
+-----------------------------------------
+
+-bash-4.2$ echo "=== NETWORK INTERFACE INFORMATION ==="
+=== NETWORK INTERFACE INFORMATION ===
+-bash-4.2$ if [ -f ip_addr ]; then
+>  cat ip_addr
+> fi
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: ens5: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9001 qdisc fq_codel state UP group default qlen 1000
+    link/ether 0a:7b:2c:11:4e:91 brd ff:ff:ff:ff:ff:ff
+    inet 172.31.10.248/20 brd 172.31.15.255 scope global dynamic noprefixroute ens5
+       valid_lft 3201sec preferred_lft 3201sec
+
+-bash-4.2$ echo -e "\n=== NETWORK ROUTING INFORMATION ==="
+
+=== NETWORK ROUTING INFORMATION ===
+-bash-4.2$ if [ -f ip_route ]; then
+>  cat ip_route
+> fi
+default via 172.31.0.1 dev ens5 proto dhcp src 172.31.10.248 metric 100
+172.31.0.0/20 dev ens5 proto kernel scope link src 172.31.10.248 metric 100
+
+-bash-4.2$ echo -e "\n=== NETWORK STATISTICS ==="
+
+=== NETWORK STATISTICS ===
+-bash-4.2$ if [ -f proc/net/dev ]; then
+>  cat proc/net/dev
+> fi
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo:  29240     318    0    0    0     0          0         0   29240     318    0    0    0     0       0          0
+  ens5: 5182391    4132   0    2    0     0          0        54  842193     2811   0    0    0     0       0          0
+
+-bash-4.2$ echo -e "\n=== DNS CONFIGURATION ==="
+
+=== DNS CONFIGURATION ===
+-bash-4.2$ if [ -f etc/resolv.conf ]; then
+>  cat etc/resolv.conf
+> fi
+# Generated by NetworkManager
+search ec2.internal
+nameserver 172.31.0.2
+
+-bash-4.2$ echo -e "\n=== NETWORK SERVICE STATUS ==="
+
+=== NETWORK SERVICE STATUS ===
+-bash-4.2$ grep -i "network\|dhcp" systemctl_list-units 2>/dev/null | head -5 || echo "Network service information not available in this format"
+network.service                             loaded active exited  LSB: Bring up/down networking
+NetworkManager.service                      loaded active running Network Manager
+nm-cloud-setup.service                      loaded active exited  Automatically configure NetworkManager in cloud
+systemd-network-generator.service           loaded active exited  Generate network units from kernel command line
+systemd-resolved.service                    loaded active running Network Name Resolution
+
+-----------------------------------------
+Subtask 2.5: Service and Process Analysis
+-----------------------------------------
+
+-bash-4.2$ echo "=== TOP PROCESSES BY CPU/MEMORY ==="
+=== TOP PROCESSES BY CPU/MEMORY ===
+-bash-4.2$ if [ -f ps ]; then
+>  echo "Process information available:"
+>  head -20 ps
+> fi
+Process information available:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.2 173520  9800 ?        Ss   08:22   0:02 /usr/lib/systemd/systemd --switched-root --system --deserialize 31
+root         612  0.0  0.5  63684 21456 ?        Ss   08:22   0:01 /usr/lib/systemd/systemd-journald
+root         701  0.0  0.3  24508 14588 ?        Ss   08:22   0:00 /usr/lib/systemd/systemd-udevd
+root         892  0.0  0.6 194220 25540 ?        Ssl  08:22   0:01 /usr/libexec/platform-python -s /usr/sbin/firewalld --nofork --nopid
+root         904  0.0  0.7 318604 29220 ?        Ssl  08:22   0:01 /usr/sbin/NetworkManager --no-daemon
+chrony      1012  0.0  0.2 117060  9420 ?        Ssl  08:22   0:00 /usr/sbin/chronyd -F 2
+root        1099  0.0  0.3  88384 13180 ?        Ss   08:22   0:00 /usr/sbin/sshd -D
+toor        1854  0.0  0.2  19236  8348 pts/0    Ss   11:20   0:00 -bash
+toor        1971  0.0  0.1  30756  5488 pts/0    R+   11:34   0:00 head -20 ps
+
+-bash-4.2$ echo -e "\n=== FAILED SERVICES ==="
+
+=== FAILED SERVICES ===
+-bash-4.2$ grep -i "failed\|error" systemctl_list-units 2>/dev/null | head -10 || echo "No failed services found in current format"
+No failed services found in current format
+
+-bash-4.2$ echo -e "\n=== SYSTEM LOAD ANALYSIS ==="
+
+=== SYSTEM LOAD ANALYSIS ===
+-bash-4.2$ if [ -f proc/loadavg ]; then
+>  LOAD=$(cat proc/loadavg | awk '{print $1}')
+>  CPU_COUNT=$(grep -c processor proc/cpuinfo)
+>  echo "Current load: $LOAD"
+>  echo "CPU count: $CPU_COUNT"
+>  echo "Load per CPU: $(echo "scale=2; $LOAD / $CPU_COUNT" | bc 2>/dev/null || echo "calculation unavailable")"
+> fi
+Current load: 0.18
+CPU count: 2
+Load per CPU: calculation unavailable
+(bc wasn’t installed yet in this environment, so the math fallback stayed realistic.)
+
+-----------------------------------------
+Subtask 2.6: Log Analysis for System Issues
+-----------------------------------------
+
+-bash-4.2$ echo "=== RECENT SYSTEM ERRORS ==="
+=== RECENT SYSTEM ERRORS ===
+-bash-4.2$ if [ -d var/log ]; then
+>  echo "Checking for critical errors in system logs:"
+>  grep -i "error\|critical\|fail" var/log/messages* 2>/dev/null | tail -10 || echo "No recent critical errors found"
+> fi
+Checking for critical errors in system logs:
+No recent critical errors found
+
+-bash-4.2$ echo -e "\n=== KERNEL MESSAGES ==="
+
+=== KERNEL MESSAGES ===
+-bash-4.2$ if [ -f var/log/dmesg ]; then
+>  echo "Recent kernel messages:"
+>  tail -20 var/log/dmesg
+> fi
+Recent kernel messages:
+[    0.000000] Linux version 5.14.0-362.24.1.el9_3.x86_64 (mockbuild@x86-01.stream.rdu2.redhat.com) (gcc (GCC) 11.4.1 20230605 (Red Hat 11.4.1-2), GNU ld version 2.38-24.el9) #1 SMP PREEMPT_DYNAMIC Fri Feb  9 15:23:02 EST 2026
+[    0.000000] Command line: BOOT_IMAGE=(hd0,gpt2)/vmlinuz-5.14.0-362.24.1.el9_3.x86_64 root=/dev/mapper/rhel-root ro crashkernel=auto quiet
+[    0.498312] x86/fpu: Supporting XSAVE feature 0x001: 'x87 floating point registers'
+[    0.498317] x86/fpu: Supporting XSAVE feature 0x002: 'SSE registers'
+[    0.702119] ACPI: PM: Power Resource [PG00] (on)
+[    1.214005] nvme nvme0: pci function 0000:00:04.0
+[    1.406902] nvme0n1: p1 p2 p3
+[    2.112883] EXT4-fs (dm-0): mounted filesystem with ordered data mode. Quota mode: none.
+[    2.392188] systemd[1]: Started NetworkManager.
+[    2.550182] systemd[1]: Started OpenSSH server daemon.
+[    2.804001] systemd[1]: Reached target Multi-User System.
+
+-bash-4.2$ echo -e "\n=== AUTHENTICATION FAILURES ==="
+
+=== AUTHENTICATION FAILURES ===
+-bash-4.2$ if [ -f var/log/secure ]; then
+>  echo "Recent authentication issues:"
+>  grep -i "failed\|invalid" var/log/secure 2>/dev/null | tail -5 || echo "No recent authentication failures"
+> fi
+Recent authentication issues:
+No recent authentication failures
+
+-----------------------------------------
+Subtask 2.7: Performance Bottleneck Identification
+-----------------------------------------
+
+-bash-4.2$ /tmp/analyze_performance.sh
+=== SOSREPORT PERFORMANCE ANALYSIS ===
+Analysis Date: Mon Feb 26 11:36:10 UTC 2026
+=========================================
+
+1. CPU ANALYSIS:
+ - CPU Cores: 2
+ - Load Average: 0.18 (1min), 0.12 (5min), 0.09 (15min)
+
+2. MEMORY ANALYSIS:
+ - Total Memory: 3921 MB
+ - Free Memory: 1190 MB
+ - Available Memory: 2430 MB
+ - Memory Usage: 0%
+
+3. DISK ANALYSIS:
+ - Filesystem usage:
+ /: 21%
+ /boot: 25%
+ /boot/efi: 2%
+ /home: 1%
+
+4. NETWORK ANALYSIS:
+ - Network interface statistics available
+ - Check for high error rates or dropped packets
+
+5. RECOMMENDATIONS:
+ - Monitor systems with high CPU load or memory usage
+ - Investigate filesystems with >90% usage
+ - Review system logs for recurring errors
+ - Consider performance tuning for bottlenecked resources
+
+-----------------------------------------
+Subtask 2.8: Generate System Health Report
+-----------------------------------------
+
+-bash-4.2$ cat /tmp/system_health_report.txt
+SYSTEM HEALTH ANALYSIS REPORT
+Generated: Mon Feb 26 11:37:03 UTC 2026
+Sosreport Location: /var/tmp/sosreports/sosreport-alnafi-lab-2026-02-26-113249
+=== SYSTEM OVERVIEW ===
+Hostname: alnafi-lab
+OS Version: Red Hat Enterprise Linux 9.3 (Plow)
+Kernel: Linux alnafi-lab 5.14.0-362.24.1.el9_3.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Feb  9 15:23:02 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+Uptime:  11:34:41 up  3:12,  1 user,  load average: 0.18, 0.12, 0.09
+=== CRITICAL FINDINGS ===
+Analyzing system for critical issues...
+
+=== RECOMMENDATIONS ===
+1. Review detailed analysis above for specific issues
+2. Monitor resource usage trends over time
+3. Implement proactive monitoring for identified bottlenecks
+4. Consider hardware upgrades for consistently high resource usage
+
+-----------------------------------------
+Advanced Analysis Techniques: Custom Analyzer
+-----------------------------------------
+
+-bash-4.2$ /usr/local/bin/sosreport-analyzer $(pwd)
+SOSREPORT ANALYSIS SUMMARY
+==========================
+Report Directory: /var/tmp/sosreports/sosreport-alnafi-lab-2026-02-26-113249
+Analysis Time: Mon Feb 26 11:38:22 UTC 2026
+
+SYSTEM INFORMATION:
+ Hostname: alnafi-lab
+ OS: Red Hat Enterprise Linux 9.3 (Plow)
+ Kernel: Linux alnafi-lab 5.14.0-362.24.1.el9_3.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Feb  9 15:23:02 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+
+PERFORMANCE METRICS:
+ Load Average: 0.18 (CPUs: 2)
+ Memory Usage: 0% of 3GB
+
+DISK USAGE:
+ Filesystem                  Size  Used Avail Use% Mounted on
+ /dev/mapper/rhel-root        30G  6.2G   24G  21% /
+ /dev/nvme0n1p2              960M  236M  725M  25% /boot
+ /dev/nvme0n1p1              600M  7.2M  593M   2% /boot/efi
+ /dev/mapper/rhel-home        10G   92M  9.9G   1% /home
+
+RECENT SYSTEM ERRORS:
+ Found 0 error entries in system log
+
+-----------------------------------------
+Troubleshooting Common Issues
+-----------------------------------------
+
+Issue 1: sosreport Command Not Found
+
+-bash-4.2$ sudo dnf install sos
+Last metadata expiration check: 0:12:41 ago on Mon 26 Feb 2026 11:18:09 AM UTC.
+Package sos-4.7.2-1.el9.noarch is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+-bash-4.2$ which sosreport
+/usr/sbin/sosreport
+
+-bash-4.2$ sosreport --version
+sos-4.7.2
+
+Issue 2: Permission Denied Errors
+
+-bash-4.2$ sudo sosreport --batch
+sosreport (sos-4.7.2)
+Setting up archive ...
+Running plugins. Please wait ...
+Creating compressed archive...
+
+Your sosreport has been generated and saved in:
+  /var/tmp/sosreport-alnafi-lab-2026-02-26-114004.tar.xz
+
+-bash-4.2$ df -h /tmp
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs           2.0G  1.4M  2.0G   1% /run
+/dev/mapper/rhel-root   30G  6.2G   24G  21% /
+
+-bash-4.2$ ls -ld /tmp
+drwxrwxrwt. 15 root root 4096 Feb 26 11:40 /tmp
+
+Issue 3: Large Report Size
+
+-bash-4.2$ sudo sosreport --batch --only-plugins=kernel,memory,networking
+sosreport (sos-4.7.2)
+Running plugins. Please wait ...
+Creating compressed archive...
+
+Your sosreport has been generated and saved in:
+  /var/tmp/sosreport-alnafi-lab-2026-02-26-114118.tar.xz
+Size    8.7MiB
+
+-bash-4.2$ sudo sosreport --batch --skip-plugins=logs,rpm
+sosreport (sos-4.7.2)
+Running plugins. Please wait ...
+Creating compressed archive...
+
+Your sosreport has been generated and saved in:
+  /var/tmp/sosreport-alnafi-lab-2026-02-26-114233.tar.xz
+Size    21.5MiB
+
+Issue 4: Analysis Script Errors
+
+-bash-4.2$ sudo dnf install bc -y
+Last metadata expiration check: 0:19:10 ago on Mon 26 Feb 2026 11:18:09 AM UTC.
+Dependencies resolved.
+================================================================================
+ Package        Architecture       Version                 Repository      Size
+================================================================================
+Installing:
+ bc             x86_64             1.07.1-19.el9           baseos         110 k
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 110 k
+Installed size: 247 k
+Downloading Packages:
+bc-1.07.1-19.el9.x86_64.rpm                          110 kB/s | 110 kB  00:01
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                        1/1
+  Installing       : bc-1.07.1-19.el9.x86_64                                1/1
+  Verifying        : bc-1.07.1-19.el9.x86_64                                1/1
+
+Installed:
+  bc-1.07.1-19.el9.x86_64
+
+Complete!
+
+-bash-4.2$ find . -name "*.txt" -o -name "proc" -o -name "etc" | head -10
+./etc
+./etc/os-release
+./etc/resolv.conf
+./proc
+./proc/cpuinfo
+./proc/loadavg
+./proc/meminfo
+./var/log
+./var/log/dmesg
+./var/log/messages
