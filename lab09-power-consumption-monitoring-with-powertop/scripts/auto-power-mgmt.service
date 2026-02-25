@@ -1,0 +1,12 @@
+[Unit]
+Description=Automated Power Management Service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/auto_power_mgmt.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
