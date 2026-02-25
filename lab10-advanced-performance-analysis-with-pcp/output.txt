@@ -1,0 +1,642 @@
+Lab 10 - Advanced Performance Analysis with PCP (Performance Co-Pilot)
+Execution Output Log
+====================================================
+
+Task 1: Set up PCP to Collect System Metrics
+--------------------------------------------
+
+Subtask 1.1: Install PCP on All Systems
+---------------------------------------
+
+# hostname
+pcp-monitor
+
+# whoami
+centos
+
+
+# sudo yum update -y
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+No packages marked for update
+
+
+# sudo yum install -y pcp pcp-gui pcp-system-tools
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+Resolving Dependencies
+--> Running transaction check
+---> Package pcp.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-gui.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-system-tools.x86_64 0:5.3.7-14.el8 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+================================================================================
+ Package              Arch       Version              Repository         Size
+================================================================================
+Installing:
+ pcp                  x86_64     5.3.7-14.el8         AppStream         2.4 M
+ pcp-gui              x86_64     5.3.7-14.el8         AppStream         1.1 M
+ pcp-system-tools     x86_64     5.3.7-14.el8         AppStream         612 k
+
+Transaction Summary
+================================================================================
+Install  3 Packages
+
+Total download size: 4.1 M
+Installed size: 15 M
+Downloading packages:
+Running transaction check
+Running transaction test
+Running transaction
+  Installing : pcp-5.3.7-14.el8.x86_64                                  1/3
+  Installing : pcp-system-tools-5.3.7-14.el8.x86_64                      2/3
+  Installing : pcp-gui-5.3.7-14.el8.x86_64                               3/3
+  Verifying  : pcp-5.3.7-14.el8.x86_64                                  1/3
+  Verifying  : pcp-gui-5.3.7-14.el8.x86_64                               2/3
+  Verifying  : pcp-system-tools-5.3.7-14.el8.x86_64                      3/3
+
+Installed:
+  pcp.x86_64 0:5.3.7-14.el8
+  pcp-gui.x86_64 0:5.3.7-14.el8
+  pcp-system-tools.x86_64 0:5.3.7-14.el8
+
+Complete!
+
+
+# sudo yum install -y pcp-pmda-* pcp-export-* pcp-import-*
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+Resolving Dependencies
+--> Running transaction check
+---> Package pcp-pmda-lmsensors.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-pmda-nfsclient.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-pmda-openmetrics.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-export-pcp2json.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-export-pcp2spark.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-import-iostat2pcp.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-import-sar2pcp.x86_64 0:5.3.7-14.el8 will be installed
+--> Finished Dependency Resolution
+Dependencies Resolved.
+Complete!
+
+
+Subtask 1.1: Start and enable PCP services
+------------------------------------------
+
+# sudo systemctl start pmcd
+# sudo systemctl enable pmcd
+# sudo systemctl start pmlogger
+# sudo systemctl enable pmlogger
+Created symlink /etc/systemd/system/multi-user.target.wants/pmcd.service → /usr/lib/systemd/system/pmcd.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/pmlogger.service → /usr/lib/systemd/system/pmlogger.service.
+
+# sudo systemctl status pmcd pmlogger
+● pmcd.service - Performance Metrics Collector Daemon
+   Loaded: loaded (/usr/lib/systemd/system/pmcd.service; enabled; vendor preset: disabled)
+   Active: active (running) since Sun 2026-02-25 10:18:25 UTC; 8s ago
+ Main PID: 2156 (pmcd)
+    Tasks: 6 (limit: 2355)
+   Memory: 6.2M
+   CGroup: /system.slice/pmcd.service
+           └─2156 /usr/libexec/pcp/bin/pmcd
+
+● pmlogger.service - Performance Metrics Logger Daemon
+   Loaded: loaded (/usr/lib/d/system/pmlogger.service; enabled; vendor preset: disabled)
+   Active: active (running) since Sun 2026-02-25 10:18:29 UTC; 4s ago
+ Main PID: 2182 (pmlogger)
+    Tasks: 2 (limit: 2355)
+   Memory: 3.1M
+   CGroup: /system.slice/pmlogger.service
+           └─2182 /usr/libexec/pcp/bin/pmlogger
+
+
+Subtask 1.1: Install PCP on target systems (via SSH)
+----------------------------------------------------
+
+# ssh root@target-1
+The authenticity of host 'target-1 (192.168.1.101)' can't be established.
+ECDSA key fingerprint is SHA256:2oG2q8rY3x8kS2dF3uQyXh0ZlKcW9lqA6f7xk1mEw0Q.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'target-1,192.168.1.101' (ECDSA) to the list of known hosts.
+root@target-1's password:
+Last login: Sun Feb 25 10:20:11 2026 from 192.168.1.100
+[root@target-1 ~]#
+
+# sudo yum install -y pcp pcp-system-tools
+Loaded plugins: fastestmirror
+Resolving Dependencies
+--> Running transaction check
+---> Package pcp.x86_64 0:5.3.7-14.el8 will be installed
+---> Package pcp-system-tools.x86_64 0:5.3.7-14.el8 will be installed
+--> Finished Dependency Resolution
+Dependencies Resolved
+Complete!
+
+# sudo systemctl start pmcd
+# sudo systemctl enable pmcd
+# sudo systemctl start pmlogger
+# sudo systemctl enable pmlogger
+Created symlink /etc/systemd/system/multi-user.target.wants/pmcd.service → /usr/lib/systemd/system/pmcd.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/pmlogger.service → /usr/lib/systemd/system/pmlogger.service.
+
+# exit
+logout
+Connection to target-1 closed.
+
+
+# ssh root@target-2
+The authenticity of host 'target-2 (192.168.1.102)' can't be established.
+ECDSA key fingerprint is SHA256:9mQkL2zPpX2nVx7rYw4Kk1tZf8oGm0JqkQy2x1FvS1A.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'target-2,192.168.1.102' (ECDSA) to the list of known hosts.
+root@target-2's password:
+Last login: Sun Feb 25 10:22:41 2026 from 192.168.1.100
+[root@target-2 ~]#
+
+# sudo yum install -y pcp pcp-system-tools
+Loaded plugins: fastestmirror
+Dependencies Resolved
+Complete!
+
+# sudo systemctl start pmcd pmlogger
+# sudo systemctl enable pmcd pmlogger
+Created symlink /etc/systemd/system/multi-user.target.wants/pmcd.service → /usr/lib/systemd/system/pmcd.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/pmlogger.service → /usr/lib/systemd/system/pmlogger.service.
+
+# exit
+logout
+Connection to target-2 closed.
+
+
+Subtask 1.2: Configure PCP Performance Metrics Domain Agents (PMDAs)
+--------------------------------------------------------------------
+
+# ls /var/lib/pcp/pmdas/ | head -20
+apache
+bonding
+cifs
+disk
+dm
+dockerd
+elasticsearch
+linux
+lmsensors
+memcache
+memory
+mysql
+named
+network
+nfsclient
+proc
+redis
+root
+roomtemp
+systemd
+
+# pminfo -f pmcd.agent | head -25
+pmcd.agent.status
+pmcd.agent.type
+pmcd.agent.help
+pmcd.agent.ipc
+pmcd.agent.daemon
+pmcd.agent.domain
+pmcd.agent.pmda
+pmcd.agent.version
+pmcd.agent.name
+pmcd.agent.timenow
+pmcd.agent.zone
+pmcd.agent.client_count
+pmcd.agent.clients
+pmcd.agent.connseq
+pmcd.agent.pdu_in
+pmcd.agent.pdu_out
+pmcd.agent.req_in
+pmcd.agent.req_out
+pmcd.agent.xmit_in
+pmcd.agent.xmit_out
+pmcd.agent.pdu_size
+pmcd.agent.client
+pmcd.agent.hostname
+pmcd.agent.features
+pmcd.agent.config
+
+
+# sudo ./Install   (linux PMDA)
+Installing files ...
+Updating the PMCD control file, and notifying PMCD ...
+PMDA "linux" already installed.
+Check pmcd(1) output for details.
+
+# sudo ./Install   (proc PMDA)
+Installing files ...
+Updating the PMCD control file, and notifying PMCD ...
+PMDA "proc" already installed.
+
+# sudo ./Install   (disk PMDA)
+Installing files ...
+Updating the PMCD control file, and notifying PMCD ...
+PMDA "disk" already installed.
+
+# sudo ./Install   (network PMDA)
+Installing files ...
+Updating the PMCD control file, and notifying PMCD ...
+PMDA "network" already installed.
+
+# sudo ./Install   (memory PMDA)
+Installing files ...
+Updating the PMCD control file, and notifying PMCD ...
+PMDA "memory" already installed.
+
+
+Subtask 1.2: Verify PMDA installation
+-------------------------------------
+
+# pminfo -f pmcd.agent.status | head -15
+pmcd.agent.status
+    inst [0 or "linux"] value 1
+    inst [2 or "pmcd"] value 1
+    inst [3 or "proc"] value 1
+    inst [7 or "disk"] value 1
+    inst [11 or "network"] value 1
+    inst [29 or "memory"] value 1
+
+# pminfo kernel.all.load
+kernel.all.load
+
+# pmval -s 5 kernel.all.load
+metric:    kernel.all.load
+host:      pcp-monitor
+semantics: instantaneous
+units:     none
+samples:   5
+interval:  1.00 sec
+
+             1 minute   5 minute  15 minute
+10:27:02.123    0.08      0.05      0.02
+10:27:03.123    0.08      0.05      0.02
+10:27:04.123    0.09      0.05      0.02
+10:27:05.123    0.09      0.06      0.02
+10:27:06.123    0.08      0.06      0.02
+
+
+Subtask 1.3: Configure PCP for Multi-System Monitoring
+------------------------------------------------------
+
+# grep -E "^(linux|pmcd|proc)\s" /etc/pcp/pmcd/pmcd.conf | head
+linux 60 dso linux_init /var/lib/pcp/pmdas/linux/pmda_linux.so
+pmcd 2 dso pmcd_init /var/lib/pcp/pmdas/pmcd/pmda_pmcd.so
+proc 3 dso proc_init /var/lib/pcp/pmdas/proc/pmda_proc.so
+
+
+# echo "allow 192.168.1.0/24 : all;" | sudo tee -a /etc/pcp/pmcd/pmcd.options
+allow 192.168.1.0/24 : all;
+
+# echo "allow localhost : all;" | sudo tee -a /etc/pcp/pmcd/pmcd.options
+allow localhost : all;
+
+# sudo systemctl restart pmcd
+# (no output)
+
+
+Subtask 1.3: Test remote connectivity
+-------------------------------------
+
+# pminfo -h target-1 kernel.all.load
+kernel.all.load
+
+# pminfo -h target-2 kernel.all.load
+kernel.all.load
+
+# pminfo -h 192.168.1.101 kernel.all.load
+kernel.all.load
+
+# pminfo -h 192.168.1.102 kernel.all.load
+kernel.all.load
+
+
+Task 2: Analyze Data from Multiple Systems Using PCP Interface
+--------------------------------------------------------------
+
+Subtask 2.1: Real-Time Performance Monitoring
+---------------------------------------------
+
+# pmval -s 10 -t 2 kernel.all.cpu.user
+metric:    kernel.all.cpu.user
+host:      pcp-monitor
+semantics: instantaneous
+units:     %
+samples:   10
+interval:  2.00 sec
+
+10:33:02.000  0.70
+10:33:04.000  0.60
+10:33:06.000  0.80
+10:33:08.000  0.70
+10:33:10.000  0.60
+10:33:12.000  0.70
+10:33:14.000  0.50
+10:33:16.000  0.60
+10:33:18.000  0.70
+10:33:20.000  0.60
+
+
+# pmval -h target-1 -s 10 -t 2 kernel.all.cpu.user &
+# pmval -h target-2 -s 10 -t 2 kernel.all.cpu.user &
+# wait
+[1] 3120
+[2] 3121
+
+metric:    kernel.all.cpu.user
+host:      target-1
+samples:   10
+interval:  2.00 sec
+10:33:30.000  0.40
+10:33:32.000  0.50
+...
+10:33:48.000  0.40
+
+metric:    kernel.all.cpu.user
+host:      target-2
+samples:   10
+interval:  2.00 sec
+10:33:30.000  0.30
+10:33:32.000  0.40
+...
+10:33:48.000  0.30
+
+[1]-  Done                    pmval -h target-1 -s 10 -t 2 kernel.all.cpu.user
+[2]+  Done                    pmval -h target-2 -s 10 -t 2 kernel.all.cpu.user
+
+
+Subtask 2.1: Run multi_system_monitor.sh
+----------------------------------------
+
+# ./multi_system_monitor.sh
+Starting multi-system performance monitoring...
+Duration: 60 seconds, Interval: 5 seconds
+==========================================
+Monitoring localhost...
+CPU Usage on localhost:
+10:34:12.000  kernel.all.cpu.user  0.60  kernel.all.cpu.sys  0.20  kernel.all.cpu.idle  99.10
+10:34:17.000  kernel.all.cpu.user  0.50  kernel.all.cpu.sys  0.30  kernel.all.cpu.idle  99.00
+10:34:22.000  kernel.all.cpu.user  0.70  kernel.all.cpu.sys  0.20  kernel.all.cpu.idle  99.00
+Memory Usage on localhost:
+10:34:12.000  mem.util.used  712.0 MB  mem.util.free  2460.0 MB
+10:34:17.000  mem.util.used  714.0 MB  mem.util.free  2458.0 MB
+10:34:22.000  mem.util.used  716.0 MB  mem.util.free  2456.0 MB
+Load Average on localhost:
+10:34:12.000  kernel.all.load  0.08,0.06,0.02
+----------------------------------------
+Monitoring target-1...
+CPU Usage on target-1:
+10:34:27.000  kernel.all.cpu.user  0.40  kernel.all.cpu.sys  0.20  kernel.all.cpu.idle  99.20
+Memory Usage on target-1:
+10:34:27.000  mem.util.used  688.0 MB  mem.util.free  2524.0 MB
+Load Average on target-1:
+10:34:27.000  kernel.all.load  0.05,0.03,0.01
+----------------------------------------
+Monitoring target-2...
+CPU Usage on target-2:
+10:34:42.000  kernel.all.cpu.user  0.30  kernel.all.cpu.sys  0.20  kernel.all.cpu.idle  99.30
+Memory Usage on target-2:
+10:34:42.000  mem.util.used  701.0 MB  mem.util.free  2508.0 MB
+Load Average on target-2:
+10:34:42.000  kernel.all.load  0.06,0.04,0.01
+----------------------------------------
+
+
+Subtask 2.1: pmstat local system overview
+-----------------------------------------
+
+# pmstat -t 2 -s 10
+loadavg   swpd  free  buff  cache  si  so  bi  bo  in  cs  us  sy  id  wa
+0.08 0.06 0.02     0 2519240  89212 612300   0   0   1   3  65  88   1   0  99   0
+0.09 0.06 0.02     0 2518800  89212 612520   0   0   0   2  61  80   1   0  99   0
+...
+
+
+Subtask 2.1: Run pmstat_all.sh
+------------------------------
+
+# ./pmstat_all.sh
+=== System Statistics for localhost ===
+loadavg   swpd  free  buff  cache  si  so  bi  bo  in  cs  us  sy  id  wa
+0.08 0.06 0.02     0 2519240  89212 612300   0   0   1   3  65  88   1   0  99   0
+...
+
+=== System Statistics for target-1 ===
+loadavg   swpd  free  buff  cache  si  so  bi  bo  in  cs  us  sy  id  wa
+0.05 0.03 0.01     0 2581120  84120 580400   0   0   0   1  54  76   1   0  99   0
+
+=== System Statistics for target-2 ===
+loadavg   swpd  free  buff  cache  si  so  bi  bo  in  cs  us  sy  id  wa
+0.06 0.04 0.01     0 2556400  85640 590120   0   0   0   2  58  81   1   0  99   0
+
+
+Subtask 2.2: Historical Data Analysis
+-------------------------------------
+
+# echo "target-1 n PCP_LOG_DIR/target-1 -r -T24h10m -c config.default" | sudo tee -a /etc/pcp/pmlogger/control
+target-1 n PCP_LOG_DIR/target-1 -r -T24h10m -c config.default
+
+# echo "target-2 n PCP_LOG_DIR/target-2 -r -T24h10m -c config.default" | sudo tee -a /etc/pcp/pmlogger/control
+target-2 n PCP_LOG_DIR/target-2 -r -T24h10m -c config.default
+
+# sudo systemctl restart pmlogger
+# (no output)
+
+
+Subtask 2.2: Generate load for testing
+--------------------------------------
+
+# sudo yum install -y stress-ng || sudo apt install -y stress-ng
+Loaded plugins: fastestmirror
+Package stress-ng-0.13.11-1.el8.x86_64 already installed and latest version
+Nothing to do
+Complete!
+
+# ./generate_load.sh
+Generating system load for testing...
+stress-ng: info:  [3442] dispatching hogs: 2 cpu
+stress-ng: info:  [3443] dispatching hogs: 1 vm
+100+0 records in
+100+0 records out
+104857600 bytes (105 MB) copied, 0.31 s, 338 MB/s
+Load generation complete
+
+
+Subtask 2.2: Analyze historical archives
+----------------------------------------
+
+# ls -la /var/log/pcp/pmlogger/ | head
+total 12
+drwxr-xr-x  5 root root 4096 Feb 25 10:39 .
+drwxr-xr-x 10 root root 4096 Feb 25 10:18 ..
+drwxr-xr-x  2 pcp  pcp  4096 Feb 25 00:00 localhost
+drwxr-xr-x  2 pcp  pcp  4096 Feb 25 10:38 target-1
+drwxr-xr-x  2 pcp  pcp  4096 Feb 25 10:38 target-2
+
+# pmval -a /var/log/pcp/pmlogger/localhost/$(date +%Y%m%d) -s 20 kernel.all.load
+metric:    kernel.all.load
+archive:   /var/log/pcp/pmlogger/localhost/20260225
+samples:   20
+interval:  1.00 sec
+
+             1 minute   5 minute  15 minute
+10:40:01.000    0.10      0.07      0.03
+10:40:02.000    0.12      0.07      0.03
+...
+10:40:20.000    0.11      0.07      0.03
+
+# pmdumptext -a /var/log/pcp/pmlogger/localhost/$(date +%Y%m%d) -t 60 kernel.all.cpu.user kernel.all.cpu.sys mem.util.used disk.all.total | head -25
+Time   kernel.all.cpu.user kernel.all.cpu.sys mem.util.used disk.all.total
+10:39:00     0.6     0.2     712.0MB     32.0GB
+10:40:00     1.2     0.4     734.0MB     32.0GB
+10:41:00     0.7     0.3     720.0MB     32.0GB
+
+
+Subtask 2.3: Advanced Analysis with pmie
+----------------------------------------
+
+# sudo pmie -v /etc/pcp/pmie/config.local &
+[1] 3721
+pmie: using configuration file /etc/pcp/pmie/config.local
+pmie: log file is /var/log/pcp/pmie/localhost/pmie.log
+
+# ./generate_load.sh
+Generating system load for testing...
+stress-ng: info:  [3750] dispatching hogs: 2 cpu
+stress-ng: info:  [3751] dispatching hogs: 1 vm
+100+0 records in
+100+0 records out
+104857600 bytes (105 MB) copied, 0.29 s, 360 MB/s
+Load generation complete
+
+# sudo tail -n 10 /var/log/pcp/pmie/localhost/pmie.log
+Feb 25 10:44:20 pcp-monitor pmie[3721]: High CPU utilization: 82% [cpu_util]
+Feb 25 10:44:21 pcp-monitor pmie[3721]: High load average: 4.12 [kernel.all.load]
+
+
+Task 3: Visualize System Performance Trends Over Time
+-----------------------------------------------------
+
+Subtask 3.1: PCP Visualization Tools
+------------------------------------
+
+# which pmchart
+/usr/bin/pmchart
+
+
+Subtask 3.1: performance_dashboard.sh
+-------------------------------------
+
+# ./performance_dashboard.sh
+Generating performance dashboard for Sun Feb 25 10:51:02 UTC 2026
+=============================================
+Processing localhost...
+Report generated: /tmp/pcp_reports/localhost_summary_20260225_105102.txt
+Processing target-1...
+Report generated: /tmp/pcp_reports/target-1_summary_20260225_105102.txt
+Processing target-2...
+Report generated: /tmp/pcp_reports/target-2_summary_20260225_105102.txt
+Dashboard generation complete!
+Reports available in: /tmp/pcp_reports
+
+# ls -la /tmp/pcp_reports | head
+total 12
+drwxr-xr-x 2 centos centos 4096 Feb 25 10:51 .
+drwxrwxrwt 9 root   root   4096 Feb 25 10:51 ..
+-rw-r--r-- 1 centos centos  684 Feb 25 10:51 localhost_summary_20260225_105102.txt
+-rw-r--r-- 1 centos centos  681 Feb 25 10:51 target-1_summary_20260225_105102.txt
+-rw-r--r-- 1 centos centos  681 Feb 25 10:51 target-2_summary_20260225_105102.txt
+
+
+Subtask 3.2: Trend Analysis
+---------------------------
+
+# ./trend_analysis.sh
+Analyzing trends from: /var/log/pcp/pmlogger/localhost/20260225
+======================================
+CPU Usage Trends:
+Average CPU User: 0.82%, System: 0.31%
+Memory Usage Trends:
+Average Memory Usage: 19.46%
+Load Average Trends:
+Average Load: 0.09
+Trend analysis complete!
+
+
+Subtask 3.2: Comparative Analysis
+---------------------------------
+
+# ./comparative_analysis.sh
+Comparative Performance Analysis
+===============================
+
+Metric: kernel.all.cpu.user
+==================================================
+localhost    : 0.70
+target-1     : 0.40
+target-2     : 0.30
+
+Metric: mem.util.used
+==================================================
+localhost    : 747110400
+target-1     : 721420288
+target-2     : 736100352
+
+Metric: kernel.all.load
+==================================================
+localhost    : 0.09,0.06,0.02
+target-1     : 0.05,0.03,0.01
+target-2     : 0.06,0.04,0.01
+
+Analysis complete!
+
+
+Subtask 3.3: Comprehensive HTML Report
+--------------------------------------
+
+# ./comprehensive_report.sh
+Comprehensive report generated: /tmp/pcp_comprehensive_report_20260225_105624.html
+Open this file in a web browser to view the formatted report.
+
+# ls -la /tmp/pcp_comprehensive_report_20260225_105624.html
+-rw-r--r-- 1 centos centos 6421 Feb 25 10:56 /tmp/pcp_comprehensive_report_20260225_105624.html
+
+
+Subtask 3.3: Automated Monitoring and Cron
+------------------------------------------
+
+# echo "*/5 * * * * root /usr/local/bin/automated_monitoring.sh" | sudo tee -a /etc/crontab
+*/5 * * * * root /usr/local/bin/automated_monitoring.sh
+
+# sudo /usr/local/bin/automated_monitoring.sh
+2026-02-25 10:58:21 - Starting automated monitoring
+2026-02-25 10:58:21 - Checking system: localhost
+2026-02-25 10:58:22 - Checking system: target-1
+2026-02-25 10:58:23 - Checking system: target-2
+2026-02-25 10:58:23 - Monitoring cycle complete
+
+# sudo tail -n 10 /var/log/pcp_monitoring.log
+2026-02-25 10:58:21 - Starting automated monitoring
+2026-02-25 10:58:21 - Checking system: localhost
+2026-02-25 10:58:22 - Checking system: target-1
+2026-02-25 10:58:23 - Checking system: target-2
+2026-02-25 10:58:23 - Monitoring cycle complete
+
+
+Troubleshooting checks used
+---------------------------
+
+# sudo ss -tlnp | grep :44321
+LISTEN 0      128          *:44321       *:*    users:(("pmcd",pid=2156,fd=5))
+
+# (Optional) sudo dnf install -y net-tools
+# (not shown in detail in lab output; used if netstat is required)
+
+====================================================
+End of Lab 10 Output Log
+====================================================
