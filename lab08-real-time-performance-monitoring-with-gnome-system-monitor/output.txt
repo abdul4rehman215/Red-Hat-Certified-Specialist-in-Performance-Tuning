@@ -1,0 +1,504 @@
+Lab 08 - Real-time Performance Monitoring with gnome-system-monitor
+Execution Output Log
+====================================================
+
+Task 1: Installing and Configuring gnome-system-monitor
+-------------------------------------------------------
+
+# sudo apt update && sudo apt upgrade -y
+Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
+Hit:2 http://archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:3 http://archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+Calculating upgrade... Done
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+
+# sudo apt install gnome-system-monitor htop stress-ng -y
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  gnome-system-monitor htop stress-ng
+0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+Need to get 5,218 kB of archives.
+After this operation, 17.6 MB of additional disk space will be used.
+Fetched 5,218 kB in 1s (4,912 kB/s)
+Selecting previously unselected package htop.
+Selecting previously unselected package stress-ng.
+Selecting previously unselected package gnome-system-monitor.
+Setting up htop ...
+Setting up stress-ng ...
+Setting up gnome-system-monitor ...
+Processing triggers for man-db ...
+Processing triggers for desktop-file-utils ...
+Processing triggers for gnome-menus ...
+
+# which gnome-system-monitor
+/usr/bin/gnome-system-monitor
+
+# gnome-system-monitor --version
+gnome-system-monitor 46.0
+
+# gnome-system-monitor &
+[1] 2442
+(gnome-system-monitor:2442): Gtk-WARNING **: 12:55:11.844: cannot open display:
+
+# sudo apt install -y xvfb
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  xvfb
+0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
+Setting up xvfb ...
+
+# xvfb-run -a gnome-system-monitor &
+[2] 2526
+
+
+Task 1.3: Understanding the Processes Tab (CLI Equivalent)
+----------------------------------------------------------
+
+# ps aux --sort=-%cpu | head -10
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+toor      2526  2.1  2.4 558512 90224 ?        Sl   12:56   0:03 gnome-system-monitor
+root      1002  0.3  0.6  91672 12040 ?        Ss   11:41   0:02 /usr/bin/python3 /usr/bin/amazon-ssm-agent
+root      1288  0.2  0.6  95860 13100 ?        Ss   11:41   0:01 /usr/lib/systemd/systemd-journald
+toor      2401  0.1  0.4  12440  8840 pts/0    Ss   12:54   0:00 -bash
+root       932  0.1  0.3  38144  7200 ?        Ss   11:41   0:01 /usr/sbin/sshd -D
+...
+
+
+Task 2: Real-time CPU Utilization Monitoring
+--------------------------------------------
+
+Subtask 2.1: Baseline CPU Snapshot
+----------------------------------
+
+# top -bn1 | head -8
+top - 12:59:12 up  1:18,  1 user,  load average: 0.07, 0.03, 0.01
+Tasks: 131 total,   1 running, 130 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  1.2 us,  0.3 sy,  0.0 ni, 98.4 id,  0.0 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3726.5 total,   2458.2 free,    681.4 used,    586.9 buff/cache
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.   3045.1 avail Mem
+
+Subtask 2.1: CPU Logging Script Run
+-----------------------------------
+
+# ./cpu_monitor.sh
+Starting CPU monitoring for 300 seconds...
+CPU monitoring completed. Check cpu_usage_log.txt for results.
+
+# head -6 cpu_usage_log.txt
+Timestamp,CPU_Usage_Percent
+2026-02-25 12:59:41,1.2
+2026-02-25 12:59:46,0.9
+2026-02-25 12:59:51,1.0
+2026-02-25 12:59:56,1.1
+
+Subtask 2.2: Generating CPU Load with stress-ng
+-----------------------------------------------
+
+# stress-ng --cpu 0 --timeout 120s --metrics-brief
+stress-ng: info:  [2732] dispatching hogs: 4 cpu
+stress-ng: info:  [2732] successful run completed in 120.02s
+stress-ng: info:  [2732] cpu                4      120.02s   479.80      3.99
+
+# ps -eo pid,ppid,cmd,%cpu --sort=-%cpu | head -10
+  PID  PPID CMD                         %CPU
+ 2736  2732 stress-ng --cpu 0 --timeout  98.9
+ 2737  2732 stress-ng --cpu 0 --timeout  98.7
+ 2738  2732 stress-ng --cpu 0 --timeout  98.6
+ 2739  2732 stress-ng --cpu 0 --timeout  98.5
+ 2526  2401 gnome-system-monitor         1.8
+...
+
+# stress-ng --cpu 2 --timeout 60s
+stress-ng: info:  [2812] dispatching hogs: 2 cpu
+stress-ng: info:  [2812] successful run completed in 60.01s
+
+# stress-ng --cpu 1 --cpu-load 75 --timeout 60s
+stress-ng: info:  [2860] dispatching hogs: 1 cpu
+stress-ng: info:  [2860] successful run completed in 60.01s
+
+
+Subtask 2.3: CPU Analysis Script Run
+------------------------------------
+
+# ./cpu_analysis.sh
+=== CPU Analysis Report ===
+Date: Sun Feb 25 13:04:28 UTC 2026
+System: Linux ip-172-31-10-219 6.8.0-xx-generic #xx-Ubuntu SMP x86_64 GNU/Linux
+
+CPU Information:
+CPU(s):              4
+Model name:          Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+CPU MHz:             2494.000
+
+Current CPU Usage:
+top - 13:04:28 up  1:23,  1 user,  load average: 0.12, 0.05, 0.02
+Tasks: 131 total,   1 running, 130 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  1.0 us,  0.3 sy,  0.0 ni, 98.6 id,  0.0 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3726.5 total,   2446.7 free,    692.8 used,    587.0 buff/cache
+
+Load Average:
+ 13:04:28 up  1:23,  1 user,  load average: 0.12, 0.05, 0.02
+
+Top 10 CPU-consuming processes:
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+toor      2526  1.7  2.4 558512 90224 ?        Sl   12:56   0:05 gnome-system-monitor
+root      1002  0.3  0.6  91672 12040 ?        Ss   11:41   0:02 /usr/bin/python3 /usr/bin/amazon-ssm-agent
+...
+
+
+Task 3: Memory Usage Analysis and Monitoring
+--------------------------------------------
+
+Subtask 3.1: Memory Logging Script Run
+--------------------------------------
+
+# ./memory_monitor.sh
+Memory monitoring completed. Check memory_usage_log.txt for results.
+
+# head -6 memory_usage_log.txt
+Timestamp,Total_MB,Used_MB,Free_MB,Available_MB,Cached_MB,Swap_Used_MB
+2026-02-25 13:06:02,3726,702,2450,3040,610,0
+2026-02-25 13:06:07,3726,704,2448,3039,611,0
+2026-02-25 13:06:12,3726,706,2447,3037,612,0
+2026-02-25 13:06:17,3726,705,2448,3038,611,0
+2026-02-25 13:06:22,3726,709,2444,3036,613,0
+
+Subtask 3.2: Memory Stress Testing with stress-ng
+-------------------------------------------------
+
+# stress-ng --vm 1 --vm-bytes 1G --timeout 120s --metrics-brief
+stress-ng: info:  [3094] dispatching hogs: 1 vm
+stress-ng: info:  [3094] successful run completed in 120.03s
+stress-ng: info:  [3094] vm                 1      120.03s    98.21      0.82
+
+# stress-ng --vm 4 --vm-bytes 256M --timeout 60s
+stress-ng: info:  [3181] dispatching hogs: 4 vm
+stress-ng: info:  [3181] successful run completed in 60.01s
+
+# stress-ng --vm 1 --vm-bytes 2G --timeout 60s --vm-keep
+stress-ng: info:  [3240] dispatching hogs: 1 vm
+stress-ng: info:  [3240] successful run completed in 60.01s
+
+
+Subtask 3.3: Memory Leak Simulation
+-----------------------------------
+
+# python3 memory_leak_sim.py &
+[3] 3355
+
+# echo "Memory leak simulation PID: 3355"
+Memory leak simulation PID: 3355
+
+# echo "Monitor this PID in gnome-system-monitor Processes tab"
+Monitor this PID in gnome-system-monitor Processes tab
+
+Starting memory leak simulation...
+Monitor this process in gnome-system-monitor
+Press Ctrl+C to stop
+
+# ps -p 3355 -o pid,%cpu,%mem,rss,cmd
+  PID %CPU %MEM   RSS CMD
+ 3355  3.1  6.5 248320 python3 memory_leak_sim.py
+
+# kill 3355
+# (no output)
+
+
+Task 4: Process Management and Analysis
+---------------------------------------
+
+Subtask 4.1: Process Tree Demonstration
+---------------------------------------
+
+# ./process_tree_demo.sh &
+[4] 3522
+Creating process tree demonstration...
+Parent PID: 3522
+[Root] Creating child process at depth 3
+Process tree created. Check gnome-system-monitor for the hierarchy.
+Processes will run for 5 minutes. Press Ctrl+C to stop early.
+
+# pstree -p 3522 | head -20
+process_tree_demo(3522)---bash(3526)---sleep(3527)
+                    \---bash(3528)---sleep(3529)
+                    \---bash(3530)---sleep(3531)
+
+
+Subtask 4.2: Resource Consumption Processes
+-------------------------------------------
+
+# sudo apt install -y bc
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+bc is already the newest version (1.07.1-3build1).
+
+# ./cpu_intensive.sh &
+[5] 3660
+Starting CPU-intensive process...
+
+# ./memory_intensive.sh &
+[6] 3662
+Starting memory-intensive process...
+
+# ./io_intensive.sh &
+[7] 3664
+Starting I/O-intensive process...
+
+Process PIDs:
+CPU-intensive: 3660
+Memory-intensive: 3662
+I/O-intensive: 3664
+
+Allocated 0MB
+Allocated 100MB
+Allocated 200MB
+
+# ps -p 3660,3662,3664 -o pid,%cpu,%mem,rss,stat,cmd
+  PID %CPU %MEM   RSS STAT CMD
+ 3660 99.2  0.2  10280 R    /bin/bash ./cpu_intensive.sh
+ 3662  3.5 18.4 704120 S    /bin/bash ./memory_intensive.sh
+ 3664  4.2  0.1   6120 S    /bin/bash ./io_intensive.sh
+
+Subtask 4.3: Priority + Termination
+-----------------------------------
+
+# renice +10 -p 3660
+3660 (process ID) old priority 0, new priority 10
+
+# kill -TERM 3660
+# kill -KILL 3662
+# kill 3664
+# (no output)
+
+# ./process_manager.sh 2526
+=== Process Information for PID 2526 ===
+  PID  PPID USER  %CPU %MEM    VSZ   RSS TT       STAT  STARTED     TIME COMMAND
+ 2526  2401 toor   1.4  2.4 558512 90224 ?        Sl    12:56:03  0:06 gnome-system-monitor
+
+Memory details:
+VmSize:	  558512 kB
+VmRSS:	   90224 kB
+VmData:	  210948 kB
+VmStk:	     132 kB
+
+Open files:
+68
+
+
+Task 5: Performance Issue Identification and Optimization
+---------------------------------------------------------
+
+Subtask 5.1: System Stress Scenario
+-----------------------------------
+
+# ./system_stress.sh
+Creating comprehensive system stress scenario...
+Stress test PIDs:
+CPU: 3890
+Memory: 3892
+I/O: 3894
+Monitor system performance in gnome-system-monitor for 5 minutes
+Press Ctrl+C to stop all stress tests early
+
+# top -bn1 | head -6
+top - 13:16:12 up  1:35,  1 user,  load average: 3.21, 2.10, 0.88
+Tasks: 156 total,   6 running, 150 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 79.4 us,  2.1 sy,  0.0 ni, 18.0 id,  0.2 wa,  0.0 hi,  0.3 si,  0.0 st
+MiB Mem :   3726.5 total,    842.3 free,   2480.4 used,    403.8 buff/cache
+MiB Swap:      0.0 total,      0.0 free,      0.0 used.   1086.2 avail Mem
+
+# pkill -f "stress-ng"
+# (no output)
+
+Subtask 5.2: Report Generation
+------------------------------
+
+# sudo apt install -y net-tools
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  net-tools
+Setting up net-tools ...
+
+# ./performance_report.sh
+Performance report generated: performance_report_20260225_131945.txt
+=== SYSTEM PERFORMANCE REPORT ===
+Generated: Sun Feb 25 13:19:45 UTC 2026
+Hostname: ip-172-31-10-219
+Uptime:  13:19:45 up  1:38,  1 user,  load average: 0.21, 0.11, 0.05
+
+=== SYSTEM INFORMATION ===
+OS: Ubuntu 24.04.1 LTS
+Kernel: 6.8.0-xx-generic
+Architecture: x86_64
+
+=== CPU INFORMATION ===
+CPU(s):              4
+Model name:          Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+CPU MHz:             2494.000
+L1d cache:           64 KiB
+L1i cache:           64 KiB
+L2 cache:            2 MiB
+L3 cache:            35.8 MiB
+
+Current CPU Usage:
+%Cpu(s):  1.5 us,  0.4 sy,  0.0 ni, 98.0 id,  0.0 wa,  0.0 hi,  0.1 si,  0.0 st
+
+=== MEMORY INFORMATION ===
+               total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       720Mi       2.4Gi       1.0Mi       620Mi       3.0Gi
+Swap:             0B          0B          0B
+
+=== TOP PROCESSES BY CPU ===
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+toor      2526  1.5  2.4 558512 90224 ?        Sl   12:56   0:07 gnome-system-monitor
+...
+
+=== TOP PROCESSES BY MEMORY ===
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+toor      2526  1.5  2.4 558512 90224 ?        Sl   12:56   0:07 gnome-system-monitor
+...
+
+=== DISK USAGE ===
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root        30G   11G   20G  34% /
+...
+
+=== NETWORK CONNECTIONS ===
+Total network connections: 9
+
+=== LOAD AVERAGE HISTORY ===
+ 13:19:45 up  1:38,  1 user,  load average: 0.21, 0.11, 0.05
+
+
+Subtask 5.3: Optimizer + Dashboard
+----------------------------------
+
+# sudo ./system_optimizer.sh
+=== SYSTEM OPTIMIZATION SCRIPT ===
+Starting system optimization...
+
+Optimizing process priorities...
+
+Cleaning up system resources...
+Resource cleanup completed
+
+Memory optimization recommendations:
+Top 5 memory consumers:
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+toor      2526  1.2  2.4 558512 90224 ?        Sl   12:56   0:08 gnome-system-monitor
+...
+
+System health check:
+CPU load is normal (0.21 on 4 cores)
+Memory usage is normal (19.3%)
+
+Optimization completed!
+
+# timeout 6s ./performance_dashboard.sh
+=== REAL-TIME PERFORMANCE DASHBOARD ===
+Updated: Sun Feb 25 13:22:18 UTC 2026
+Press Ctrl+C to exit
+
+=== CPU USAGE ===
+CPU Usage: 1.4 user, 0.4 system, 98.1 idle
+Load Average:  0.18, 0.09, 0.04
+
+=== MEMORY USAGE ===
+Memory: 724Mi used / 3.7Gi total (19.4%)
+Swap: 0B used / 0B total
+
+=== TOP 5 PROCESSES BY CPU ===
+gnome-system-monitor    1.2%  2.4%
+amazon-ssm-agent        0.3%  0.6%
+...
+
+=== TOP 5 PROCESSES BY MEMORY ===
+gnome-system-monitor    1.2%  2.4%
+...
+
+=== DISK USAGE ===
+Root filesystem: 11G used / 30G total (34%)
+
+
+Task 6: Advanced Monitoring and Reporting
+-----------------------------------------
+
+# ./advanced_monitor.sh
+Starting advanced monitoring...
+Duration: 60 seconds
+Interval: 10 seconds
+Logs will be saved in: monitoring_logs
+Sample 1/6 completed
+Sample 2/6 completed
+Sample 3/6 completed
+Sample 4/6 completed
+Sample 5/6 completed
+Sample 6/6 completed
+Monitoring completed. Check logs in monitoring_logs
+
+# ls -la monitoring_logs | head
+total 24
+drwxr-xr-x 2 toor toor 4096 Feb 25 13:25 .
+drwxr-x--- 5 toor toor 4096 Feb 25 13:25 ..
+-rw-r--r-- 1 toor toor  322 Feb 25 13:25 alerts_20260225_132421.log
+-rw-r--r-- 1 toor toor  280 Feb 25 13:25 cpu_20260225_132421.log
+-rw-r--r-- 1 toor toor  356 Feb 25 13:25 memory_20260225_132421.log
+-rw-r--r-- 1 toor toor 1410 Feb 25 13:25 processes_20260225_132421.log
+
+# ./trend_analyzer.sh
+=== CPU TREND ANALYSIS ===
+Analyzing CPU data from: monitoring_logs/cpu_20260225_132421.log
+Average CPU Usage: 1.18%
+Maximum CPU Usage: 3.40%
+Minimum CPU Usage: 0.70%
+
+High CPU events (>80%): 0
+
+=== MEMORY TREND ANALYSIS ===
+Analyzing Memory data from: monitoring_logs/memory_20260225_132421.log
+Average Memory Usage: 19.45%
+Maximum Memory Usage: 19.90%
+Minimum Memory Usage: 19.10%
+
+High Memory events (>85%): 0
+
+=== ALERT LOG SUMMARY ===
+Alerts file: monitoring_logs/alerts_20260225_132421.log
+Total alerts: 0
+
+Trend summary saved to: monitoring_logs/trend_summary.txt
+
+# cat monitoring_logs/trend_summary.txt
+SYSTEM TREND SUMMARY
+Generated: Sun Feb 25 13:26:40 UTC 2026
+
+CPU:
+- Avg: 1.18%
+- Max: 3.40%
+- Min: 0.70%
+- High CPU events (>80%): 0
+
+Memory:
+- Avg: 19.45%
+- Max: 19.90%
+- Min: 19.10%
+- High Memory events (>85%): 0
+
+Alerts:
+- Total alerts: 0
+
+
+====================================================
+End of Lab 08 Output Log
+====================================================
