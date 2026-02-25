@@ -1,0 +1,76 @@
+#!/usr/bin/env stap
+global io_start_time, io_latency
+global read_latencies, write_latencies
+# Track read system call start time
+probe syscall.read {
+ if (target() == 0 || target() == pid()) {
+ io_start_time[tid(), "read"] = gettimeofday_us()
+ }
+}
+# Calculate read latency
+probe syscall.read.return {
+ if (target() == 0 || target() == pid()) {
+ start_time = io_start_time[tid(), "read"]
+ if (start_time) {
+ latency = gettimeofday_us() - start_time
+ read_latencies <<< latency
+ delete io_start_time[tid(), "read"]
+
+ if (latency > 1000) { # Log slow reads (>1ms)
+ printf("SLOW READ: %s pid=%d latency=%d us bytes=%d\n",
+ execname(), pid(), latency, $return)
+ }
+ }
+ }
+}
+# Track write system call start time
+probe syscall.write {
+ if (target() == 0 || target() == pid()) {
+ io_start_time[tid(), "write"] = gettimeofday_us()
+ }
+}
+# Calculate write latency
+probe syscall.write.return {
+ if (target() == 0 || target() == pid()) {
+ start_time = io_start_time[tid(), "write"]
+ if (start_time) {
+ latency = gettimeofday_us() - start_time
+ write_latencies <<< latency
+ delete io_start_time[tid(), "write"]
+
+ if (latency > 1000) { # Log slow writes (>1ms)
+ printf("SLOW WRITE: %s pid=%d latency=%d us bytes=%d\n",
+ execname(), pid(), latency, $return)
+ }
+ }
+ }
+}
+# Print statistics every 15 seconds
+probe timer.s(15) {
+ printf("\n=== I/O Latency Statistics ===\n")
+ printf("Read Operations:\n")
+ if (@count(read_latencies) > 0) {
+ printf(" Count: %d\n", @count(read_latencies))
+ printf(" Average: %d us\n", @avg(read_latencies))
+ printf(" Min: %d us\n", @min(read_latencies))
+ printf(" Max: %d us\n", @max(read_latencies))
+ print(" Histogram:")
+ print(@hist_log(read_latencies))
+ }
+
+ printf("\nWrite Operations:\n")
+ if (@count(write_latencies) > 0) {
+ printf(" Count: %d\n", @count(write_latencies))
+ printf(" Average: %d us\n", @avg(write_latencies))
+ printf(" Min: %d us\n", @min(write_latencies))
+ printf(" Max: %d us\n", @max(write_latencies))
+ print(" Histogram:")
+ print(@hist_log(write_latencies))
+ }
+
+ delete read_latencies
+ delete write_latencies
+}
+probe end {
+ printf("\nI/O latency monitoring completed\n")
+}
