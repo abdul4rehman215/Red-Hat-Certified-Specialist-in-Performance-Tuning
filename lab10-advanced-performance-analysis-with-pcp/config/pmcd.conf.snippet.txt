@@ -1,0 +1,3 @@
+linux 60 dso linux_init /var/lib/pcp/pmdas/linux/pmda_linux.so
+pmcd 2 dso pmcd_init /var/lib/pcp/pmdas/pmcd/pmda_pmcd.so
+proc 3 dso proc_init /var/lib/pcp/pmdas/proc/pmda_proc.so
