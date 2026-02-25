@@ -1,0 +1,13 @@
+#!/usr/bin/env stap
+probe begin {
+ println("Hello from SystemTap!")
+ println("Kernel version: ", kernel_v)
+ println("Current time: ", ctime(gettimeofday_s()))
+}
+probe end {
+ println("SystemTap script finished")
+}
+probe timer.s(5) {
+ println("Timer fired - SystemTap is monitoring")
+ exit()
+}
