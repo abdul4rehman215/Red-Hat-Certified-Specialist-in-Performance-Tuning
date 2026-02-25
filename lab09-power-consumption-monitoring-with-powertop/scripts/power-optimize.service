@@ -1,0 +1,11 @@
+[Unit]
+Description=Power Optimization Service
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/power-optimize.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
