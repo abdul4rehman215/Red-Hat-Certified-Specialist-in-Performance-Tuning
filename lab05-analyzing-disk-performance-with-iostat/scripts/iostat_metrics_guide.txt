@@ -1,0 +1,20 @@
+IOSTAT KEY METRICS REFERENCE GUIDE
+==================================
+Device Utilization Metrics:
+- %util: Percentage of CPU time during which I/O requests were issued
+- r/s: Read requests per second
+- w/s: Write requests per second
+- rkB/s: Kilobytes read per second
+- wkB/s: Kilobytes written per second
+Latency Metrics:
+- await: Average time for I/O requests (including queue time)
+- r_await: Average time for read requests
+- w_await: Average time for write requests
+- svctm: Average service time (deprecated in newer versions)
+Queue Metrics:
+- avgqu-sz: Average queue length of requests
+- aqu-sz: Average queue size (newer metric name)
+Performance Indicators:
+- High %util (>80%): Potential bottleneck
+- High await (>20ms): Slow response times
+- High avgqu-sz (>2): Queue buildup indicating saturation
