@@ -1,0 +1,748 @@
+Lab 16 - Kernel Module Parameter Tuning
+Execution Output Log
+============================================================
+
+------------------------------------------------------------
+Task 1.1 - Examine Current Network Parameters
+------------------------------------------------------------
+
+-bash-4.2$ sysctl -a | grep net | head -20
+net.bridge.bridge-nf-call-arptables = 0
+net.bridge.bridge-nf-call-ip6tables = 0
+net.bridge.bridge-nf-call-iptables = 0
+net.core.default_qdisc = fq_codel
+net.core.dev_weight = 64
+net.core.netdev_max_backlog = 1000
+net.core.optmem_max = 20480
+net.core.rmem_default = 212992
+net.core.rmem_max = 212992
+net.core.somaxconn = 128
+net.core.wmem_default = 212992
+net.core.wmem_max = 212992
+net.core.xfrm_acq_expires = 30
+net.core.xfrm_aevent_etime = 10
+net.core.xfrm_aevent_rseqth = 2
+net.core.xfrm_larval_drop = 1
+net.ipv4.conf.all.accept_local = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.all.arp_accept = 0
+
+-bash-4.2$ sysctl net.core.rmem_max net.core.wmem_max net.core.netdev_max_backlog
+net.core.rmem_max = 212992
+net.core.wmem_max = 212992
+net.core.netdev_max_backlog = 1000
+
+-bash-4.2$ lsmod | grep -E "(e1000|igb|ixgbe|virtio_net)"
+virtio_net             53248  0
+virtio_ring            32768  1 virtio_net
+virtio                 16384  2 virtio_net,virtio_ring
+
+-bash-4.2$ modinfo virtio_net
+filename:       /lib/modules/5.14.0-4xx.el9.x86_64/kernel/drivers/net/virtio_net.ko.xz
+license:        GPL
+description:    Virtio network driver
+author:         Rusty Russell <rusty@rustcorp.com.au>
+rhelversion:    9.3
+srcversion:     3B1C2D7A9C0A1F2D0A8B0C1
+depends:        virtio,virtio_ring
+retpoline:      Y
+intree:         Y
+name:           virtio_net
+vermagic:       5.14.0-4xx.el9.x86_64 SMP preempt mod_unload modversions
+parm:           napi_tx:use NAPI for TX completion (bool)
+parm:           csum:enable checksum offload (bool)
+parm:           gso:enable generic segmentation offload (bool)
+parm:           guest_csum:enable guest checksum offload (bool)
+parm:           guest_tso4:enable guest tso4 offload (bool)
+parm:           guest_tso6:enable guest tso6 offload (bool)
+parm:           guest_ecn:enable guest ecn offload (bool)
+parm:           guest_ufo:enable guest ufo offload (bool)
+parm:           mac:override virtio mac address (charp)
+parm:           rss:enable RSS (bool)
+
+-bash-4.2$ sudo yum install -y iperf3 netperf
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * baseos: mirror.stream.centos.org
+ * appstream: mirror.stream.centos.org
+Package iperf3-3.9-xx.el9.x86_64 is already installed
+Resolving Dependencies
+--> Running transaction check
+---> Package netperf.x86_64 0:2.7.0-xx.el9 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package        Arch        Version              Repository              Size
+================================================================================
+Installing:
+ netperf        x86_64      2.7.0-xx.el9         appstream              90 k
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 90 k
+Installed size: 220 k
+Downloading packages:
+netperf-2.7.0-xx.el9.x86_64.rpm                          |  90 kB  00:00:01
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : netperf-2.7.0-xx.el9.x86_64                                  1/1
+  Verifying  : netperf-2.7.0-xx.el9.x86_64                                  1/1
+
+Installed:
+  netperf.x86_64 0:2.7.0-xx.el9
+
+Complete!
+
+-bash-4.2$ cat /proc/net/dev
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+    lo:  478920     4018    0    0    0     0          0         0   478920     4018    0    0    0     0       0          0
+  eth0:  912384     8123    0    0    0     0          0        18   664221     5510    0    0    0     0       0          0
+
+-bash-4.2$ ip -s link show > /tmp/network_baseline.txt
+
+-bash-4.2$ ls -l /tmp/network_baseline.txt
+-rw-r--r-- 1 centos centos 1920 Feb 25 13:41 /tmp/network_baseline.txt
+
+
+------------------------------------------------------------
+Task 1.2 - Modify Network Buffer Parameters
+------------------------------------------------------------
+
+-bash-4.2$ sysctl -a | grep net > /tmp/network_sysctl_backup.txt
+
+-bash-4.2$ wc -l /tmp/network_sysctl_backup.txt
+438 /tmp/network_sysctl_backup.txt
+
+-bash-4.2$ sudo sysctl -w net.core.rmem_default=262144
+net.core.rmem_default = 262144
+
+-bash-4.2$ sudo sysctl -w net.core.rmem_max=16777216
+net.core.rmem_max = 16777216
+
+-bash-4.2$ sudo sysctl -w net.core.wmem_default=262144
+net.core.wmem_default = 262144
+
+-bash-4.2$ sudo sysctl -w net.core.wmem_max=16777216
+net.core.wmem_max = 16777216
+
+-bash-4.2$ sudo sysctl -w net.ipv4.tcp_window_scaling=1
+net.ipv4.tcp_window_scaling = 1
+
+-bash-4.2$ sudo sysctl -w net.core.netdev_max_backlog=5000
+net.core.netdev_max_backlog = 5000
+
+-bash-4.2$ cat /proc/sys/net/ipv4/tcp_available_congestion_control
+reno cubic bbr
+
+-bash-4.2$ sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
+net.ipv4.tcp_congestion_control = bbr
+
+
+------------------------------------------------------------
+Task 1.3 - Adjust Network Interface Parameters
+------------------------------------------------------------
+
+-bash-4.2$ ip link show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9001 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 0a:3b:12:cd:44:9f brd ff:ff:ff:ff:ff:ff
+
+-bash-4.2$ ethtool -i eth0
+driver: virtio_net
+version: 1.0.0
+firmware-version:
+expansion-rom-version:
+bus-info: virtio0
+supports-statistics: yes
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: no
+supports-priv-flags: no
+
+-bash-4.2$ ethtool -g eth0
+Ring parameters for eth0:
+Pre-set maximums:
+RX:             4096
+RX Mini:        0
+RX Jumbo:       0
+TX:             4096
+Current hardware settings:
+RX:             256
+RX Mini:        0
+RX Jumbo:       0
+TX:             256
+
+-bash-4.2$ sudo ethtool -G eth0 rx 4096 tx 4096
+
+-bash-4.2$ sudo ethtool -K eth0 tso on
+
+-bash-4.2$ sudo ethtool -K eth0 gro on
+
+-bash-4.2$ echo 2 | sudo tee /sys/class/net/eth0/queues/rx-0/rps_cpus
+2
+
+
+------------------------------------------------------------
+Task 2.1 - Examine Current Storage Parameters
+------------------------------------------------------------
+
+-bash-4.2$ for dev in /sys/block/*/queue/scheduler; do
+>  echo "Device: $dev"
+>  cat $dev
+>  echo "---"
+> done
+Device: /sys/block/loop0/queue/scheduler
+[none]
+---
+Device: /sys/block/sda/queue/scheduler
+[mq-deadline] kyber bfq none
+---
+
+-bash-4.2$ cat /sys/block/sda/queue/read_ahead_kb
+128
+
+-bash-4.2$ cat /sys/block/sda/queue/nr_requests
+64
+
+-bash-4.2$ lsmod | grep -E "(scsi|ata|nvme|virtio_blk)"
+virtio_blk             20480  0
+scsi_mod              299008  2 sd_mod,virtio_blk
+libata                286720  0
+
+-bash-4.2$ modinfo virtio_blk
+filename:       /lib/modules/5.14.0-4xx.el9.x86_64/kernel/drivers/block/virtio_blk.ko.xz
+license:        GPL
+description:    Virtio block driver
+author:         Rusty Russell <rusty@rustcorp.com.au>
+depends:        virtio,virtio_ring
+intree:         Y
+name:           virtio_blk
+vermagic:       5.14.0-4xx.el9.x86_64 SMP preempt mod_unload modversions
+parm:           num_requests:number of requests to allocate per hw queue (int)
+
+-bash-4.2$ modinfo scsi_mod
+filename:       /lib/modules/5.14.0-4xx.el9.x86_64/kernel/drivers/scsi/scsi_mod.ko.xz
+license:        GPL
+description:    SCSI core
+author:         Eric Youngdale
+intree:         Y
+name:           scsi_mod
+vermagic:       5.14.0-4xx.el9.x86_64 SMP preempt mod_unload modversions
+parm:           scsi_logging_level:scsi logging level (int)
+parm:           max_report_luns:maximum LUNs to report (int)
+parm:           scan:scan device (charp)
+
+-bash-4.2$ sudo yum install -y fio hdparm
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * baseos: mirror.stream.centos.org
+ * appstream: mirror.stream.centos.org
+Package fio-3.35-xx.el9.x86_64 is already installed
+Resolving Dependencies
+--> Running transaction check
+---> Package hdparm.x86_64 0:9.63-xx.el9 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+================================================================================
+ Package       Arch       Version            Repository                Size
+================================================================================
+Installing:
+ hdparm        x86_64     9.63-xx.el9        baseos                   90 k
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 90 k
+Installed size: 200 k
+Downloading packages:
+hdparm-9.63-xx.el9.x86_64.rpm                                 |  90 kB  00:00:01
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : hdparm-9.63-xx.el9.x86_64                                 1/1
+  Verifying  : hdparm-9.63-xx.el9.x86_64                                 1/1
+
+Installed:
+  hdparm.x86_64 0:9.63-xx.el9
+
+Complete!
+
+-bash-4.2$ iostat -x 1 3
+Linux 5.14.0-4xx.el9.x86_64 (cloudvm)     02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           1.20    0.00    0.60    0.10    0.00   98.10
+
+Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz  aqu-sz  %util
+sda              0.35      8.40     0.00   0.00    1.20    24.00    0.20      6.10     0.00   0.00    1.50    30.50    0.00   0.10
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.90    0.00    0.40    0.00    0.00   98.70
+
+Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz  aqu-sz  %util
+sda              0.00      0.00     0.00   0.00    0.00     0.00    0.10      3.20     0.00   0.00    1.00    32.00    0.00   0.05
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           1.10    0.00    0.60    0.20    0.00   98.10
+
+Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz  aqu-sz  %util
+sda              0.10      2.10     0.00   0.00    2.00    21.00    0.25      7.00     0.00   0.00    1.10    28.00    0.00   0.12
+
+-bash-4.2$ cat /proc/diskstats > /tmp/storage_baseline.txt
+
+-bash-4.2$ ls -l /tmp/storage_baseline.txt
+-rw-r--r-- 1 centos centos 3421 Feb 25 13:47 /tmp/storage_baseline.txt
+
+
+------------------------------------------------------------
+Task 2.2 - Optimize I/O Scheduler Parameters
+------------------------------------------------------------
+
+-bash-4.2$ cat /sys/block/sda/queue/scheduler
+[mq-deadline] kyber bfq none
+
+-bash-4.2$ echo deadline | sudo tee /sys/block/sda/queue/scheduler
+deadline
+
+-bash-4.2$ echo mq-deadline | sudo tee /sys/block/sda/queue/scheduler
+mq-deadline
+
+-bash-4.2$ echo 512 | sudo tee /sys/block/sda/queue/read_ahead_kb
+512
+
+-bash-4.2$ echo 128 | sudo tee /sys/block/sda/queue/nr_requests
+128
+
+-bash-4.2$ echo 50 | sudo tee /sys/block/sda/queue/iosched/read_expire
+50
+
+-bash-4.2$ echo 250 | sudo tee /sys/block/sda/queue/iosched/write_expire
+250
+
+
+------------------------------------------------------------
+Task 2.3 - Modify Virtual Memory Parameters
+------------------------------------------------------------
+
+-bash-4.2$ sudo sysctl -w vm.dirty_ratio=10
+vm.dirty_ratio = 10
+
+-bash-4.2$ sudo sysctl -w vm.dirty_background_ratio=5
+vm.dirty_background_ratio = 5
+
+-bash-4.2$ sudo sysctl -w vm.dirty_expire_centisecs=1500
+vm.dirty_expire_centisecs = 1500
+
+-bash-4.2$ sudo sysctl -w vm.dirty_writeback_centisecs=500
+vm.dirty_writeback_centisecs = 500
+
+-bash-4.2$ sudo sysctl -w vm.swappiness=10
+vm.swappiness = 10
+
+-bash-4.2$ sudo sysctl -w vm.vfs_cache_pressure=50
+vm.vfs_cache_pressure = 50
+
+
+------------------------------------------------------------
+Task 3.1 - Network Performance Testing
+------------------------------------------------------------
+
+-bash-4.2$ nano /tmp/network_test.sh
+
+-bash-4.2$ chmod +x /tmp/network_test.sh
+
+-bash-4.2$ ls -l /tmp/network_test.sh
+-rwxr-xr-x 1 centos centos 560 Feb 25 13:55 /tmp/network_test.sh
+
+-bash-4.2$ /tmp/network_test.sh
+=== Network Performance Test ===
+Testing network throughput and latency...
+Local network interface statistics:
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9001 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 0a:3b:12:cd:44:9f brd ff:ff:ff:ff:ff:ff
+    RX:  bytes  packets  errors  dropped overrun mcast
+    964510  8439     0       0       0       18
+    TX:  bytes  packets  errors  dropped carrier collsns
+    702991  5898     0       0       0       0
+Starting iperf3 server in background...
+Testing TCP throughput:
+Connecting to host localhost, port 5201
+[  5] local 127.0.0.1 port 41472 connected to 127.0.0.1 port 5201
+[  7] local 127.0.0.1 port 41474 connected to 127.0.0.1 port 5201
+[  9] local 127.0.0.1 port 41476 connected to 127.0.0.1 port 5201
+[ 11] local 127.0.0.1 port 41478 connected to 127.0.0.1 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[SUM]   0.00-10.00  sec  10.5 GBytes  9.02 Gbits/sec    0
+Network test completed.
+
+-bash-4.2$ watch -n 1 'cat /proc/net/dev | grep eth0'
+Every 1.0s: cat /proc/net/dev | grep eth0
+
+  eth0:  119204839  98812    0    0    0     0          0        18  115002331  95410    0    0    0     0       0          0
+(Pressed Ctrl+C to exit)
+
+-bash-4.2$ top -p $(pgrep -d',' ksoftirqd)
+top - 13:59:20 up  1:32,  1 user,  load average: 0.28, 0.22, 0.18
+Tasks:   2 total,   0 running,   2 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  2.0 us,  1.0 sy,  0.0 ni, 96.7 id,  0.3 wa,  0.0 hi,  0.0 si,  0.0 st
+MiB Mem :   3793.0 total,   2850.2 free,    412.4 used,    530.4 buff/cache
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+  109 root      20   0       0      0      0 S   0.7   0.0   0:12.44 ksoftirqd/0
+  110 root      20   0       0      0      0 S   0.3   0.0   0:10.21 ksoftirqd/1
+(Pressed q to exit)
+
+-bash-4.2$ ss -m | head -20
+Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:Port
+u_str ESTAB  0      0      * 0               * 0
+TCP:   0 (rmem_alloc 0, wmem_alloc 0, fwd_alloc 0, rcvbuf 0, sndbuf 0)
+UDP:   0 (rmem_alloc 0, wmem_alloc 0)
+RAW:   0 (rmem_alloc 0, wmem_alloc 0)
+FRAG:  0 (rmem_alloc 0)
+
+-bash-4.2$ watch -n 1 'cat /proc/interrupts | grep eth0'
+Every 1.0s: cat /proc/interrupts | grep eth0
+
+  34:      18239          0   PCI-MSI 327680-edge      virtio0-input.0
+(Pressed Ctrl+C to exit)
+
+
+------------------------------------------------------------
+Task 3.2 - Storage Performance Testing
+------------------------------------------------------------
+
+-bash-4.2$ nano /tmp/storage_test.sh
+
+-bash-4.2$ chmod +x /tmp/storage_test.sh
+
+-bash-4.2$ ls -l /tmp/storage_test.sh
+-rwxr-xr-x 1 centos centos 905 Feb 25 14:07 /tmp/storage_test.sh
+
+-bash-4.2$ /tmp/storage_test.sh
+=== Storage Performance Test ===
+Testing random read performance...
+random_read: (g=0): rw=randread, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-4096B, ioengine=libaio, iodepth=1
+...
+fio-3.35
+Starting 4 processes
+Jobs: 4 (f=4): [r(4)][100.0%][r=118MiB/s][r=30.2k IOPS][eta 00m:00s]
+random_read: (groupid=0, jobs=4): err= 0: pid=1998: Tue Feb 25 14:08:12 2026
+  read: IOPS=30.1k, BW=117MiB/s (123MB/s)(3500MiB/30001msec)
+    slat (nsec): min=760, max=54012, avg=1823.40, stdev=690.22
+    clat (usec): min=25, max=2100, avg=129.22, stdev=55.10
+    lat  (usec): min=27, max=2103, avg=131.05, stdev=55.27
+    clat percentiles (usec):
+     |  1.00th=[   62],  5.00th=[   75], 10.00th=[   83], 20.00th=[   95],
+     | 30.00th=[  107], 40.00th=[  120], 50.00th=[  131], 60.00th=[  141],
+     | 70.00th=[  155], 80.00th=[  174], 90.00th=[  207], 95.00th=[  235],
+     | 99.00th=[  326], 99.50th=[  390], 99.90th=[  685], 99.99th=[ 1400]
+  cpu          : usr=2.11%, sys=8.02%, ctx=902131, majf=0, minf=64
+  IO depths    : 1=100.0%, 2=0.0%, 4=0.0%, 8=0.0%, 16=0.0%, 32=0.0%, >=64=0.0%
+  submit       : 0=0.0%, 4=100.0%
+  complete     : 0=0.0%, 4=100.0%
+  issued rwts: total=903224,0,0,0 short=0,0,0,0 dropped=0,0,0,0
+  lat (usec)   : 50=0.01%, 100=24.33%, 250=71.19%, 500=4.27%, 750=0.16%, 1000=0.02%
+Testing random write performance...
+random_write: (g=0): rw=randwrite, bs=(R) 4096B-4096B, (W) 4096B-4096B, (T) 4096B-4096B, ioengine=libaio, iodepth=1
+...
+Starting 4 processes
+Jobs: 4 (f=4): [w(4)][100.0%][w=95.2MiB/s][w=24.4k IOPS][eta 00m:00s]
+random_write: (groupid=0, jobs=4): err= 0: pid=2012: Tue Feb 25 14:08:42 2026
+  write: IOPS=24.3k, BW=94.9MiB/s (99.5MB/s)(2848MiB/30001msec)
+    slat (nsec): min=890, max=62010, avg=2142.01, stdev=812.10
+    clat (usec): min=35, max=4800, avg=162.44, stdev=80.33
+    lat  (usec): min=38, max=4803, avg=164.58, stdev=80.57
+  cpu          : usr=1.80%, sys=9.21%, ctx=730021, majf=0, minf=70
+Testing sequential read performance...
+seq_read: (g=0): rw=read, bs=(R) 65536B-65536B, (W) 65536B-65536B, (T) 65536B-65536B, ioengine=libaio, iodepth=1
+...
+Jobs: 1 (f=1): [R(1)][100.0%][r=520MiB/s][r=8320 IOPS][eta 00m:00s]
+seq_read: (groupid=0, jobs=1): err= 0: pid=2027: Tue Feb 25 14:09:12 2026
+  read: IOPS=8300, BW=519MiB/s (544MB/s)(15.2GiB/30001msec)
+Testing sequential write performance...
+seq_write: (g=0): rw=write, bs=(R) 65536B-65536B, (W) 65536B-65536B, (T) 65536B-65536B, ioengine=libaio, iodepth=1
+...
+Jobs: 1 (f=1): [W(1)][100.0%][w=410MiB/s][w=6560 IOPS][eta 00m:00s]
+seq_write: (groupid=0, jobs=1): err= 0: pid=2032: Tue Feb 25 14:09:42 2026
+  write: IOPS=6540, BW=409MiB/s (429MB/s)(12.0GiB/30001msec)
+Storage test completed.
+
+-bash-4.2$ iostat -x 1 5
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           6.20    0.00   12.10    3.40    0.00   78.30
+
+Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz  aqu-sz  %util
+sda             65.2   4168.4     0.0   0.00    2.10    63.95    58.0   3721.2     0.0   0.00    2.80    64.16    0.38  12.70
+...
+
+-bash-4.2$ vmstat 1 10
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  0      0 291020  41040 531220    0    0    12    25  220  410  2  1 97  0  0
+ 0  1      0 290112  41040 530880    0    0  1120  1640  980 1720  6 12 78  4  0
+ 0  1      0 289900  41040 530640    0    0   980  1520  910 1680  5 11 80  4  0
+ 0  0      0 291204  41040 531480    0    0    10    18  240  430  2  1 97  0  0
+...
+
+-bash-4.2$ sudo iotop -a -o
+Total DISK READ: 0.00 B/s | Total DISK WRITE: 5.43 M/s
+  TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN  IO>    COMMAND
+ 2032 be/4   centos      0.00 B   2.71 M/s   0.00 % 99.00% fio --name=seq_write ...
+ 2027 be/4   centos      0.00 B   2.62 M/s   0.00 % 98.50% fio --name=seq_read ...
+(Pressed q to exit)
+
+-bash-4.2$ ps aux | grep -E "\[.*\]" | grep -E "(kworker|ksoftirqd|migration)" | head -15
+root         10  0.0  0.0      0     0 ?        S    12:28   0:00 [migration/0]
+root         11  0.0  0.0      0     0 ?        S    12:28   0:00 [migration/1]
+root        109  0.0  0.0      0     0 ?        S    12:28   0:12 [ksoftirqd/0]
+root        110  0.0  0.0      0     0 ?        S    12:28   0:10 [ksoftirqd/1]
+root        154  0.0  0.0      0     0 ?        I    12:28   0:02 [kworker/0:1-events]
+root        162  0.0  0.0      0     0 ?        I    12:28   0:03 [kworker/1:1-events]
+
+
+------------------------------------------------------------
+Task 3.3 - System-Wide Performance Analysis
+------------------------------------------------------------
+
+-bash-4.2$ /tmp/system_monitor.sh > /tmp/performance_analysis.txt
+
+-bash-4.2$ cat /tmp/performance_analysis.txt
+=== System Performance Analysis ===
+Timestamp: Tue Feb 25 14:22:10 UTC 2026
+
+CPU Usage:
+Linux 5.14.0-4xx.el9.x86_64 (cloudvm)  02/25/2026  _x86_64_  (2 CPU)
+
+14:22:11     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+14:22:12     all    2.00    0.00    1.50    0.30    0.00    0.10    0.00    0.00    0.00   96.10
+14:22:13     all    1.50    0.00    1.20    0.10    0.00    0.10    0.00    0.00    0.00   97.10
+14:22:14     all    3.00    0.00    2.10    0.40    0.00    0.20    0.00    0.00    0.00   94.30
+14:22:15     all    1.20    0.00    1.00    0.10    0.00    0.10    0.00    0.00    0.00   97.60
+14:22:16     all    1.00    0.00    0.80    0.00    0.00    0.10    0.00    0.00    0.00   98.10
+
+Memory Usage:
+              total        used        free      shared  buff/cache   available
+Mem:          3.7Gi       410Mi       2.8Gi       6.0Mi       530Mi       3.1Gi
+Swap:            0B          0B          0B
+
+System Load:
+ 14:22:16 up  1:55,  1 user,  load average: 0.18, 0.20, 0.19
+
+Top Processes by CPU:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+centos      2140  3.2  0.2  89460  8500 ?        Ss   12:30   0:02 sshd: centos@pts/0
+root        109  0.7  0.0      0     0 ?        S    12:28   0:12 [ksoftirqd/0]
+centos      2161  0.6  0.1  12084  5120 pts/0    R+   14:22   0:00 ps aux --sort=-%cpu
+...
+
+Top Processes by Memory:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+centos      2140  0.3  0.2  89460  8500 ?        Ss   12:30   0:02 sshd: centos@pts/0
+centos      2102  0.0  0.1  20012  6200 pts/0    S+   14:22   0:00 bash
+...
+
+Network Connections:
+8
+Active network connections: 8
+
+Disk I/O Statistics:
+Linux 5.14.0-4xx.el9.x86_64 (cloudvm)     02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           1.40    0.00    0.90    0.10    0.00   97.60
+
+Device            r/s     rkB/s     w/s     wkB/s  r_await  w_await  aqu-sz  %util
+sda              0.20      6.40    0.10      3.20    1.80    1.10    0.00   0.08
+...
+
+System Interrupts:
+           CPU0       CPU1
+  0:         22          0   IO-APIC   2-edge      timer
+  1:          1          0   IO-APIC   1-edge      i8042
+  8:          0          1   IO-APIC   8-edge      rtc0
+  9:          0          0   IO-APIC   9-fasteoi   acpi
+ 24:       2210          0   PCI-MSI 512000-edge      virtio0-config
+ 34:      19220          0   PCI-MSI 327680-edge      virtio0-input.0
+
+-bash-4.2$ /tmp/compare_performance.sh
+=== Performance Comparison ===
+Comparing baseline vs optimized performance
+
+Network Buffer Sizes:
+Before: Default values
+After:
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+net.core.netdev_max_backlog = 5000
+
+Storage I/O Settings:
+Current I/O Scheduler: [mq-deadline] kyber bfq none
+Read-ahead: 512 KB
+Request Queue Depth: 128
+
+Virtual Memory Settings:
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 5
+vm.swappiness = 10
+
+
+------------------------------------------------------------
+Task 4.1 - Making Changes Persistent
+------------------------------------------------------------
+
+-bash-4.2$ sudo ls -l /etc/sysctl.d/99-performance-tuning.conf
+-rw-r--r-- 1 root root 480 Feb 25 14:30 /etc/sysctl.d/99-performance-tuning.conf
+
+-bash-4.2$ sudo systemctl daemon-reload
+
+-bash-4.2$ sudo systemctl enable storage-tuning.service
+Created symlink /etc/systemd/system/multi-user.target.wants/storage-tuning.service → /etc/systemd/system/storage-tuning.service.
+
+-bash-4.2$ sudo ls -l /usr/local/bin/network-tuning.sh
+-rwxr-xr-x 1 root root 420 Feb 25 14:35 /usr/local/bin/network-tuning.sh
+
+-bash-4.2$ sudo systemctl daemon-reload
+
+-bash-4.2$ sudo systemctl enable network-tuning.service
+Created symlink /etc/systemd/system/multi-user.target.wants/network-tuning.service → /etc/systemd/system/network-tuning.service.
+
+
+------------------------------------------------------------
+Task 4.2 - Validate Persistent Configuration
+------------------------------------------------------------
+
+-bash-4.2$ sudo sysctl -p /etc/sysctl.d/99-performance-tuning.conf
+net.core.rmem_default = 262144
+net.core.rmem_max = 16777216
+net.core.wmem_default = 262144
+net.core.wmem_max = 16777216
+net.core.netdev_max_backlog = 5000
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_congestion_control = bbr
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 5
+vm.dirty_expire_centisecs = 1500
+vm.dirty_writeback_centisecs = 500
+vm.swappiness = 10
+vm.vfs_cache_pressure = 50
+
+-bash-4.2$ sudo systemctl start storage-tuning.service
+
+-bash-4.2$ sudo systemctl start network-tuning.service
+
+-bash-4.2$ echo "=== Verifying sysctl parameters ==="
+=== Verifying sysctl parameters ===
+
+-bash-4.2$ sysctl net.core.rmem_max net.core.wmem_max vm.dirty_ratio vm.swappiness
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+vm.dirty_ratio = 10
+vm.swappiness = 10
+
+-bash-4.2$ echo "=== Verifying storage settings ==="
+=== Verifying storage settings ===
+
+-bash-4.2$ cat /sys/block/sda/queue/scheduler
+[mq-deadline] kyber bfq none
+
+-bash-4.2$ cat /sys/block/sda/queue/read_ahead_kb
+512
+
+-bash-4.2$ echo "=== Verifying network settings ==="
+=== Verifying network settings ===
+
+-bash-4.2$ ethtool -g eth0 2>/dev/null || echo "ethtool not available or interface not found"
+Ring parameters for eth0:
+Pre-set maximums:
+RX:             4096
+RX Mini:        0
+RX Jumbo:       0
+TX:             4096
+Current hardware settings:
+RX:             4096
+RX Mini:        0
+RX Jumbo:       0
+TX:             4096
+
+-bash-4.2$ /tmp/validate_tuning.sh
+=== Kernel Parameter Tuning Validation ===
+Timestamp: Tue Feb 25 14:41:07 UTC 2026
+
+Network Parameters:
+✓ net.core.rmem_max: 16777216 (Expected: 16777216)
+✓ net.core.wmem_max: 16777216 (Expected: 16777216)
+✓ net.core.netdev_max_backlog: 5000 (Expected: 5000)
+
+Virtual Memory Parameters:
+✓ vm.dirty_ratio: 10 (Expected: 10)
+✓ vm.swappiness: 10 (Expected: 10)
+
+Storage Settings:
+✓ I/O Scheduler: mq-deadline
+
+=== Validation Summary ===
+Passed: 6
+Failed: 0
+All kernel parameter tuning validated successfully!
+
+
+------------------------------------------------------------
+Troubleshooting Commands Used
+------------------------------------------------------------
+
+-bash-4.2$ lsmod | grep tcp_bbr
+tcp_bbr                20480  1
+
+-bash-4.2$ sudo modprobe tcp_bbr
+
+-bash-4.2$ echo 'tcp_bbr' | sudo tee -a /etc/modules-load.d/bbr.conf
+tcp_bbr
+
+-bash-4.2$ which ethtool || sudo yum install -y ethtool
+/usr/sbin/ethtool
+
+-bash-4.2$ ip link show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9001 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 0a:3b:12:cd:44:9f brd ff:ff:ff:ff:ff:ff
+
+-bash-4.2$ cat /sys/block/sda/queue/scheduler
+[mq-deadline] kyber bfq none
+
+-bash-4.2$ ls /sys/block/nvme*/queue/scheduler
+ls: cannot access '/sys/block/nvme*/queue/scheduler': No such file or directory
+
+-bash-4.2$ sudo -i
+[root@cloudvm ~]#
+
+[root@cloudvm ~]# ls -la /sys/block/sda/queue/
+total 0
+drwxr-xr-x  2 root root 0 Feb 25 12:28 .
+drwxr-xr-x 15 root root 0 Feb 25 12:28 ..
+-rw-r--r--  1 root root 4096 Feb 25 12:28 add_random
+-rw-r--r--  1 root root 4096 Feb 25 12:28 read_ahead_kb
+-rw-r--r--  1 root root 4096 Feb 25 12:28 nr_requests
+-r--r--r--  1 root root 4096 Feb 25 12:28 scheduler
+drwxr-xr-x  2 root root 0 Feb 25 12:28 iosched
+...
+
+[root@cloudvm ~]# exit
+-bash-4.2$
+
+============================================================
+End of Output - Lab 16
+============================================================
