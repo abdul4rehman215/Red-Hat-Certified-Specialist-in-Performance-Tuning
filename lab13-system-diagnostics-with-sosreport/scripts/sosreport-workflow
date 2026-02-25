@@ -1,0 +1,22 @@
+#!/bin/bash
+WORK_DIR="/tmp/sosreport-analysis"
+mkdir -p "$WORK_DIR"
+
+echo "Starting sosreport analysis workflow..."
+
+# Generate report
+echo "1. Generating sosreport..."
+sudo sosreport --batch --tmp-dir="$WORK_DIR"
+
+# Extract latest report
+echo "2. Extracting report..."
+cd "$WORK_DIR"
+LATEST=$(ls -t sosreport-*.tar.xz | head -1)
+tar -xf "$LATEST"
+
+# Analyze report
+echo "3. Analyzing report..."
+EXTRACTED_DIR=$(basename "$LATEST" .tar.xz)
+/usr/local/bin/sosreport-analyzer "$WORK_DIR/$EXTRACTED_DIR"
+
+echo "4. Workflow complete. Files in $WORK_DIR"
