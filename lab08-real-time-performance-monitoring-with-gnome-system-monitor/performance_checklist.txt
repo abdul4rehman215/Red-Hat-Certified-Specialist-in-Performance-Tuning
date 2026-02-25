@@ -1,0 +1,38 @@
+PERFORMANCE ANALYSIS CHECKLIST (Real-time Monitoring)
+
+A) Baseline (Before Stress)
+- [ ] Record uptime + load average (uptime)
+- [ ] Capture CPU baseline (top -bn1)
+- [ ] Capture memory baseline (free -h)
+- [ ] Capture disk baseline (df -h)
+- [ ] Identify top CPU processes (ps aux --sort=-%cpu | head)
+- [ ] Identify top memory processes (ps aux --sort=-%mem | head)
+
+B) CPU Monitoring
+- [ ] Observe CPU utilization trend (Resources/CPU graph)
+- [ ] Confirm per-process CPU usage in Processes tab (sort by %CPU)
+- [ ] Capture CPU-heavy PIDs and command lines (ps -eo pid,cmd,%cpu --sort=-%cpu | head)
+- [ ] Note unusual spikes, sustained >80%, or high system time
+
+C) Memory Monitoring
+- [ ] Observe memory trend (Resources/Memory graph)
+- [ ] Validate available vs cached memory behavior (free -m)
+- [ ] Check swap usage (free -h / sar -S if available)
+- [ ] Identify top memory consumers and check growth over time
+- [ ] If suspected leak: track RSS growth for a PID (ps -p PID -o rss,cmd)
+
+D) Disk / I/O Monitoring
+- [ ] Review disk usage (df -h)
+- [ ] If I/O stress is used: check for wait or responsiveness issues
+- [ ] Identify processes doing heavy writes/reads (iotop if installed; otherwise ps + logs)
+
+E) Actions / Response
+- [ ] Adjust priority of non-critical CPU hogs (renice)
+- [ ] Stop stress or runaway processes (kill, pkill)
+- [ ] Clean up temp files created during testing (/tmp)
+- [ ] Generate performance_report.sh output for documentation
+
+F) Documentation
+- [ ] Save outputs: cpu_usage_log.txt, memory_usage_log.txt, performance_report_*.txt
+- [ ] Save any monitoring_logs and trend_summary.txt
+- [ ] Summarize: What happened? Which process? What was the fix/recommendation?
