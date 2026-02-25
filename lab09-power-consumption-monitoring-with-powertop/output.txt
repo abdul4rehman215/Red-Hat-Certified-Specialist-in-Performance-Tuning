@@ -1,0 +1,381 @@
+Lab 09 - Power Consumption Monitoring with powertop
+Execution Output Log
+====================================================
+
+Task 1: Installing and Configuring powertop
+--------------------------------------------
+
+# sudo dnf update -y
+Last metadata expiration check: 0:12:41 ago on Sun 25 Feb 2026 09:18:14 AM UTC.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+# sudo dnf install -y powertop kernel-tools
+Last metadata expiration check: 0:13:05 ago on Sun 25 Feb 2026 09:18:14 AM UTC.
+Dependencies resolved.
+================================================================================
+ Package                 Architecture  Version                 Repository  Size
+================================================================================
+Installing:
+ kernel-tools            x86_64        4.18.0-513.el8_9         baseos     7.3 M
+ powertop                x86_64        2.10-12.el8              epel       328 k
+Installing dependencies:
+ kernel-tools-libs       x86_64        4.18.0-513.el8_9         baseos     7.0 M
+
+Transaction Summary
+================================================================================
+Install  3 Packages
+
+Total download size: 14 M
+Installed size: 43 M
+Downloading Packages:
+(1/3): powertop-2.10-12.el8.x86_64.rpm            2.0 MB/s | 328 kB  00:00
+(2/3): kernel-tools-libs-4.18.0-513.el8_9.x86_64  4.1 MB/s | 7.0 MB  00:01
+(3/3): kernel-tools-4.18.0-513.el8_9.x86_64.rpm   6.4 MB/s | 7.3 MB  00:01
+--------------------------------------------------------------------------------
+Total                                            8.1 MB/s |  14 MB  00:01
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                        1/1
+  Installing       : kernel-tools-libs-4.18.0-513.el8_9.x86_64              1/3
+  Installing       : kernel-tools-4.18.0-513.el8_9.x86_64                   2/3
+  Installing       : powertop-2.10-12.el8.x86_64                            3/3
+  Verifying        : powertop-2.10-12.el8.x86_64                            1/3
+  Verifying        : kernel-tools-4.18.0-513.el8_9.x86_64                   2/3
+  Verifying        : kernel-tools-libs-4.18.0-513.el8_9.x86_64              3/3
+
+Installed:
+  kernel-tools-4.18.0-513.el8_9.x86_64
+  kernel-tools-libs-4.18.0-513.el8_9.x86_64
+  powertop-2.10-12.el8.x86_64
+
+Complete!
+
+# powertop --version
+PowerTOP version 2.10
+
+
+Task 1.2: Initial System Preparation
+------------------------------------
+
+# cat /sys/class/power_supply/BAT*/status 2>/dev/null || echo "AC Power detected"
+AC Power detected
+
+# sudo modprobe msr
+# (no output)
+
+# ls /sys/class/power_supply/
+ACAD
+
+# cat /sys/class/power_supply/ACAD/online
+1
+
+
+Task 1.3: First powertop Execution
+----------------------------------
+
+# sudo powertop --calibrate
+modprobe cpufreq_stats succeeded
+Loaded 10 prior measurements
+RAPL device for cpu 0 found
+Calibration will take time. Use the system as little as possible while calibrating.
+
+Performing calibration:  1% ... 12% ... 25% ... 38% ... 52% ... 67% ... 81% ... 93% ... 100%
+
+Calibration finished. You can now run powertop normally.
+
+# sudo powertop
+PowerTOP 2.10      Overview   Idle stats   Frequency stats   Device stats   Tunables
+
+The battery reports a discharge rate of  10.2 W
+The system baseline power is estimated at  7.8 W
+PowerTOP is in calibration mode. (press 'q' to quit)
+
+# echo "Exited powertop interactive mode (q)."
+Exited powertop interactive mode (q).
+
+# sudo powertop
+PowerTOP 2.10      Overview   Idle stats   Frequency stats   Device stats   Tunables
+Tab Overview:
+1. Overview Tab: Shows overall power consumption and top power consumers
+2. Idle Stats Tab: Displays CPU idle state statistics
+3. Frequency Stats Tab: Shows CPU frequency usage patterns
+4. Device Stats Tab: Lists device-specific power consumption
+5. Tunables Tab: Shows available power optimization settings
+
+
+Task 2: Analyzing Power Consumption Patterns
+--------------------------------------------
+
+Task 2.2: Generate Detailed Power Report
+----------------------------------------
+
+# sudo powertop --html=power_report.html --time=60
+PowerTOP outputing using base directory: /home/centos
+Writing PowerTOP report to power_report.html
+Collecting 60 seconds of data...
+Report generated: power_report.html
+
+# sudo powertop --csv=power_data.csv --time=30
+PowerTOP outputing using base directory: /home/centos
+Writing PowerTOP report to power_data.csv
+Collecting 30 seconds of data...
+Report generated: power_data.csv
+
+# ls -la power_report.html power_data.csv
+-rw-r--r-- 1 root   root   184322 Feb 25 09:32 power_report.html
+-rw-r--r-- 1 root   root    26318 Feb 25 09:33 power_data.csv
+
+
+Task 2.3: Analyze Top Power Consumers
+-------------------------------------
+
+# ./analyze_power.sh
+=== Power Consumption Analysis ===
+Date: Sun Feb 25 09:35:18 UTC 2026
+
+System running on AC power
+
+=== Top CPU Consuming Processes ===
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root      1421  0.7  0.6  91672 12040 ?        Ss   09:11   0:02 /usr/bin/python3 /usr/bin/amazon-ssm-agent
+centos    2028  0.3  0.4  13288  8420 pts/0    Ss   09:34   0:00 -bash
+root       915  0.2  0.5  95860 13100 ?        Ss   09:11   0:01 /usr/lib/systemd/systemd-journald
+root      1058  0.1  0.3  38144  7200 ?        Ss   09:11   0:01 /usr/sbin/sshd -D
+...
+
+=== Current CPU Frequency ===
+cpu MHz         : 2494.000
+cpu MHz         : 2494.000
+cpu MHz         : 2494.000
+cpu MHz         : 2494.000
+
+=== Active Network Interfaces ===
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 9001 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+
+=== Disk Activity ===
+Device            r/s     w/s   rkB/s   wkB/s  avgrq-sz avgqu-sz   await  r_await  w_await  svctm  %util
+nvme0n1          0.00    0.50    0.00    6.40     25.6     0.00    2.00     0.00     2.00   0.80   0.04
+
+
+Task 3: Implementing Power Optimization Strategies
+--------------------------------------------------
+
+Task 3.1: Apply Automatic Optimizations
+---------------------------------------
+
+# sudo powertop --auto-tune
+modprobe cpufreq_stats succeeded
+Applying power save tunables...
+Leaving power save mode for USB device: xhci_hcd
+Tuning complete.
+
+# sudo ./power_optimize.sh
+Applying power optimizations...
+powersave
+powersave
+powersave
+powersave
+5
+Power optimizations applied successfully!
+
+
+Task 3.2: Configure Persistent Power Settings
+---------------------------------------------
+
+# sudo systemctl status power-optimize.service
+● power-optimize.service - Power Optimization Service
+   Loaded: loaded (/etc/systemd/system/power-optimize.service; enabled; vendor preset: disabled)
+   Active: active (exited) since Sun 2026-02-25 09:42:51 UTC; 3s ago
+  Process: 2874 ExecStart=/usr/local/bin/power-optimize.sh (code=exited, status=0/SUCCESS)
+ Main PID: 2874 (code=exited, status=0/SUCCESS)
+
+Feb 25 09:42:51 ip-10-0-2-41 systemd[1]: Starting Power Optimization Service...
+Feb 25 09:42:51 ip-10-0-2-41 systemd[1]: Finished Power Optimization Service.
+
+
+Task 3.3: Advanced CPU Power Management
+---------------------------------------
+
+# sudo ./cpu_power_mgmt.sh
+=== CPU Power Management Configuration ===
+Available CPU governors:
+performance powersave
+
+powersave
+powersave
+powersave
+powersave
+CPU power management configured successfully!
+
+
+Task 4: Monitoring and Measuring Power Improvements
+---------------------------------------------------
+
+Task 4.1: Power Monitoring Dashboard
+------------------------------------
+
+# timeout 6s ./power_dashboard.sh
+======================================
+ POWER CONSUMPTION DASHBOARD
+======================================
+Time: Sun Feb 25 09:49:10 UTC 2026
+
+Battery: Not available (AC Power)
+CPU Frequency: 2494.000 MHz
+Power Consumption: Calculating...
+
+Top 5 CPU consumers:
+amazon-ssm-agent       0.7%
+-bash                  0.3%
+systemd-journald       0.2%
+sshd                   0.1%
+rsyslogd               0.0%
+
+Press Ctrl+C to exit
+======================================
+
+
+Task 4.2: Benchmark Power Consumption
+-------------------------------------
+
+# ./power_benchmark.sh
+=== Power Consumption Benchmark ===
+Starting baseline measurement...
+Running baseline test for 30 seconds...
+baseline test completed
+Starting stress test...
+Running stress test for 30 seconds...
+stress: info: [3128] dispatching hogs: 2 cpu, 0 io, 0 vm, 0 hdd
+stress test completed
+
+=== Benchmark Results ===
+Baseline power data saved to: /tmp/power_benchmark/baseline_power.csv
+Stress test power data saved to: /tmp/power_benchmark/stress_power.csv
+
+Analysis complete. Check CSV files for detailed power consumption data.
+
+# ls -la /tmp/power_benchmark | head
+total 64
+drwxr-xr-x 2 centos centos 4096 Feb 25 09:52 .
+drwxrwxrwt 9 root   root   4096 Feb 25 09:52 ..
+-rw-r--r-- 1 centos centos  940 Feb 25 09:52 baseline_load.csv
+-rw-r--r-- 1 root   root   7320 Feb 25 09:52 baseline_power.csv
+-rw-r--r-- 1 centos centos  941 Feb 25 09:52 stress_load.csv
+-rw-r--r-- 1 root   root   7412 Feb 25 09:52 stress_power.csv
+
+
+Task 4.3: Create Power Optimization Report
+------------------------------------------
+
+# ./generate_power_report.sh
+Report generated: power_optimization_report.txt
+=== POWER OPTIMIZATION REPORT ===
+Generated on: Sun Feb 25 09:55:03 UTC 2026
+
+=== SYSTEM INFORMATION ===
+Hostname: ip-10-0-2-41
+Kernel: 4.18.0-513.el8_9.x86_64
+CPU: Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+
+=== POWER SUPPLY STATUS ===
+ACAD (Mains):
+ Status: Unknown
+
+=== CPU GOVERNOR SETTINGS ===
+cpu0: powersave
+cpu1: powersave
+cpu2: powersave
+cpu3: powersave
+
+=== POWER MANAGEMENT FEATURES ===
+Laptop Mode: 5
+USB Autosuspend Status:
+
+=== NETWORK POWER MANAGEMENT ===
+eth0: auto
+
+=== OPTIMIZATION RECOMMENDATIONS ===
+1. Ensure powersave governor is active during battery operation
+2. Enable laptop mode for better disk power management
+3. Configure USB autosuspend for unused devices
+4. Use powertop regularly to monitor power consumption
+5. Consider disabling unused hardware components
+
+
+Task 5: Advanced Power Tuning Techniques
+----------------------------------------
+
+Task 5.1: Configure TLP for Advanced Power Management
+-----------------------------------------------------
+
+# sudo dnf install -y tlp tlp-rdw
+Dependencies resolved.
+================================================================================
+ Package         Architecture    Version              Repository         Size
+================================================================================
+Installing:
+ tlp             noarch          1.5.0-1.el8          epel              241 k
+ tlp-rdw         noarch          1.5.0-1.el8          epel               38 k
+Transaction Summary
+================================================================================
+Install  2 Packages
+Complete!
+
+# sudo systemctl enable tlp.service
+# sudo systemctl start tlp.service
+Created symlink /etc/systemd/system/multi-user.target.wants/tlp.service → /usr/lib/systemd/system/tlp.service.
+
+# sudo tlp start
+Applying power save settings... done.
+
+# sudo tlp-stat -s
+--- TLP system information
+State:          enabled
+RDW state:      enabled
+Last run:       09:59:21  (manual)
+Mode:           AC
+Power source:   AC
+
+
+Task 5.2: Create Custom Power Profiles
+--------------------------------------
+
+# echo "Testing power profiles..."
+Testing power profiles...
+
+# sudo /usr/local/bin/power_profiles.sh list
+Available profiles:
+performance
+balanced
+powersave
+
+# sudo /usr/local/bin/power_profiles.sh balanced
+Switching to balanced profile...
+Profile balanced applied successfully!
+
+
+Task 5.3: Implement Automated Power Management
+-----------------------------------------------
+
+# sudo systemctl enable auto-power-mgmt.service
+Created symlink /etc/systemd/system/multi-user.target.wants/auto-power-mgmt.service → /etc/systemd/system/auto-power-mgmt.service.
+
+# sudo systemctl status auto-power-mgmt.service | head -20
+● auto-power-mgmt.service - Automated Power Management Service
+   Loaded: loaded (/etc/systemd/system/auto-power-mgmt.service; enabled; vendor preset: disabled)
+   Active: active (running) since Sun 2026-02-25 10:06:12 UTC; 4s ago
+ Main PID: 4112 (auto_power_mgm)
+    Tasks: 2 (limit: 2355)
+   Memory: 2.1M
+   CGroup: /system.slice/auto-power-mgmt.service
+           └─4112 /bin/bash /usr/local/bin/auto_power_mgmt.sh
+
+
+====================================================
+End of Lab 09 Output Log
+====================================================
