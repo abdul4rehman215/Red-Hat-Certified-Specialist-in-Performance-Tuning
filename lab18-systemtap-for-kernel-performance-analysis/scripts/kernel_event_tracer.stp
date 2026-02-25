@@ -1,0 +1,90 @@
+#!/usr/bin/env stap
+global kernel_events, interrupt_stats, lock_contention
+global memory_events, network_events
+# Track kernel function calls
+probe kernel.function("do_fork") {
+ kernel_events["process_creation"]++
+ printf("PROCESS_CREATION: %s (pid=%d) forking\n", execname(), pid())
+}
+probe kernel.function("do_exit") {
+ kernel_events["process_exit"]++
+ printf("PROCESS_EXIT: %s (pid=%d) exiting with code %d\n",
+ execname(), pid(), $code)
+}
+# Track interrupt handling
+probe kernel.function("handle_irq_event") {
+ interrupt_stats[irq]++
+ if (irq == 0) { # Timer interrupt
+ kernel_events["timer_interrupt"]++
+ }
+}
+# Track memory management events
+probe kernel.function("__alloc_pages_nodemask") {
+ memory_events["page_allocation"]++
+ if ($gfp_mask & 0x10) { # GFP_ATOMIC
+ printf("ATOMIC_ALLOCATION: %s requesting %d pages\n",
+ execname(), 1 << $order)
+ }
+}
+probe kernel.function("free_pages") {
+ memory_events["page_free"]++
+}
+# Track network events
+probe kernel.function("netif_rx") {
+ network_events["packet_receive"]++
+}
+probe kernel.function("dev_queue_xmit") {
+ network_events["packet_transmit"]++
+}
+# Track lock contention (simplified)
+probe kernel.function("_raw_spin_lock") {
+ lock_contention["spin_lock"]++
+}
+probe kernel.function("mutex_lock") {
+ lock_contention["mutex_lock"]++
+}
+# Print kernel event statistics
+probe timer.s(20) {
+ printf("\n=== Kernel Event Analysis ===\n")
+ printf("Timestamp: %s\n", ctime(gettimeofday_s()))
+
+ printf("\nKernel Events:\n")
+ foreach (event in kernel_events) {
+ printf(" %s: %d\n", event, kernel_events[event])
+ }
+
+ printf("\nInterrupt Statistics:\n")
+ foreach (irq in interrupt_stats- limit 10) {
+ printf(" IRQ %d: %d interrupts\n", irq, interrupt_stats[irq])
+ }
+
+ printf("\nMemory Events:\n")
+ foreach (event in memory_events) {
+ printf(" %s: %d\n", event, memory_events[event])
+ }
+
+ printf("\nNetwork Events:\n")
+ foreach (event in network_events) {
+ printf(" %s: %d\n", event, network_events[event])
+ }
+
+ printf("\nLock Contention:\n")
+ foreach (lock in lock_contention) {
+ if (lock_contention[lock] > 1000) {
+ printf(" WARNING: High contention on %s: %d\n",
+ lock, lock_contention[lock])
+ } else {
+ printf(" %s: %d\n", lock, lock_contention[lock])
+ }
+ }
+
+ # Reset counters
+ delete kernel_events
+ delete interrupt_stats
+ delete memory_events
+ delete network_events
+ delete lock_contention
+}
+probe end {
+ printf("\nKernel event tracing completed\n")
+}
