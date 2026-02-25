@@ -1,0 +1,25 @@
+#!/bin/bash
+echo "Performance Comparison Report"
+echo "============================="
+echo "Generated: $(date)"
+echo
+echo "Modified Kernel Parameters:"
+echo "---------------------------"
+echo "Virtual Memory:"
+echo " vm.swappiness = $(sysctl -n vm.swappiness) (default: 60)"
+echo " vm.dirty_ratio = $(sysctl -n vm.dirty_ratio) (default: 20)"
+echo " vm.dirty_background_ratio = $(sysctl -n vm.dirty_background_ratio) (default: 10)"
+echo " vm.vfs_cache_pressure = $(sysctl -n vm.vfs_cache_pressure) (default: 100)"
+echo
+echo "Network Parameters:"
+echo " net.ipv4.tcp_congestion_control = $(sysctl -n net.ipv4.tcp_congestion_control)"
+echo " net.core.somaxconn = $(sysctl -n net.core.somaxconn) (default: 128)"
+echo " net.core.rmem_max = $(sysctl -n net.core.rmem_max)"
+echo " net.core.wmem_max = $(sysctl -n net.core.wmem_max)"
+echo
+echo "Current System Status:"
+echo "---------------------"
+echo "Load Average: $(uptime | awk -F'load average:' '{print $2}')"
+echo "Memory Usage: $(free | awk 'NR==2{printf "%.1f%%", $3*100/$2}')"
+echo "Swap Usage: $(free | awk 'NR==3{printf "%.1f%%", $3*100/$2}')"
+echo "Active Connections: $(ss -tuln | wc -l)"
