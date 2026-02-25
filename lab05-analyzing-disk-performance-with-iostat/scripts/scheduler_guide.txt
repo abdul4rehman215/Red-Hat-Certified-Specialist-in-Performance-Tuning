@@ -1,0 +1,24 @@
+I/O SCHEDULER COMPARISON GUIDE
+==============================
+1. mq-deadline (Multi-Queue Deadline):
+ - Best for: General purpose, mixed workloads
+ - Characteristics: Good balance of throughput and latency
+ - Use case: Default choice for most scenarios
+2. kyber:
+ - Best for: Latency-sensitive applications
+ - Characteristics: Focuses on response time consistency
+ - Use case: Interactive workloads, databases
+3. bfq (Budget Fair Queueing):
+ - Best for: Desktop systems, interactive workloads
+ - Characteristics: Provides fairness between processes
+ - Use case: Multi-user systems, mixed workloads
+4. none:
+ - Best for: High-performance SSDs, NVMe drives
+ - Characteristics: No scheduling overhead
+ - Use case: Fast storage with hardware queuing
+SELECTION CRITERIA:
+- Rotational drives: mq-deadline or bfq
+- SSDs: mq-deadline, kyber, or none
+- Database servers: kyber or mq-deadline
+- File servers: mq-deadline or bfq
+- High IOPS applications: none or kyber
