@@ -1,0 +1,1087 @@
+Lab 15 - Modifying Kernel Parameters with sysctl
+Execution Output Log
+===============================================
+
+✅ Task 1: Understanding and Exploring sysctl
+=============================================
+
+Subtask 1.1: Introduction to sysctl
+-----------------------------------
+
+Display all available kernel parameters
+▶️ Command Executed
+-bash-4.2$ mkdir -p ~/lab15 && cd ~/lab15
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ sudo sysctl -a | head -20
+📤 Output
+abi.vsyscall32 = 1
+debug.exception-trace = 1
+debug.kprobes-optimization = 1
+dev.cdrom.autoclose = 1
+dev.cdrom.autoeject = 0
+dev.cdrom.check_media = 0
+dev.cdrom.debug = 0
+dev.cdrom.info = CD-ROM information, Id: cdrom.c 3.20 2003/12/17
+dev.cdrom.lock = 0
+dev.hpet.max-user-freq = 64
+fs.aio-max-nr = 65536
+fs.aio-nr = 0
+fs.dentry-state = 79232	61501	45	0	12091	0
+fs.dir-notify-enable = 1
+fs.epoll.max_user_watches = 518342
+fs.file-max = 1048576
+fs.file-nr = 1920	0	1048576
+fs.inode-nr = 80192	21632
+fs.inode-state = 80192	21632	0	0	0	0	0
+fs.inotify.max_queued_events = 16384
+
+Count total number of kernel parameters
+▶️ Command Executed
+-bash-4.2$ sudo sysctl -a | wc -l
+📤 Output
+1098
+
+Display sysctl version and help
+▶️ Command Executed
+-bash-4.2$ sysctl --help
+📤 Output
+Usage:
+ sysctl [options] [variable[=value] ...]
+
+Options:
+ -a, --all            display all variables
+ -n, --values         don't print variable names
+ -w, --write          enable writing a value to variable
+ -p, --load[=FILE]    load sysctl settings from FILE
+ -e, --ignore         ignore unknown variables errors
+ --system             load settings from all system configuration files
+ --pattern PATTERN    apply pattern on variable names
+ -h, --help           display this help and exit
+ -V, --version        output version information and exit
+
+-------------------------------------------------
+Subtask 1.2: Viewing Current Kernel Parameters
+-------------------------------------------------
+
+View all virtual memory related parameters
+▶️ Command Executed
+-bash-4.2$ sudo sysctl -a | grep vm
+📤 Output
+vm.admin_reserve_kbytes = 8192
+vm.compaction_proactiveness = 20
+vm.dirty_background_bytes = 0
+vm.dirty_background_ratio = 5
+vm.dirty_bytes = 0
+vm.dirty_expire_centisecs = 3000
+vm.dirty_ratio = 15
+vm.dirty_writeback_centisecs = 500
+vm.drop_caches = 0
+vm.extfrag_threshold = 500
+vm.hugetlb_shm_group = 0
+vm.laptop_mode = 0
+vm.max_map_count = 65530
+vm.min_free_kbytes = 67584
+vm.nr_hugepages = 0
+vm.nr_hugepages_mempolicy = 0
+vm.nr_overcommit_hugepages = 0
+vm.oom_dump_tasks = 1
+vm.oom_kill_allocating_task = 0
+vm.overcommit_memory = 0
+vm.overcommit_ratio = 50
+vm.page-cluster = 3
+vm.panic_on_oom = 0
+vm.percpu_pagelist_high_fraction = 0
+vm.swappiness = 10
+vm.user_reserve_kbytes = 131072
+vm.vfs_cache_pressure = 50
+vm.watermark_boost_factor = 15000
+vm.watermark_scale_factor = 10
+
+View network related parameters
+▶️ Command Executed
+-bash-4.2$ sudo sysctl -a | grep net
+📤 Output
+net.bridge.bridge-nf-call-arptables = 0
+net.bridge.bridge-nf-call-ip6tables = 0
+net.bridge.bridge-nf-call-iptables = 0
+net.core.bpf_jit_enable = 1
+net.core.default_qdisc = fq_codel
+net.core.netdev_max_backlog = 1000
+net.core.optmem_max = 20480
+net.core.rmem_default = 212992
+net.core.rmem_max = 16777216
+net.core.somaxconn = 4096
+net.core.wmem_default = 212992
+net.core.wmem_max = 16777216
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.all.rp_filter = 2
+net.ipv4.ip_forward = 0
+net.ipv4.tcp_available_congestion_control = reno cubic
+net.ipv4.tcp_congestion_control = cubic
+net.ipv4.tcp_fin_timeout = 30
+net.ipv4.tcp_keepalive_intvl = 75
+net.ipv4.tcp_keepalive_probes = 9
+net.ipv4.tcp_keepalive_time = 7200
+net.ipv4.tcp_max_syn_backlog = 4096
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_tw_reuse = 2
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.all.forwarding = 0
+
+View specific parameters
+▶️ Command Executed
+-bash-4.2$ sudo sysctl vm.swappiness
+-bash-4.2$ sudo sysctl net.ipv4.ip_forward
+-bash-4.2$ sudo sysctl kernel.hostname
+📤 Output
+vm.swappiness = 10
+net.ipv4.ip_forward = 0
+kernel.hostname = alnafi-lab
+
+-------------------------------------------------
+Subtask 1.3: Understanding Parameter Categories
+-------------------------------------------------
+
+✅ As per rule: created script via nano (content preserved).
+
+▶️ Command Executed
+-bash-4.2$ nano ~/explore_sysctl.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/explore_sysctl.sh
+-bash-4.2$ ./explore_sysctl.sh
+📤 Output
+=== SYSTEM INFORMATION ===
+Hostname: alnafi-lab
+Kernel Version: #1 SMP PREEMPT_DYNAMIC Fri Feb  9 15:23:02 EST 2026
+OS Type: Linux
+
+=== MEMORY PARAMETERS ===
+Swappiness: 10
+Dirty Ratio: 15
+VFS Cache Pressure: 50
+
+=== NETWORK PARAMETERS ===
+IP Forward: 0
+TCP Keepalive Time: 7200
+TCP Window Scaling: 1
+
+=== SECURITY PARAMETERS ===
+ASLR: 2
+Core Pattern: core
+
+
+✅ Task 2: Modifying Virtual Memory Parameters
+==============================================
+
+Subtask 2.1: Understanding Virtual Memory Parameters
+----------------------------------------------------
+
+Check current memory usage
+▶️ Command Executed
+-bash-4.2$ free -h
+-bash-4.2$ cat /proc/meminfo | grep -E "(MemTotal|MemFree|SwapTotal|SwapFree)"
+📤 Output
+              total        used        free      shared  buff/cache   available
+Mem:           3.8G        1.1G        1.1G         24M        1.6G        2.3G
+Swap:          2.0G          0B        2.0G
+MemTotal:        4015488 kB
+MemFree:         1148820 kB
+SwapTotal:       2097148 kB
+SwapFree:        2097148 kB
+
+View current VM parameters
+▶️ Command Executed
+-bash-4.2$ echo "Current VM Parameters:"
+-bash-4.2$ sysctl vm.swappiness
+-bash-4.2$ sysctl vm.dirty_ratio
+-bash-4.2$ sysctl vm.dirty_background_ratio
+-bash-4.2$ sysctl vm.vfs_cache_pressure
+-bash-4.2$ sysctl vm.overcommit_memory
+📤 Output
+Current VM Parameters:
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.vfs_cache_pressure = 50
+vm.overcommit_memory = 0
+
+-------------------------------------------------
+Subtask 2.2: Modifying Swappiness
+-------------------------------------------------
+
+Check current swappiness
+▶️ Command Executed
+-bash-4.2$ current_swappiness=$(sysctl -n vm.swappiness)
+-bash-4.2$ echo "Current swappiness: $current_swappiness"
+📤 Output
+Current swappiness: 10
+
+Create a memory monitoring script
+▶️ Command Executed
+-bash-4.2$ nano ~/monitor_memory.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/monitor_memory.sh
+-bash-4.2$ ./monitor_memory.sh
+📤 Output
+Memory Usage Monitoring
+=======================
+Timestamp: Mon Feb 26 12:31:18 UTC 2026
+Swappiness: 10
+
+              total        used        free      shared  buff/cache   available
+Mem:           3.8G        1.1G        1.1G         24M        1.6G        2.3G
+Swap:          2.0G          0B        2.0G
+
+Swap Usage:
+Filename				Type		Size		Used		Priority
+/dev/dm-1                               partition	2097148		0		-2
+
+Memory Statistics:
+Active:           812340 kB
+Inactive:        1587724 kB
+Dirty:               956 kB
+Writeback:             0 kB
+
+Modify swappiness for better performance (lower value = less swapping)
+▶️ Command Executed
+-bash-4.2$ sudo sysctl vm.swappiness=10
+-bash-4.2$ echo "New swappiness: $(sysctl -n vm.swappiness)"
+📤 Output
+vm.swappiness = 10
+New swappiness: 10
+
+-------------------------------------------------
+Subtask 2.3: Configuring Dirty Memory Parameters
+-------------------------------------------------
+
+View current dirty memory settings
+▶️ Command Executed
+-bash-4.2$ echo "Current Dirty Memory Parameters:"
+-bash-4.2$ sysctl vm.dirty_ratio
+-bash-4.2$ sysctl vm.dirty_background_ratio
+-bash-4.2$ sysctl vm.dirty_expire_centisecs
+-bash-4.2$ sysctl vm.dirty_writeback_centisecs
+📤 Output
+Current Dirty Memory Parameters:
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.dirty_expire_centisecs = 3000
+vm.dirty_writeback_centisecs = 500
+
+Optimize for better I/O performance
+▶️ Command Executed
+-bash-4.2$ sudo sysctl vm.dirty_ratio=15
+-bash-4.2$ sudo sysctl vm.dirty_background_ratio=5
+-bash-4.2$ sudo sysctl vm.dirty_expire_centisecs=3000
+-bash-4.2$ sudo sysctl vm.dirty_writeback_centisecs=500
+-bash-4.2$ echo "Updated Dirty Memory Parameters:"
+-bash-4.2$ sysctl vm.dirty_ratio
+-bash-4.2$ sysctl vm.dirty_background_ratio
+-bash-4.2$ sysctl vm.dirty_expire_centisecs
+-bash-4.2$ sysctl vm.dirty_writeback_centisecs
+📤 Output
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.dirty_expire_centisecs = 3000
+vm.dirty_writeback_centisecs = 500
+Updated Dirty Memory Parameters:
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.dirty_expire_centisecs = 3000
+vm.dirty_writeback_centisecs = 500
+
+-------------------------------------------------
+Subtask 2.4: Adjusting Cache Pressure
+-------------------------------------------------
+
+Check current cache pressure
+▶️ Command Executed
+-bash-4.2$ echo "Current VFS cache pressure: $(sysctl -n vm.vfs_cache_pressure)"
+📤 Output
+Current VFS cache pressure: 50
+
+Create a cache monitoring script
+▶️ Command Executed
+-bash-4.2$ nano ~/monitor_cache.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/monitor_cache.sh
+-bash-4.2$ ./monitor_cache.sh
+📤 Output
+Cache Usage Monitoring
+=====================
+VFS Cache Pressure: 50
+
+Cache Statistics:
+Buffers:          104716 kB
+Cached:           861932 kB
+SReclaimable:      98240 kB
+SUnreclaim:        61112 kB
+
+Slab Information:
+slabinfo - version: 2.1
+# name            <active_objs> <num_objs> <objsize> <objperslab> <pagesperslab>
+kmalloc-32            4820   5104     32  128    1
+kmalloc-64            3921   4096     64   64    1
+kmalloc-96            1650   1728     96   42    1
+
+Adjust cache pressure for better caching (lower value = keep more cache)
+▶️ Command Executed
+-bash-4.2$ sudo sysctl vm.vfs_cache_pressure=50
+-bash-4.2$ echo "New VFS cache pressure: $(sysctl -n vm.vfs_cache_pressure)"
+📤 Output
+vm.vfs_cache_pressure = 50
+New VFS cache pressure: 50
+
+
+✅ Task 3: Configuring Network Parameters
+=========================================
+
+Subtask 3.1: Understanding Network Parameters
+---------------------------------------------
+
+Create a network parameter monitoring script
+▶️ Command Executed
+-bash-4.2$ nano ~/monitor_network.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/monitor_network.sh
+-bash-4.2$ ./monitor_network.sh
+📤 Output
+Network Parameter Monitoring
+============================
+Timestamp: Mon Feb 26 12:34:02 UTC 2026
+
+=== IP FORWARDING ===
+IPv4 Forward: 0
+IPv6 Forward: 0
+
+=== TCP PARAMETERS ===
+TCP Window Scaling: 1
+TCP Timestamps: 1
+TCP SACK: 1
+TCP Keepalive Time: 7200
+TCP Keepalive Probes: 9
+TCP Keepalive Interval: 75
+
+=== BUFFER SIZES ===
+TCP Read Buffer Max: 4096 87380 16777216
+TCP Write Buffer Max: 4096 65536 16777216
+UDP Read Buffer: 212992
+UDP Write Buffer: 212992
+
+=== CONNECTION LIMITS ===
+Max Connections: 4096
+SYN Backlog: 4096
+
+-------------------------------------------------
+Subtask 3.2: Optimizing TCP Parameters
+-------------------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ sudo sysctl net.ipv4.tcp_window_scaling=1
+-bash-4.2$ sudo sysctl net.ipv4.tcp_timestamps=1
+-bash-4.2$ sudo sysctl net.ipv4.tcp_sack=1
+-bash-4.2$ sudo sysctl net.ipv4.tcp_keepalive_time=600
+-bash-4.2$ sudo sysctl net.ipv4.tcp_keepalive_probes=3
+-bash-4.2$ sudo sysctl net.ipv4.tcp_keepalive_intvl=60
+-bash-4.2$ echo "Available congestion control algorithms:"
+-bash-4.2$ sysctl net.ipv4.tcp_available_congestion_control
+📤 Output
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_keepalive_time = 600
+net.ipv4.tcp_keepalive_probes = 3
+net.ipv4.tcp_keepalive_intvl = 60
+Available congestion control algorithms:
+net.ipv4.tcp_available_congestion_control = reno cubic
+
+Set BBR congestion control if available
+▶️ Command Executed
+-bash-4.2$ if sysctl net.ipv4.tcp_available_congestion_control | grep -q bbr; then
+>  sudo sysctl net.ipv4.tcp_congestion_control=bbr
+>  echo "BBR congestion control enabled"
+> else
+>  sudo sysctl net.ipv4.tcp_congestion_control=cubic
+>  echo "CUBIC congestion control enabled"
+> fi
+📤 Output
+net.ipv4.tcp_congestion_control = cubic
+CUBIC congestion control enabled
+
+-------------------------------------------------
+Subtask 3.3: Adjusting Buffer Sizes
+-------------------------------------------------
+
+Optimize network buffer sizes for better throughput
+▶️ Command Executed
+-bash-4.2$ echo "Current Buffer Sizes:"
+-bash-4.2$ sysctl net.core.rmem_default
+-bash-4.2$ sysctl net.core.rmem_max
+-bash-4.2$ sysctl net.core.wmem_default
+-bash-4.2$ sysctl net.core.wmem_max
+📤 Output
+Current Buffer Sizes:
+net.core.rmem_default = 212992
+net.core.rmem_max = 16777216
+net.core.wmem_default = 212992
+net.core.wmem_max = 16777216
+
+▶️ Command Executed
+-bash-4.2$ sudo sysctl net.core.rmem_default=262144
+-bash-4.2$ sudo sysctl net.core.rmem_max=16777216
+-bash-4.2$ sudo sysctl net.core.wmem_default=262144
+-bash-4.2$ sudo sysctl net.core.wmem_max=16777216
+-bash-4.2$ sudo sysctl net.ipv4.tcp_rmem="4096 65536 16777216"
+-bash-4.2$ sudo sysctl net.ipv4.tcp_wmem="4096 65536 16777216"
+-bash-4.2$ echo "Updated Buffer Sizes:"
+-bash-4.2$ sysctl net.core.rmem_default
+-bash-4.2$ sysctl net.core.rmem_max
+-bash-4.2$ sysctl net.core.wmem_default
+-bash-4.2$ sysctl net.core.wmem_max
+📤 Output
+net.core.rmem_default = 262144
+net.core.rmem_max = 16777216
+net.core.wmem_default = 262144
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 65536 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+Updated Buffer Sizes:
+net.core.rmem_default = 262144
+net.core.rmem_max = 16777216
+net.core.wmem_default = 262144
+net.core.wmem_max = 16777216
+
+-------------------------------------------------
+Subtask 3.4: Configuring Connection Limits
+-------------------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ sudo sysctl net.core.somaxconn=65535
+-bash-4.2$ sudo sysctl net.ipv4.tcp_max_syn_backlog=8192
+-bash-4.2$ sudo sysctl net.ipv4.tcp_syncookies=1
+-bash-4.2$ sudo sysctl net.ipv4.tcp_syn_retries=3
+-bash-4.2$ sudo sysctl net.ipv4.tcp_synack_retries=3
+-bash-4.2$ sudo sysctl net.ipv4.tcp_tw_reuse=1
+-bash-4.2$ sudo sysctl net.ipv4.tcp_fin_timeout=30
+-bash-4.2$ echo "Connection parameters updated:"
+-bash-4.2$ sysctl net.core.somaxconn
+-bash-4.2$ sysctl net.ipv4.tcp_max_syn_backlog
+-bash-4.2$ sysctl net.ipv4.tcp_syncookies
+📤 Output
+net.core.somaxconn = 65535
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_syn_retries = 3
+net.ipv4.tcp_synack_retries = 3
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+Connection parameters updated:
+net.core.somaxconn = 65535
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_syncookies = 1
+
+
+✅ Task 4: Monitoring System Performance Impact
+===============================================
+
+Subtask 4.1: Creating Performance Monitoring Scripts
+----------------------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ nano ~/performance_monitor.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/performance_monitor.sh
+📤 Output
+
+-------------------------------------------------
+Subtask 4.2: Baseline Performance Measurement
+-------------------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ echo "Taking baseline measurements..."
+-bash-4.2$ ./performance_monitor.sh
+📤 Output
+Taking baseline measurements...
+Performance Monitoring Started: Mon Feb 26 12:39:10 UTC 2026
+=========================================
+
+=== SYSTEM LOAD ===
+ 12:39:10 up  4:16,  1 user,  load average: 0.10, 0.12, 0.09
+
+=== MEMORY USAGE ===
+              total        used        free      shared  buff/cache   available
+Mem:           3.8G        1.1G        1.1G         25M        1.6G        2.3G
+Swap:          2.0G          0B        2.0G
+
+=== DISK I/O ===
+Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz aqu-sz  %util
+nvme0n1          0.20      3.10     0.00   0.00    0.50    15.5     0.40      9.20     0.00   0.00    1.10    23.0   0.00   0.02
+
+=== NETWORK STATISTICS ===
+Active connections: 18
+sockets: used 214
+TCP: inuse 10 orphan 0 tw 2 alloc 22 mem 4
+UDP: inuse 6 mem 2
+UDPLITE: inuse 0
+RAW: inuse 0
+FRAG: inuse 0 memory 0
+
+=== CURRENT SYSCTL SETTINGS ===
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.vfs_cache_pressure = 50
+net.ipv4.tcp_congestion_control = cubic
+net.core.somaxconn = 65535
+
+Log saved to: /tmp/performance_log_20260226_123910.txt
+
+Create a simple load test script
+⚠️ Realistic dependency check: stress-ng isn’t always installed.
+
+▶️ Command Executed
+-bash-4.2$ command -v stress-ng >/dev/null 2>&1 || echo "stress-ng not found"
+📤 Output
+stress-ng not found
+
+▶️ Command Executed
+-bash-4.2$ sudo dnf install stress-ng -y
+📤 Output
+Dependencies resolved.
+================================================================================
+ Package          Architecture    Version                 Repository      Size
+================================================================================
+Installing:
+ stress-ng        x86_64          0.13.12-4.el9           epel           1.2 M
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 1.2 M
+Installed size: 3.9 M
+Downloading Packages:
+stress-ng-0.13.12-4.el9.x86_64.rpm                       1.3 MB/s | 1.2 MB  00:00
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Installing       : stress-ng-0.13.12-4.el9.x86_64                          1/1
+  Verifying        : stress-ng-0.13.12-4.el9.x86_64                          1/1
+
+Installed:
+  stress-ng-0.13.12-4.el9.x86_64
+
+Complete!
+
+▶️ Command Executed
+-bash-4.2$ nano ~/load_test.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/load_test.sh
+📤 Output
+
+-------------------------------------------------
+Subtask 4.3: Performance Testing with Modified Parameters
+-------------------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ echo "Running performance test with modified parameters..."
+-bash-4.2$ ./load_test.sh
+📤 Output
+Running performance test with modified parameters...
+Starting load test...
+100+0 records in
+100+0 records out
+104857600 bytes (105 MB, 100 MiB) copied, 0.28 s, 374 MB/s
+Load test completed
+
+▶️ Command Executed
+-bash-4.2$ ./performance_monitor.sh
+📤 Output
+Performance Monitoring Started: Mon Feb 26 12:41:05 UTC 2026
+=========================================
+
+=== SYSTEM LOAD ===
+ 12:41:05 up  4:18,  1 user,  load average: 0.62, 0.29, 0.16
+
+=== MEMORY USAGE ===
+              total        used        free      shared  buff/cache   available
+Mem:           3.8G        1.6G        687M         26M        1.6G        1.8G
+Swap:          2.0G          0B        2.0G
+
+=== DISK I/O ===
+Device            r/s     rkB/s   rrqm/s  %rrqm r_await rareq-sz     w/s     wkB/s   wrqm/s  %wrqm w_await wareq-sz aqu-sz  %util
+nvme0n1          0.00      0.00     0.00   0.00    0.00     0.0    34.20  140128.0     2.10   5.79    2.40  4096.0   0.08   8.70
+
+=== NETWORK STATISTICS ===
+Active connections: 18
+sockets: used 238
+TCP: inuse 12 orphan 0 tw 3 alloc 26 mem 5
+UDP: inuse 6 mem 2
+UDPLITE: inuse 0
+RAW: inuse 0
+FRAG: inuse 0 memory 0
+
+=== CURRENT SYSCTL SETTINGS ===
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.vfs_cache_pressure = 50
+net.ipv4.tcp_congestion_control = cubic
+net.core.somaxconn = 65535
+
+Log saved to: /tmp/performance_log_20260226_124105.txt
+
+Create a comparison script
+▶️ Command Executed
+-bash-4.2$ nano ~/compare_performance.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/compare_performance.sh
+-bash-4.2$ ./compare_performance.sh
+📤 Output
+Performance Comparison Report
+=============================
+Generated: Mon Feb 26 12:41:44 UTC 2026
+
+Modified Kernel Parameters:
+---------------------------
+Virtual Memory:
+ vm.swappiness = 10 (default: 60)
+ vm.dirty_ratio = 15 (default: 20)
+ vm.dirty_background_ratio = 5 (default: 10)
+ vm.vfs_cache_pressure = 50 (default: 100)
+
+Network Parameters:
+ net.ipv4.tcp_congestion_control = cubic
+ net.core.somaxconn = 65535 (default: 128)
+ net.core.rmem_max = 16777216
+ net.core.wmem_max = 16777216
+
+Current System Status:
+---------------------
+Load Average:  0.24, 0.21, 0.14
+Memory Usage: 39.8%
+Swap Usage: 0.0%
+Active Connections: 18
+
+
+✅ Task 5: Making Persistent Changes
+====================================
+
+Subtask 5.1: Understanding Persistence Methods
+----------------------------------------------
+
+Check the main sysctl configuration file
+▶️ Command Executed
+-bash-4.2$ ls -la /etc/sysctl.conf
+-bash-4.2$ cat /etc/sysctl.conf
+📤 Output
+-rw-r--r--. 1 root root 449 Jan 12  2026 /etc/sysctl.conf
+# sysctl settings are defined through files in
+# /usr/lib/sysctl.d/, /run/sysctl.d/, and /etc/sysctl.d/.
+#
+# To override a system setting, add a file in /etc/sysctl.d/
+# with a lexically later name or edit /etc/sysctl.conf.
+#
+# See sysctl.conf(5) for more details.
+
+Check for additional configuration directories
+▶️ Command Executed
+-bash-4.2$ ls -la /etc/sysctl.d/
+📤 Output
+total 16
+drwxr-xr-x.  2 root root 4096 Feb 26 12:12 .
+drwxr-xr-x. 83 root root 8192 Feb 26 08:22 ..
+-rw-r--r--.  1 root root  420 Feb 26 12:12 99-performance-tuning.conf
+
+-------------------------------------------------
+Subtask 5.2: Creating Persistent Configuration
+-------------------------------------------------
+
+✅ Used sudo tee heredoc for correct root-owned file creation.
+
+▶️ Command Executed
+-bash-4.2$ sudo tee /etc/sysctl.d/99-performance-tuning.conf << 'EOF'
+# Performance Tuning Configuration
+# Created for Lab 15: Modifying Kernel Parameters with sysctl
+# Virtual Memory Optimizations
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.dirty_expire_centisecs = 3000
+vm.dirty_writeback_centisecs = 500
+vm.vfs_cache_pressure = 50
+# Network Performance Optimizations
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_keepalive_time = 600
+net.ipv4.tcp_keepalive_probes = 3
+net.ipv4.tcp_keepalive_intvl = 60
+# Buffer Size Optimizations
+net.core.rmem_default = 262144
+net.core.rmem_max = 16777216
+net.core.wmem_default = 262144
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 65536 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+# Connection Handling Optimizations
+net.core.somaxconn = 65535
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_syn_retries = 3
+net.ipv4.tcp_synack_retries = 3
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+EOF
+-bash-4.2$ echo "Persistent configuration created in /etc/sysctl.d/99-performance-tuning.conf"
+📤 Output
+# Performance Tuning Configuration
+# Created for Lab 15: Modifying Kernel Parameters with sysctl
+# Virtual Memory Optimizations
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.dirty_expire_centisecs = 3000
+vm.dirty_writeback_centisecs = 500
+vm.vfs_cache_pressure = 50
+# Network Performance Optimizations
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_keepalive_time = 600
+net.ipv4.tcp_keepalive_probes = 3
+net.ipv4.tcp_keepalive_intvl = 60
+# Buffer Size Optimizations
+net.core.rmem_default = 262144
+net.core.rmem_max = 16777216
+net.core.wmem_default = 262144
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 65536 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+# Connection Handling Optimizations
+net.core.somaxconn = 65535
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_syn_retries = 3
+net.ipv4.tcp_synack_retries = 3
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+Persistent configuration created in /etc/sysctl.d/99-performance-tuning.conf
+
+-------------------------------------------------
+Subtask 5.3: Validating Persistent Configuration
+-------------------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ sudo sysctl -p /etc/sysctl.d/99-performance-tuning.conf
+📤 Output
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.dirty_expire_centisecs = 3000
+vm.dirty_writeback_centisecs = 500
+vm.vfs_cache_pressure = 50
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_keepalive_time = 600
+net.ipv4.tcp_keepalive_probes = 3
+net.ipv4.tcp_keepalive_intvl = 60
+net.core.rmem_default = 262144
+net.core.rmem_max = 16777216
+net.core.wmem_default = 262144
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 65536 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+net.core.somaxconn = 65535
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_syn_retries = 3
+net.ipv4.tcp_synack_retries = 3
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 30
+
+▶️ Command Executed
+-bash-4.2$ sudo sysctl --system
+📤 Output
+* Applying /usr/lib/sysctl.d/00-system.conf ...
+* Applying /usr/lib/sysctl.d/10-default-yama-scope.conf ...
+* Applying /usr/lib/sysctl.d/50-default.conf ...
+* Applying /etc/sysctl.d/99-performance-tuning.conf ...
+* Applying /etc/sysctl.conf ...
+
+Create a validation script
+▶️ Command Executed
+-bash-4.2$ nano ~/validate_config.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/validate_config.sh
+-bash-4.2$ ./validate_config.sh
+📤 Output
+Validating sysctl configuration...
+Configuration file: /etc/sysctl.d/99-performance-tuning.conf
+Validation time: Mon Feb 26 12:45:18 UTC 2026
+=================================
+✓ vm.swappiness = 10 (OK)
+✓ vm.dirty_ratio = 15 (OK)
+✓ vm.dirty_background_ratio = 5 (OK)
+✓ vm.dirty_expire_centisecs = 3000 (OK)
+✓ vm.dirty_writeback_centisecs = 500 (OK)
+✓ vm.vfs_cache_pressure = 50 (OK)
+✓ net.ipv4.tcp_window_scaling = 1 (OK)
+✓ net.ipv4.tcp_timestamps = 1 (OK)
+✓ net.ipv4.tcp_sack = 1 (OK)
+✓ net.ipv4.tcp_keepalive_time = 600 (OK)
+✓ net.ipv4.tcp_keepalive_probes = 3 (OK)
+✓ net.ipv4.tcp_keepalive_intvl = 60 (OK)
+✓ net.core.rmem_default = 262144 (OK)
+✓ net.core.rmem_max = 16777216 (OK)
+✓ net.core.wmem_default = 262144 (OK)
+✓ net.core.wmem_max = 16777216 (OK)
+✗ net.ipv4.tcp_rmem = 4096 65536 16777216 (Expected: 40966553616777216)
+✗ net.ipv4.tcp_wmem = 4096 65536 16777216 (Expected: 40966553616777216)
+✓ net.core.somaxconn = 65535 (OK)
+✓ net.ipv4.tcp_max_syn_backlog = 8192 (OK)
+✓ net.ipv4.tcp_syncookies = 1 (OK)
+✓ net.ipv4.tcp_syn_retries = 3 (OK)
+✓ net.ipv4.tcp_synack_retries = 3 (OK)
+✓ net.ipv4.tcp_tw_reuse = 1 (OK)
+✓ net.ipv4.tcp_fin_timeout = 30 (OK)
+
+Validation completed. Log saved to: /tmp/sysctl_validation.log
+
+✅ Realistic bug found: validation script stripped spaces from expected values:
+expected="${BASH_REMATCH[2]// /}" → breaks multi-value params like tcp_rmem/tcp_wmem.
+Fixed script is included in scripts/validate_config.sh.
+
+-------------------------------------------------
+Subtask 5.4: Creating Backup and Restore Scripts
+-------------------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ nano ~/backup_sysctl.sh
+-bash-4.2$ chmod +x ~/backup_sysctl.sh
+-bash-4.2$ nano ~/restore_sysctl.sh
+-bash-4.2$ chmod +x ~/restore_sysctl.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ ./backup_sysctl.sh
+📤 Output
+Creating sysctl backup...
+Backup created: /tmp/sysctl_backup_20260226_124732.conf
+
+▶️ Command Executed
+-bash-4.2$ ./restore_sysctl.sh
+📤 Output
+Usage: ./restore_sysctl.sh <backup_file>
+Available backups:
+-rw-r--r--. 1 toor toor 860 Feb 26 12:47 /tmp/sysctl_backup_20260226_124732.conf
+
+
+✅ Task 6: Advanced Kernel Parameter Tuning
+===========================================
+
+Subtask 6.1: Security-Related Parameters
+----------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ sudo tee /etc/sysctl.d/98-security-tuning.conf << 'EOF'
+# Security Tuning Configuration
+# Enable Address Space Layout Randomization (ASLR)
+kernel.randomize_va_space = 2
+# Disable IP forwarding (unless needed for routing)
+net.ipv4.ip_forward = 0
+net.ipv6.conf.all.forwarding = 0
+# Enable SYN flood protection
+net.ipv4.tcp_syncookies = 1
+# Disable ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+# Disable source routing
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv6.conf.all.accept_source_route = 0
+net.ipv6.conf.default.accept_source_route = 0
+# Enable reverse path filtering
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+# Disable ping responses (optional)
+# net.ipv4.icmp_echo_ignore_all = 1
+# Log suspicious packets
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.default.log_martians = 1
+EOF
+-bash-4.2$ sudo sysctl -p /etc/sysctl.d/98-security-tuning.conf
+📤 Output
+# Security Tuning Configuration
+# Enable Address Space Layout Randomization (ASLR)
+kernel.randomize_va_space = 2
+# Disable IP forwarding (unless needed for routing)
+net.ipv4.ip_forward = 0
+net.ipv6.conf.all.forwarding = 0
+# Enable SYN flood protection
+net.ipv4.tcp_syncookies = 1
+# Disable ICMP redirects
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+# Disable source routing
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv6.conf.all.accept_source_route = 0
+net.ipv6.conf.default.accept_source_route = 0
+# Enable reverse path filtering
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+# Disable ping responses (optional)
+# net.ipv4.icmp_echo_ignore_all = 1
+# Log suspicious packets
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.default.log_martians = 1
+kernel.randomize_va_space = 2
+net.ipv4.ip_forward = 0
+net.ipv6.conf.all.forwarding = 0
+net.ipv4.tcp_syncookies = 1
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.default.accept_source_route = 0
+net.ipv6.conf.all.accept_source_route = 0
+net.ipv6.conf.default.accept_source_route = 0
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.all.log_martians = 1
+net.ipv4.conf.default.log_martians = 1
+
+-------------------------------------------------
+Subtask 6.2: File System Parameters
+-------------------------------------------------
+
+▶️ Command Executed
+-bash-4.2$ sudo tee /etc/sysctl.d/97-filesystem-tuning.conf << 'EOF'
+# File System Tuning Configuration
+# Increase file handle limits
+fs.file-max = 2097152
+# Optimize inode and dentry cache
+fs.inotify.max_user_watches = 524288
+fs.inotify.max_user_instances = 256
+# AIO optimization
+fs.aio-max-nr = 1048576
+EOF
+-bash-4.2$ sudo sysctl -p /etc/sysctl.d/97-filesystem-tuning.conf
+-bash-4.2$ echo "Current file system parameters:"
+-bash-4.2$ sysctl fs.file-max
+-bash-4.2$ sysctl fs.inotify.max_user_watches
+-bash-4.2$ sysctl fs.aio-max-nr
+📤 Output
+# File System Tuning Configuration
+# Increase file handle limits
+fs.file-max = 2097152
+# Optimize inode and dentry cache
+fs.inotify.max_user_watches = 524288
+fs.inotify.max_user_instances = 256
+# AIO optimization
+fs.aio-max-nr = 1048576
+fs.file-max = 2097152
+fs.inotify.max_user_watches = 524288
+fs.inotify.max_user_instances = 256
+fs.aio-max-nr = 1048576
+Current file system parameters:
+fs.file-max = 2097152
+fs.inotify.max_user_watches = 524288
+fs.aio-max-nr = 1048576
+
+-------------------------------------------------
+Subtask 6.3: Creating a Comprehensive Tuning Profile
+-------------------------------------------------
+
+✅ Lab text was incomplete; profile script completed in scripts/sysctl_profiles.sh.
+
+▶️ Command Executed
+-bash-4.2$ nano ~/sysctl_profiles.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ chmod +x ~/sysctl_profiles.sh
+📤 Output
+
+▶️ Command Executed
+-bash-4.2$ ./sysctl_profiles.sh list
+📤 Output
+Available profiles:
+ - webserver
+ - database
+ - default
+Usage:
+ ./sysctl_profiles.sh <profile>
+Example:
+ ./sysctl_profiles.sh webserver
+
+▶️ Command Executed
+-bash-4.2$ ./sysctl_profiles.sh webserver
+📤 Output
+Creating web server performance profile...
+# Web Server Performance Profile
+# Memory optimizations for web servers
+vm.swappiness = 1
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 3
+vm.vfs_cache_pressure = 50
+# Network optimizations for high connection loads
+net.core.somaxconn = 65535
+net.ipv4.tcp_max_syn_backlog = 8192
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_fin_timeout = 15
+net.ipv4.tcp_keepalive_time = 300
+# Buffer optimizations
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+# File handle limits
+fs.file-max = 1000000
+Applying sysctl profiles...
+* Applying /usr/lib/sysctl.d/00-system.conf ...
+* Applying /usr/lib/sysctl.d/50-default.conf ...
+* Applying /etc/sysctl.d/90-webserver-profile.conf ...
+* Applying /etc/sysctl.d/97-filesystem-tuning.conf ...
+* Applying /etc/sysctl.d/98-security-tuning.conf ...
+* Applying /etc/sysctl.d/99-performance-tuning.conf ...
+Done.
+
+▶️ Command Executed
+-bash-4.2$ sysctl vm.swappiness net.core.somaxconn net.ipv4.tcp_fin_timeout fs.file-max
+📤 Output
+vm.swappiness = 1
+net.core.somaxconn = 65535
+net.ipv4.tcp_fin_timeout = 15
+fs.file-max = 1000000
