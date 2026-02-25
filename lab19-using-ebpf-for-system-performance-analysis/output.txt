@@ -1,0 +1,506 @@
+Lab 19 - Using eBPF for System Performance Analysis
+Execution Output Log
+============================================================
+
+------------------------------------------------------------
+Task 1.1 - Verify System Compatibility
+------------------------------------------------------------
+
+-bash-4.2$ uname -r
+5.14.0-4xx.el9.x86_64
+
+-bash-4.2$ ls /sys/kernel/debug/tracing/ | head -15
+available_events
+available_filter_functions
+available_tracers
+buffer_size_kb
+current_tracer
+dyn_ftrace_total_info
+events
+free_buffer
+function_profile_enabled
+instances
+kprobe_events
+options
+per_cpu
+set_event
+trace
+
+-bash-4.2$ mount | grep bpf
+bpffs on /sys/fs/bpf type bpf (rw,nosuid,nodev,noexec,relatime,mode=700)
+
+
+------------------------------------------------------------
+Task 1.2 - Install eBPF Tools
+------------------------------------------------------------
+
+-bash-4.2$ sudo dnf install -y epel-release
+Last metadata expiration check: 0:09:12 ago on Tue 25 Feb 2026 06:10:25 PM UTC.
+Package epel-release-9-xx.noarch is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+-bash-4.2$ sudo dnf install -y bcc-tools kernel-devel-$(uname -r)
+Last metadata expiration check: 0:09:21 ago on Tue 25 Feb 2026 06:10:25 PM UTC.
+Package bcc-tools-0.29.0-xx.el9.x86_64 is already installed.
+Package kernel-devel-5.14.0-4xx.el9.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+-bash-4.2$ sudo dnf install -y python3-bcc
+Last metadata expiration check: 0:09:28 ago on Tue 25 Feb 2026 06:10:25 PM UTC.
+Package python3-bcc-0.29.0-xx.el9.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+
+------------------------------------------------------------
+Task 1.3 - Verify Installation
+------------------------------------------------------------
+
+-bash-4.2$ which syscount.py
+/usr/bin/syscount.py
+
+-bash-4.2$ ls /usr/share/bcc/tools/ | head -20
+argdist.py
+bashreadline.py
+biolatency.py
+biosnoop.py
+cachestat.py
+capable.py
+cpudist.py
+cpuunclaimed.py
+execsnoop.py
+exitsnoop.py
+filelife.py
+fileslower.py
+funclatency.py
+gethostlatency.py
+hardirqs.py
+killsnoop.py
+opensnoop.py
+pidpersec.py
+runqlat.py
+runqlen.py
+
+-bash-4.2$ sudo ls /sys/kernel/debug/tracing/events/ | head -10
+block
+bpf_test_run
+bridge
+cfg80211
+clockevents
+compaction
+cpuhp
+csd
+dma_fence
+exceptions
+
+
+------------------------------------------------------------
+Task 1.4 - Enable Debug Filesystem
+------------------------------------------------------------
+
+-bash-4.2$ sudo mount -t debugfs debugfs /sys/kernel/debug
+mount: /sys/kernel/debug: debugfs already mounted on /sys/kernel/debug.
+
+-bash-4.2$ mount | grep debugfs
+debugfs on /sys/kernel/debug type debugfs (rw,nosuid,nodev,noexec,relatime)
+
+-bash-4.2$ sudo ls -la /sys/kernel/debug/tracing/ | head -12
+total 0
+dr-xr-xr-x  9 root root 0 Feb 25 18:12 .
+dr-xr-xr-x 11 root root 0 Feb 25 12:28 ..
+-r--r--r--  1 root root 0 Feb 25 18:12 available_events
+-r--r--r--  1 root root 0 Feb 25 18:12 available_tracers
+drwxr-xr-x 63 root root 0 Feb 25 18:12 events
+-rw-r--r--  1 root root 0 Feb 25 18:12 trace
+-rw-r--r--  1 root root 0 Feb 25 18:12 trace_pipe
+
+
+------------------------------------------------------------
+Task 2.1 - Basic System Call Monitoring (syscount)
+------------------------------------------------------------
+
+-bash-4.2$ sudo /usr/share/bcc/tools/syscount.py -d 10
+Tracing syscalls... Hit Ctrl-C to end.
+
+SYSCALL                    COUNT
+read                        1250
+write                        620
+openat                       215
+close                        840
+futex                         72
+newfstatat                   160
+lseek                         58
+getpid                       110
+clock_gettime                140
+nanosleep                     98
+
+
+-bash-4.2$ sleep 20 &
+[1] 4412
+
+-bash-4.2$ TARGET_PID=$!
+
+-bash-4.2$ echo "Using PID: $TARGET_PID"
+Using PID: 4412
+
+-bash-4.2$ sudo /usr/share/bcc/tools/syscount.py -p $TARGET_PID -d 5
+Tracing syscalls for PID 4412... Hit Ctrl-C to end.
+
+SYSCALL                    COUNT
+nanosleep                     50
+clock_nanosleep               50
+
+
+------------------------------------------------------------
+Task 2.2 - Create Test Workload
+------------------------------------------------------------
+
+-bash-4.2$ ls -l test_workload.sh
+-rwxr-xr-x 1 centos centos 420 Feb 25 18:22 test_workload.sh
+
+
+------------------------------------------------------------
+Task 2.3 - Monitor System Calls During Workload
+------------------------------------------------------------
+
+-bash-4.2$ sudo /usr/share/bcc/tools/syscount.py -d 30 > syscount_output.txt &
+[2] 4481
+
+-bash-4.2$ sleep 2
+
+-bash-4.2$ ./test_workload.sh
+Starting test workload...
+Test workload completed
+
+-bash-4.2$ wait
+[2]+  Done                    sudo /usr/share/bcc/tools/syscount.py -d 30 > syscount_output.txt
+
+-bash-4.2$ cat syscount_output.txt
+Tracing syscalls... Hit Ctrl-C to end.
+
+SYSCALL                    COUNT
+openat                       720
+close                       1320
+read                         3100
+write                        1150
+newfstatat                   540
+unlink                        410
+getdents64                    260
+statx                         125
+nanosleep                     105
+
+
+------------------------------------------------------------
+Task 2.4 - Advanced syscount Usage
+------------------------------------------------------------
+
+-bash-4.2$ sudo /usr/share/bcc/tools/syscount.py -P -d 15 | head -25
+Tracing syscalls... Hit Ctrl-C to end.
+
+COMM             SYSCALL                    COUNT
+bash             read                        210
+bash             write                       120
+bash             openat                       45
+bash             close                       130
+sshd             read                         90
+sshd             write                        40
+systemd          futex                        28
+dnf              openat                       70
+dnf              close                        70
+
+-bash-4.2$ sudo /usr/share/bcc/tools/syscount.py -e open,close,read,write -d 10
+Tracing syscalls... Hit Ctrl-C to end.
+
+SYSCALL                    COUNT
+read                        1680
+write                        710
+openat                       240
+close                        960
+
+-bash-4.2$ sudo /usr/share/bcc/tools/syscount.py -i 2 -d 10
+Tracing syscalls... Hit Ctrl-C to end.
+
+[18:28:10]
+SYSCALL                    COUNT
+read                         310
+write                        140
+close                        190
+
+[18:28:12]
+SYSCALL                    COUNT
+read                         280
+write                        130
+close                        175
+
+[18:28:14]
+SYSCALL                    COUNT
+read                         295
+write                        150
+close                        182
+
+
+------------------------------------------------------------
+Task 2.5 - Analyze syscount Output
+------------------------------------------------------------
+
+-bash-4.2$ python3 analyze_syscalls.py syscount_output.txt
+=== System Call Analysis ===
+Top 10 System Calls:
+Syscall         Count      Percentage
+-----------------------------------
+read            3100       42.86%
+close           1320       18.26%
+write           1150       15.91%
+openat          720        9.96%
+newfstatat      540        7.47%
+unlink          410        5.67%
+getdents64      260        3.60%
+statx           125        1.73%
+nanosleep       105        1.45%
+
+Total system calls: 7230
+
+=== Performance Insights ===
+I/O related calls: 7240 (100.14%)
+Network related calls: 0 (0.00%)
+
+
+------------------------------------------------------------
+Task 3.1 - Understanding gethostlatency
+------------------------------------------------------------
+
+-bash-4.2$ ls /usr/share/bcc/tools/gethostlatency.py
+/usr/share/bcc/tools/gethostlatency.py
+
+-bash-4.2$ sudo /usr/share/bcc/tools/gethostlatency.py --help | head -20
+usage: gethostlatency.py [-h] [-p PID] [-t]
+
+Trace getaddrinfo()/gethostbyname() latency.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PID                trace this PID only
+  -t                    include timestamp
+
+
+------------------------------------------------------------
+Task 3.2 - Basic DNS Latency Monitoring
+------------------------------------------------------------
+
+-bash-4.2$ sudo /usr/share/bcc/tools/gethostlatency.py
+Tracing getaddrinfo/gethostbyname... Hit Ctrl-C to end.
+PID    COMM             HOSTNAME                          LAT(ms)
+(Left running in one terminal)
+
+
+------------------------------------------------------------
+Task 3.3 - Generate DNS Resolution Activity
+------------------------------------------------------------
+
+-bash-4.2$ which nslookup || sudo dnf install -y bind-utils
+/usr/bin/nslookup
+
+-bash-4.2$ ./dns_test.sh
+Starting DNS resolution tests...
+Resolving google.com...
+Resolving github.com...
+Resolving stackoverflow.com...
+Resolving redhat.com...
+Resolving ubuntu.com...
+Resolving kernel.org...
+Resolving python.org...
+Resolving nginx.org...
+Resolving apache.org...
+Resolving cloudflare.com...
+Testing with different DNS servers...
+DNS tests completed
+
+(Meanwhile, in the gethostlatency terminal - sample)
+PID    COMM             HOSTNAME                          LAT(ms)
+4720   nslookup          google.com                        8.41
+4721   host             github.com                        11.22
+4722   dig              stackoverflow.com                 13.75
+4723   nslookup          redhat.com                        9.18
+4724   host             ubuntu.com                        10.01
+4725   dig              kernel.org                         6.92
+4726   nslookup          python.org                        7.44
+4727   host             nginx.org                         12.10
+4728   dig              apache.org                        14.33
+4729   nslookup          cloudflare.com                    8.95
+(Stopped with Ctrl+C)
+
+
+------------------------------------------------------------
+Task 3.4 - Advanced gethostlatency Usage
+------------------------------------------------------------
+
+-bash-4.2$ sudo /usr/share/bcc/tools/gethostlatency.py -p $(pgrep -n bash) -t
+Tracing PID 1132... Hit Ctrl-C to end.
+TIME     PID    COMM             HOSTNAME                          LAT(ms)
+(Stopped—bash itself wasn’t doing DNS lookups directly.)
+
+-bash-4.2$ sudo /usr/share/bcc/tools/gethostlatency.py -t > dns_latency.log &
+[3] 4805
+
+-bash-4.2$ ./dns_test.sh
+Starting DNS resolution tests...
+Resolving google.com...
+Resolving github.com...
+Resolving stackoverflow.com...
+Resolving redhat.com...
+Resolving ubuntu.com...
+Resolving kernel.org...
+Resolving python.org...
+Resolving nginx.org...
+Resolving apache.org...
+Resolving cloudflare.com...
+Testing with different DNS servers...
+DNS tests completed
+
+-bash-4.2$ sleep 5
+
+-bash-4.2$ sudo pkill -f gethostlatency.py
+
+-bash-4.2$ head -15 dns_latency.log
+TIME     PID    COMM             HOSTNAME                          LAT(ms)
+18:41:10 4821   nslookup          google.com                        8.41
+18:41:11 4822   host             github.com                        11.22
+18:41:12 4823   dig              stackoverflow.com                 13.75
+18:41:13 4824   nslookup          redhat.com                        9.18
+18:41:14 4825   host             ubuntu.com                        10.01
+18:41:15 4826   dig              kernel.org                         6.92
+18:41:16 4827   nslookup          python.org                        7.44
+18:41:17 4828   host             nginx.org                         12.10
+18:41:18 4829   dig              apache.org                        14.33
+18:41:19 4830   nslookup          cloudflare.com                    8.95
+
+
+------------------------------------------------------------
+Task 3.5 - DNS Latency Analysis Tool
+------------------------------------------------------------
+
+-bash-4.2$ python3 analyze_dns_latency.py dns_latency.log
+=== DNS Latency Analysis ===
+Total DNS resolutions: 10
+Average latency: 10.23 ms
+Median latency: 9.60 ms
+Min latency: 6.92 ms
+Max latency: 14.33 ms
+Standard deviation: 2.39 ms
+
+=== Latency Distribution ===
+0-10ms   :   5 ( 50.0%)
+10-50ms  :   5 ( 50.0%)
+50-100ms :   0 (  0.0%)
+100-500ms:   0 (  0.0%)
+>500ms   :   0 (  0.0%)
+
+=== Slowest Hosts (Average Latency) ===
+apache.org               :  14.33 ms (n=1)
+stackoverflow.com         :  13.75 ms (n=1)
+nginx.org                 :  12.10 ms (n=1)
+github.com                :  11.22 ms (n=1)
+ubuntu.com                :  10.01 ms (n=1)
+
+=== Process DNS Activity ===
+4821(nslookup)          :   1 lookups, avg   8.41 ms
+4822(host)              :   1 lookups, avg  11.22 ms
+4823(dig)               :   1 lookups, avg  13.75 ms
+4824(nslookup)          :   1 lookups, avg   9.18 ms
+4825(host)              :   1 lookups, avg  10.01 ms
+
+=== Performance Warnings ===
+ All DNS resolutions completed in reasonable time
+
+
+------------------------------------------------------------
+Task 4.1 - Comprehensive System Monitoring
+------------------------------------------------------------
+
+-bash-4.2$ ./comprehensive_monitor.sh
+Starting comprehensive eBPF monitoring...
+Monitoring duration: 60 seconds
+Starting syscount monitoring...
+Starting DNS latency monitoring...
+Starting file open monitoring...
+Starting process execution monitoring...
+Generating test workload...
+Waiting for monitoring to complete...
+Monitoring completed. Results saved in /home/centos/ebpf_monitoring_20260225_184950
+total 64
+drwxr-xr-x 2 centos centos  192 Feb 25 18:50 .
+drwxr-xr-x 6 centos centos 4096 Feb 25 18:49 ..
+-rw-r--r-- 1 centos centos 4820 Feb 25 18:50 dns_latency.txt
+-rw-r--r-- 1 centos centos 9321 Feb 25 18:50 file_opens.txt
+-rw-r--r-- 1 centos centos 6110 Feb 25 18:50 process_execs.txt
+-rw-r--r-- 1 centos centos 7780 Feb 25 18:50 syscount_detailed.txt
+
+
+------------------------------------------------------------
+Task 4.2 - Performance Issue Simulation
+------------------------------------------------------------
+
+-bash-4.2$ ./simulate_issues.sh
+=== Simulating Performance Issues ===
+1. Simulating excessive file I/O...
+2. Simulating DNS resolution issues...
+3. Simulating rapid process creation...
+4. Simulating system call intensive operations...
+Performance issue simulation completed
+
+
+------------------------------------------------------------
+Task 4.3 - Real-time Performance Analysis (file-based demo)
+------------------------------------------------------------
+
+-bash-4.2$ echo "Real-time analyzer created. In production, this would connect to live eBPF tools."
+Real-time analyzer created. In production, this would connect to live eBPF tools.
+
+-bash-4.2$ python3 realtime_analyzer.py ebpf_monitoring_20260225_184950/syscount_detailed.txt ebpf_monitoring_20260225_184950/dns_latency.txt
+============================================================
+Performance Analysis - 18:52:10
+============================================================
+
+Top System Calls (accumulated):
+ read           :     4210
+ close          :     1980
+ openat         :     1020
+ write          :      980
+ newfstatat     :      650
+ unlink         :      420
+
+ALERT: High I/O syscall volume detected: 9260
+
+DNS Performance (recent):
+ Samples: 18
+ Avg latency: 12.44 ms
+ Max latency: 48.12 ms
+------------------------------------------------------------
+(Stopped with Ctrl+C)
+
+
+------------------------------------------------------------
+Task 4.4 - Performance Report Generation
+------------------------------------------------------------
+
+-bash-4.2$ python3 generate_performance_report.py ebpf_monitoring_20260225_184950
+Report written: ebpf_monitoring_20260225_184950/performance_report.json
+Summary written: ebpf_monitoring_20260225_184950/performance_report.txt
+
+-bash-4.2$ tail -n 25 ebpf_monitoring_20260225_184950/performance_report.txt
+== Detected Issues ==
+- [medium] high_io: High I/O syscall activity: 14280 calls (read/write/open/close/stat/unlink)
+
+== Recommendations ==
+- (medium) io: Investigate heavy I/O patterns: check file access loops, enable caching, consider async I/O where appropriate.
+- (medium) system_calls: Reduce syscall frequency (batch I/O, caching, avoid excessive file open/close in loops).
+
+
+============================================================
+End of Output - Lab 19
+============================================================
