@@ -1,0 +1,63 @@
+#!/usr/bin/env stap
+global syscall_count, syscall_time, syscall_errors
+global process_syscalls, start_times
+# Trace all system calls
+probe syscall.* {
+ if (target() == 0 || target() == pid()) {
+ syscall_count[name]++
+ process_syscalls[execname(), name]++
+ start_times[tid(), name] = gettimeofday_us()
+ }
+}
+# Track system call completion and errors
+probe syscall.*.return {
+ if (target() == 0 || target() == pid()) {
+ start_time = start_times[tid(), name]
+ if (start_time) {
+ duration = gettimeofday_us() - start_time
+ syscall_time[name] += duration
+ delete start_times[tid(), name]
+
+ # Track errors
+ if ($return < 0) {
+ syscall_errors[name]++
+ printf("ERROR: %s in %s (pid=%d) returned %d\n",
+ name, execname(), pid(), $return)
+ }
+
+ # Log slow system calls (>10ms)
+ if (duration > 10000) {
+ printf("SLOW SYSCALL: %s in %s took %d us\n",
+ name, execname(), duration)
+ }
+ }
+ }
+}
+# Print statistics every 20 seconds
+probe timer.s(20) {
+ printf("\n=== System Call Statistics ===\n")
+ printf("%-20s %10s %15s %10s %15s\n",
+ "SYSCALL", "COUNT", "TOTAL_TIME_US", "ERRORS", "AVG_TIME_US")
+
+ foreach (syscall in syscall_count- limit 20) {
+ avg_time = (syscall_count[syscall] > 0) ?
+ syscall_time[syscall] / syscall_count[syscall] : 0
+ printf("%-20s %10d %15d %10d %15d\n",
+ syscall, syscall_count[syscall], syscall_time[syscall],
+ syscall_errors[syscall], avg_time)
+ }
+
+ printf("\n=== Top Processes by System Call Activity ===\n")
+ foreach ([proc, syscall] in process_syscalls- limit 15) {
+ printf("%s: %s (%d calls)\n", proc, syscall, process_syscalls[proc, syscall])
+ }
+
+ # Reset counters
+ delete syscall_count
+ delete syscall_time
+ delete syscall_errors
+ delete process_syscalls
+}
+probe end {
+ printf("\nSystem call tracing completed\n")
+}
