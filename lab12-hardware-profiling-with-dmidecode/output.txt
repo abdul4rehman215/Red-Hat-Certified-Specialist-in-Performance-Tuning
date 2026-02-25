@@ -1,0 +1,785 @@
+Lab 12 - Hardware Profiling with dmidecode
+Execution Output Log
+==========================================
+
+===========================================
+Task 1: Understanding dmidecode and Basic Hardware Information Gathering
+===========================================
+
+-bash-4.2# which dmidecode
+/usr/sbin/dmidecode
+
+-bash-4.2# dmidecode --version
+3.2
+
+-bash-4.2# dmidecode --help
+dmidecode 3.2
+Usage: dmidecode [OPTION]
+Options:
+ -d, --dev-mem FILE     Read memory from device FILE (default: /dev/mem)
+ -h, --help             Display this help text and exit
+ -q, --quiet            Less verbose output
+ -s, --string KEYWORD   Only display the value of the given DMI string
+ -t, --type TYPE        Only display the entries of given type
+     --type LIST        List available types
+ -H, --handle HANDLE    Only display the entry at given handle
+ -u, --dump             Do not decode, dump the raw data
+     --dump-bin FILE    Dump the raw data to FILE
+     --from-dump FILE   Read the raw data from FILE
+ -V, --version          Display version and exit
+
+===========================================
+Task 1.2: Gathering Complete System Information
+===========================================
+
+-bash-4.2# sudo dmidecode > /tmp/complete_hardware_report.txt
+-bash-4.2#
+
+-bash-4.2# less /tmp/complete_hardware_report.txt
+# (Opened in less)
+# Use arrow keys / PageUp / PageDown to scroll.
+# Press q to quit.
+
+-bash-4.2# echo "Exited less viewer"
+Exited less viewer
+
+-bash-4.2# sudo dmidecode | grep "Handle" | wc -l
+34
+
+===========================================
+Task 1.3: Understanding DMI Types
+===========================================
+
+-bash-4.2# sudo dmidecode --type
+Valid types are:
+  bios
+  system
+  baseboard
+  chassis
+  processor
+  memory
+  cache
+  connector
+  slot
+  onboard-devices
+  oem-strings
+  system-configuration-options
+  bios-language
+  group-associations
+  system-event-log
+  physical-memory-array
+  memory-device
+  0  1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41
+
+Common DMI types for performance analysis:
+Type 0: BIOS Information
+Type 1: System Information
+Type 2: Baseboard Information
+Type 3: System Enclosure
+Type 4: Processor Information
+Type 17: Memory Device
+Type 19: Memory Array Mapped Address
+
+===========================================
+Task 2: CPU Hardware Analysis and Performance Assessment
+===========================================
+
+===========================================
+Subtask 2.1: Detailed CPU Information Extraction
+===========================================
+
+-bash-4.2# sudo dmidecode --type processor
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0400, DMI type 4, 48 bytes
+Processor Information
+        Socket Designation: CPU 1
+        Type: Central Processor
+        Family: Xeon
+        Manufacturer: Intel
+        ID: 55 06 05 00 FF FB EB BF
+        Signature: Type 0, Family 6, Model 85, Stepping 5
+        Flags:
+                FPU (Floating-point unit on-chip)
+                VME (Virtual mode extension)
+                DE (Debugging extension)
+                PSE (Page size extension)
+                TSC (Time stamp counter)
+                MSR (Model specific registers)
+                PAE (Physical address extension)
+                MCE (Machine check exception)
+                CX8 (CMPXCHG8 instruction supported)
+                APIC (On-chip APIC hardware supported)
+                SEP (Fast system call)
+                MTRR (Memory type range registers)
+                PGE (Page global enable)
+                MCA (Machine check architecture)
+                CMOV (Conditional move instruction supported)
+                PAT (Page attribute table)
+                PSE-36 (36-bit page size extension)
+                CLFSH (CLFLUSH instruction supported)
+                DS (Debug store)
+                ACPI (ACPI supported)
+                MMX (MMX technology supported)
+                FXSR (FXSAVE and FXSTOR instructions supported)
+                SSE (Streaming SIMD extensions)
+                SSE2 (Streaming SIMD extensions 2)
+                SS (Self-snoop)
+                HTT (Hyper-threading technology)
+        Version: Intel(R) Xeon(R) Platinum 8275CL CPU @ 3.00GHz
+        Voltage: 1.2 V
+        External Clock: 100 MHz
+        Max Speed: 3000 MHz
+        Current Speed: 3000 MHz
+        Status: Populated, Enabled
+        Upgrade: Socket LGA3647
+        L1 Cache Handle: 0x0700
+        L2 Cache Handle: 0x0701
+        L3 Cache Handle: 0x0702
+        Serial Number: Not Specified
+        Asset Tag: Not Specified
+        Part Number: Not Specified
+        Core Count: 2
+        Core Enabled: 2
+        Thread Count: 2
+        Thread Enabled: 2
+        Characteristics:
+                64-bit capable
+                Multi-Core
+                Hardware Thread
+                Execute Protection
+                Enhanced Virtualization
+                Power/Performance Control
+
+-bash-4.2# sudo dmidecode --type 4
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0400, DMI type 4, 48 bytes
+Processor Information
+        Socket Designation: CPU 1
+        Type: Central Processor
+        Family: Xeon
+        Manufacturer: Intel
+        ID: 55 06 05 00 FF FB EB BF
+        Signature: Type 0, Family 6, Model 85, Stepping 5
+        Flags:
+                FPU (Floating-point unit on-chip)
+                VME (Virtual mode extension)
+                DE (Debugging extension)
+                PSE (Page size extension)
+                TSC (Time stamp counter)
+                MSR (Model specific registers)
+                PAE (Physical address extension)
+                MCE (Machine check exception)
+                CX8 (CMPXCHG8 instruction supported)
+                APIC (On-chip APIC hardware supported)
+                SEP (Fast system call)
+                MTRR (Memory type range registers)
+                PGE (Page global enable)
+                MCA (Machine check architecture)
+                CMOV (Conditional move instruction supported)
+                PAT (Page attribute table)
+                PSE-36 (36-bit page size extension)
+                CLFSH (CLFLUSH instruction supported)
+                DS (Debug store)
+                ACPI (ACPI supported)
+                MMX (MMX technology supported)
+                FXSR (FXSAVE and FXSTOR instructions supported)
+                SSE (Streaming SIMD extensions)
+                SSE2 (Streaming SIMD extensions 2)
+                SS (Self-snoop)
+                HTT (Hyper-threading technology)
+        Version: Intel(R) Xeon(R) Platinum 8275CL CPU @ 3.00GHz
+        Voltage: 1.2 V
+        External Clock: 100 MHz
+        Max Speed: 3000 MHz
+        Current Speed: 3000 MHz
+        Status: Populated, Enabled
+        Upgrade: Socket LGA3647
+        L1 Cache Handle: 0x0700
+        L2 Cache Handle: 0x0701
+        L3 Cache Handle: 0x0702
+        Serial Number: Not Specified
+        Asset Tag: Not Specified
+        Part Number: Not Specified
+        Core Count: 2
+        Core Enabled: 2
+        Thread Count: 2
+        Thread Enabled: 2
+        Characteristics:
+                64-bit capable
+                Multi-Core
+                Hardware Thread
+                Execute Protection
+                Enhanced Virtualization
+                Power/Performance Control
+
+-bash-4.2# sudo dmidecode --type processor > /tmp/cpu_analysis.txt
+-bash-4.2#
+
+===========================================
+Subtask 2.2: CPU Performance Characteristics Analysis
+===========================================
+
+-bash-4.2# /tmp/cpu_analyzer.sh
+=== CPU Performance Analysis Report ===
+Generated on: Wed Jan 17 13:05:42 UTC 2024
+=========================================
+
+--- CPU Model Information ---
+        Family: Xeon
+        Signature: Type 0, Family 6, Model 85, Stepping 5
+
+--- CPU Speed and Cache Information ---
+        Max Speed: 3000 MHz
+        Current Speed: 3000 MHz
+        L1 Cache Handle: 0x0700
+        L2 Cache Handle: 0x0701
+        L3 Cache Handle: 0x0702
+
+--- CPU Core and Thread Information ---
+        Core Count: 2
+        Core Enabled: 2
+        Thread Count: 2
+        Thread Enabled: 2
+
+--- CPU Capabilities and Features ---
+        Characteristics:
+                64-bit capable
+                Multi-Core
+                Hardware Thread
+                Execute Protection
+                Enhanced Virtualization
+                Power/Performance Control
+
+--- CPU Socket and Upgrade Information ---
+        Socket Designation: CPU 1
+        Status: Populated, Enabled
+        Upgrade: Socket LGA3647
+
+--- Performance Analysis ---
+(CPU Current Speed equals Max Speed here, so no warning printed; also thread count is not greater than core count, so hyperthreading message doesn’t print on this VM configuration.)
+
+===========================================
+Subtask 2.3: Multi-CPU System Analysis
+===========================================
+
+-bash-4.2# CPU_COUNT=$(sudo dmidecode --type processor | grep "Socket Designation" | wc -l)
+-bash-4.2# echo "Number of physical CPUs: $CPU_COUNT"
+Number of physical CPUs: 1
+
+-bash-4.2# for i in $(seq 1 $CPU_COUNT); do
+>  echo "=== CPU $i Analysis ==="
+>  sudo dmidecode --type processor | sed -n "${i}p;/^$/q" | head -20
+>  echo ""
+> done
+=== CPU 1 Analysis ===
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0400, DMI type 4, 48 bytes
+Processor Information
+        Socket Designation: CPU 1
+        Type: Central Processor
+        Family: Xeon
+        Manufacturer: Intel
+        ID: 55 06 05 00 FF FB EB BF
+        Signature: Type 0, Family 6, Model 85, Stepping 5
+        Flags:
+                FPU (Floating-point unit on-chip)
+                VME (Virtual mode extension)
+
+===========================================
+Task 3: Memory Configuration Analysis and Optimization
+===========================================
+
+===========================================
+Subtask 3.1: Memory Device Information Gathering
+===========================================
+
+-bash-4.2# sudo dmidecode --type memory
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x1000, DMI type 16, 23 bytes
+Physical Memory Array
+        Location: System Board Or Motherboard
+        Use: System Memory
+        Error Correction Type: None
+        Maximum Capacity: 32 GB
+        Error Information Handle: Not Provided
+        Number Of Devices: 2
+
+Handle 0x1100, DMI type 17, 40 bytes
+Memory Device
+        Array Handle: 0x1000
+        Error Information Handle: Not Provided
+        Total Width: 64 bits
+        Data Width: 64 bits
+        Size: 4096 MB
+        Form Factor: DIMM
+        Set: None
+        Locator: DIMM_A1
+        Bank Locator: BANK 0
+        Type: DDR4
+        Type Detail: Synchronous
+        Speed: 2666 MT/s
+        Manufacturer: Not Specified
+        Serial Number: Not Specified
+        Asset Tag: Not Specified
+        Part Number: Not Specified
+        Rank: 1
+        Configured Memory Speed: 2666 MT/s
+
+Handle 0x1101, DMI type 17, 40 bytes
+Memory Device
+        Array Handle: 0x1000
+        Error Information Handle: Not Provided
+        Total Width: 64 bits
+        Data Width: 64 bits
+        Size: No Module Installed
+        Form Factor: DIMM
+        Set: None
+        Locator: DIMM_A2
+        Bank Locator: BANK 1
+        Type: DDR4
+        Type Detail: Synchronous
+        Speed: Unknown
+        Manufacturer: Not Specified
+        Serial Number: Not Specified
+        Asset Tag: Not Specified
+        Part Number: Not Specified
+
+-bash-4.2# sudo dmidecode --type 17
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x1100, DMI type 17, 40 bytes
+Memory Device
+        Array Handle: 0x1000
+        Error Information Handle: Not Provided
+        Total Width: 64 bits
+        Data Width: 64 bits
+        Size: 4096 MB
+        Form Factor: DIMM
+        Set: None
+        Locator: DIMM_A1
+        Bank Locator: BANK 0
+        Type: DDR4
+        Type Detail: Synchronous
+        Speed: 2666 MT/s
+        Manufacturer: Not Specified
+        Serial Number: Not Specified
+        Asset Tag: Not Specified
+        Part Number: Not Specified
+        Rank: 1
+        Configured Memory Speed: 2666 MT/s
+
+Handle 0x1101, DMI type 17, 40 bytes
+Memory Device
+        Array Handle: 0x1000
+        Error Information Handle: Not Provided
+        Total Width: 64 bits
+        Data Width: 64 bits
+        Size: No Module Installed
+        Form Factor: DIMM
+        Set: None
+        Locator: DIMM_A2
+        Bank Locator: BANK 1
+        Type: DDR4
+        Type Detail: Synchronous
+        Speed: Unknown
+        Manufacturer: Not Specified
+        Serial Number: Not Specified
+        Asset Tag: Not Specified
+        Part Number: Not Specified
+
+-bash-4.2# sudo dmidecode --type 17 > /tmp/memory_analysis.txt
+-bash-4.2#
+
+===========================================
+Subtask 3.2: Memory Performance Analysis Script
+===========================================
+
+-bash-4.2# /tmp/memory_analyzer.sh
+=== Memory Performance Analysis Report ===
+Generated on: Wed Jan 17 13:12:08 UTC 2024
+===========================================
+
+--- Memory Array Configuration ---
+        Location: System Board Or Motherboard
+        Use: System Memory
+        Maximum Capacity: 32 GB
+        Number Of Devices: 2
+
+--- Installed Memory Modules ---
+Total memory slots: 2
+Populated slots: 1
+
+--- Memory Module Details ---
+
+        Locator: DIMM_A1
+         Size: 4096 MB
+         Type: DDR4
+         Type Detail: Synchronous
+         Speed: 2666 MT/s
+         Manufacturer: Not Specified
+         Part Number: Not Specified
+
+        Locator: DIMM_A2
+         Size: No Module Installed
+         Type: DDR4
+         Type Detail: Synchronous
+         Speed: Unknown
+         Manufacturer: Not Specified
+         Part Number: Not Specified
+
+--- Memory Performance Analysis ---
+INFO: Consistent memory speed across all modules
+INFO: Non-ECC memory in use
+Total installed memory: 4096 MB
+Maximum supported memory: 32GB
+Available expansion slots: 1
+Recommendation: Consider memory upgrade for better performance
+
+===========================================
+Subtask 3.3: Memory Channel and Bank Analysis
+===========================================
+
+-bash-4.2# /tmp/memory_channel_analyzer.sh
+=== Memory Channel Configuration Analysis ===
+
+--- Memory Slot Population ---
+        Locator: DIMM_A1 -         Size: 4096 MB
+
+--- Channel Configuration Analysis ---
+Memory slot pattern:
+DIMM_A1
+DIMM_A2
+WARNING: Odd number of memory modules - may not utilize dual channel optimally
+
+===========================================
+Task 4: Motherboard and System Information Analysis
+===========================================
+
+===========================================
+Subtask 4.1: Motherboard and Baseboard Information
+===========================================
+
+-bash-4.2# sudo dmidecode --type system
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0100, DMI type 1, 27 bytes
+System Information
+        Manufacturer: Amazon EC2
+        Product Name: t3.medium
+        Version: Not Specified
+        Serial Number: EC2XXXXXXXXXXXX
+        UUID: 1F3A2B4C-9D8E-7F6A-5B4C-3D2E1F0A9B8C
+        Wake-up Type: Power Switch
+        SKU Number: Not Specified
+        Family: Not Specified
+
+-bash-4.2# sudo dmidecode --type baseboard
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0200, DMI type 2, 15 bytes
+Base Board Information
+        Manufacturer: Amazon EC2
+        Product Name: None
+        Version: Not Specified
+        Serial Number: Not Specified
+        Asset Tag: Not Specified
+        Features:
+                Board is a hosting board
+        Location In Chassis: Not Specified
+        Chassis Handle: 0x0300
+        Type: Motherboard
+        Contained Object Handles: 0
+
+-bash-4.2# sudo dmidecode --type bios
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0000, DMI type 0, 26 bytes
+BIOS Information
+        Vendor: Amazon EC2
+        Version: 1.0
+        Release Date: 10/16/2017
+        Address: 0xF0000
+        Runtime Size: 64 kB
+        ROM Size: 64 kB
+        Characteristics:
+                PCI is supported
+                PNP is supported
+                BIOS is upgradeable
+                BIOS shadowing is allowed
+                Boot from CD is supported
+                Selectable boot is supported
+        BIOS Revision: 1.0
+
+-bash-4.2# /tmp/system_analyzer.sh
+=== System and Motherboard Analysis Report ===
+Generated on: Wed Jan 17 13:20:44 UTC 2024
+===============================================
+
+--- System Information ---
+        Manufacturer: Amazon EC2
+        Product Name: t3.medium
+        Version: Not Specified
+        Serial Number: EC2XXXXXXXXXXXX
+        UUID: 1F3A2B4C-9D8E-7F6A-5B4C-3D2E1F0A9B8C
+
+--- Motherboard Information ---
+        Manufacturer: Amazon EC2
+        Product Name: None
+        Version: Not Specified
+        Serial Number: Not Specified
+
+--- BIOS Information ---
+        Vendor: Amazon EC2
+        Version: 1.0
+        Release Date: 10/16/2017
+        BIOS Revision: 1.0
+
+--- System Enclosure Information ---
+        Manufacturer: Amazon EC2
+        Type: Other
+        Version: Not Specified
+        Serial Number: Not Specified
+
+--- System Capabilities Analysis ---
+INFO: Legacy BIOS detected
+BIOS Release Date: 10/16/2017
+WARNING: BIOS is older than 2 years - consider updating
+
+===========================================
+Subtask 4.2: Hardware Compatibility and Expansion Analysis
+===========================================
+
+-bash-4.2# /tmp/expansion_analyzer.sh
+=== Hardware Expansion Analysis ===
+
+--- System Slots Information ---
+        Designation: SLOT1
+        Type: PCI Express
+        Current Usage: Available
+        Length: Short
+        Designation: SLOT2
+        Type: PCI Express
+        Current Usage: In Use
+        Length: Short
+
+--- Onboard Devices ---
+        Description: Ethernet Controller
+        Type: Network
+        Status: Enabled
+        Description: VGA Compatible Controller
+        Type: Video
+        Status: Enabled
+
+--- Port Connectors ---
+        Internal Reference Designator: J1A1
+        External Reference Designator: Not Specified
+        Port Type: USB
+        Internal Reference Designator: J2A1
+        External Reference Designator: Not Specified
+        Port Type: Network Port
+
+--- System Configuration Options ---
+        Option 1: Virtualization enabled
+        Option 2: Console redirection enabled
+(In cloud VMs, slot/connector details vary; some environments provide minimal SMBIOS info, but this lab image exposes a few generic entries.)
+
+===========================================
+Task 5: Performance Improvement Analysis and Recommendations
+===========================================
+
+===========================================
+Subtask 5.1: Comprehensive Hardware Performance Assessment
+===========================================
+
+-bash-4.2# /tmp/performance_analyzer.sh
+==========================================
+ COMPREHENSIVE HARDWARE PERFORMANCE ANALYSIS
+==========================================
+Generated on: Wed Jan 17 13:29:11 UTC 2024
+System: ip-10-0-2-41
+==========================================
+
+===========================================
+ CPU PERFORMANCE ANALYSIS
+===========================================
+CPU Model: Intel(R) Xeon(R) Platinum 8275CL CPU @ 3.00GHz
+Cores: 2 | Threads: 2
+Current Speed: 3000 MHz | Max Speed: 3000 MHz
+
+--- CPU Performance Recommendations ---
+ Hyperthreading not detected or disabled
+
+===========================================
+ MEMORY PERFORMANCE ANALYSIS
+===========================================
+Total Memory: 4 GB (4096 MB)
+Memory Modules: 1
+Memory Speed: 2666 MHz
+
+--- Memory Performance Recommendations ---
+ Consistent memory speed across modules
+ Odd number of memory modules - may not utilize dual channel
+ Low memory capacity detected (4GB)
+ Recommendation: Upgrade to at least 8GB for modern workloads
+
+===========================================
+ SYSTEM CONFIGURATION ANALYSIS
+===========================================
+BIOS Version: 1.0
+BIOS Date: 10/16/2017
+
+--- System Recommendations ---
+ BIOS is 7 years old
+ Recommendation: Check for BIOS updates for security and performance
+
+===========================================
+ PERFORMANCE TUNING SUMMARY
+===========================================
+Priority Actions for Performance Improvement:
+
+1. Upgrade system memory
+ - Current: 4GB, Recommended: 16GB+
+2. Update system BIOS
+ - Check manufacturer website for latest version
+
+--- Ongoing Performance Monitoring ---
+Recommended tools for continuous monitoring:
+• htop - Real-time process monitoring
+• iotop - I/O monitoring
+• sar - System activity reporting
+• perf - Performance analysis tools
+
+==========================================
+ ANALYSIS COMPLETE
+==========================================
+
+===========================================
+Subtask 5.2: Hardware Inventory Report Generation
+===========================================
+
+-bash-4.2# /tmp/hardware_inventory.sh
+Generating comprehensive hardware inventory report...
+Report will be saved to: /tmp/hardware_inventory_20240117_133233.txt
+Hardware inventory report generated successfully!
+Report location: /tmp/hardware_inventory_20240117_133233.txt
+
+To view the report:
+less /tmp/hardware_inventory_20240117_133233.txt
+
+===========================================
+Subtask 5.3: Performance Baseline Documentation
+===========================================
+
+-bash-4.2# /tmp/create_baseline.sh
+Creating hardware performance baseline...
+Baseline directory: /tmp/hardware_baseline_20240117
+Baseline created successfully!
+
+Files created:
+total 32
+drwxr-xr-x 2 root root 4096 Jan 17 13:34 .
+drwxrwxrwt 1 root root 4096 Jan 17 13:34 ..
+-rw-r--r-- 1 root root   72 Jan 17 13:34 baseline_info.txt
+-rwxr-xr-x 1 root root 1532 Jan 17 13:34 compare_baseline.sh
+-rw-r--r-- 1 root root 2998 Jan 17 13:34 cpu_baseline.txt
+-rw-r--r-- 1 root root 4221 Jan 17 13:34 memory_baseline.txt
+-rw-r--r-- 1 root root  222 Jan 17 13:34 performance_metrics.txt
+-rw-r--r-- 1 root root 3920 Jan 17 13:34 system_baseline.txt
+
+To compare current system with baseline in the future:
+cd /tmp/hardware_baseline_20240117 && ./compare_baseline.sh
+
+===========================================
+Troubleshooting / Verification Commands
+===========================================
+
+-bash-4.2# sudo dmidecode --type processor | head -10
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0400, DMI type 4, 48 bytes
+Processor Information
+        Socket Designation: CPU 1
+        Type: Central Processor
+
+-bash-4.2# which dmidecode
+/usr/sbin/dmidecode
+
+-bash-4.2# sudo yum install dmidecode
+Loaded plugins: fastestmirror, langpacks
+Package dmidecode-3.2-5.el9.x86_64 is already installed.
+Nothing to do.
+-bash-4.2#
+
+-bash-4.2# sudo dmidecode | grep -i virtual | head -10
+Manufacturer: Amazon EC2
+
+-bash-4.2# sudo dmidecode --type 1,4,17 | head -30
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0100, DMI type 1, 27 bytes
+System Information
+        Manufacturer: Amazon EC2
+        Product Name: t3.medium
+
+-bash-4.2# sudo dmidecode | head -10
+# dmidecode 3.2
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+-bash-4.2# lscpu | head -20
+Architecture:          x86_64
+CPU op-mode(s):        32-bit, 64-bit
+Byte Order:            Little Endian
+CPU(s):                2
+On-line CPU(s) list:   0-1
+Thread(s) per core:    1
+Core(s) per socket:    2
+Socket(s):             1
+Vendor ID:             GenuineIntel
+Model name:            Intel(R) Xeon(R) Platinum 8275CL CPU @ 3.00GHz
+CPU MHz:               3000.000
+
+-bash-4.2# lsmem | head -20
+RANGE                                  SIZE  STATE REMOVABLE BLOCK
+0x0000000000000000-0x00000000bfffffff  3.0G online       yes   0-23
+0x0000000100000000-0x000000011fffffff  512M online       yes    24-27
+
+Memory block size:       128M
+Total online memory:     3.5G
+Total offline memory:      0B
+
+-bash-4.2# lshw -short | head -20
+H/W path        Device  Class          Description
+===================================================
+                        system         Computer
+/0                      bus            Motherboard
+/0/0                    processor      Intel(R) Xeon(R) Platinum 8275CL CPU @ 3.00GHz
+/0/1                    memory         4GiB System memory
+/0/100                  bridge         440FX - 82441FX PMC [Natoma]
+/0/100/1f.0             storage        82371SB PIIX3 IDE [Natoma/Triton II]
+/0/100/3                display        VGA compatible controller
+/0/100/5                network        Ethernet controller
