@@ -1,0 +1,55 @@
+#!/usr/bin/env stap
+global cpu_samples, ctxsw, syscalls
+global io_reads, io_writes
+
+probe timer.profile {
+ cpu_samples[cpu()]++
+}
+
+probe scheduler.ctxswitch {
+ ctxsw++
+}
+
+probe syscall.* {
+ syscalls[name]++
+}
+
+probe syscall.read.return {
+ if ($return > 0) io_reads += $return
+}
+
+probe syscall.write.return {
+ if ($return > 0) io_writes += $return
+}
+
+probe timer.s(5) {
+ printf("\n===== REAL-TIME PERF DASHBOARD (5s) =====\n")
+ printf("Time: %s\n", ctime(gettimeofday_s()))
+
+ total = 0
+ foreach (c in cpu_samples) total += cpu_samples[c]
+ printf("CPU sample distribution:\n")
+ foreach (c in cpu_samples) {
+ pct = (total > 0) ? (cpu_samples[c] * 100 / total) : 0
+ printf(" CPU%d: %d%% (%d)\n", c, pct, cpu_samples[c])
+ }
+
+ printf("\nContext switches (5s): %d\n", ctxsw)
+
+ printf("\nTop syscalls (5s):\n")
+ foreach (s in syscalls- limit 8) {
+ printf(" %-18s %d\n", s, syscalls[s])
+ }
+
+ printf("\nI/O bytes (5s): read=%d write=%d\n", io_reads, io_writes)
+
+ delete cpu_samples
+ delete syscalls
+ ctxsw = 0
+ io_reads = 0
+ io_writes = 0
+}
+
+probe end {
+ printf("\nDashboard stopped.\n")
+}
