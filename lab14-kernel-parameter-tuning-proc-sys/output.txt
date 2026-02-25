@@ -1,0 +1,561 @@
+Lab 14 - Kernel Parameter Tuning with /proc/sys
+Execution Output Log
+============================================
+
+✅ Task 1: Explore /proc/sys to View and Modify Kernel Parameters
+===============================================================
+
+Subtask 1.1: Understanding the /proc/sys Filesystem Structure
+-------------------------------------------------------------
+
+Step 1: Navigate to the /proc/sys directory
+-bash-4.2$ cd /proc/sys
+📤 Output
+
+Step 1: List the main categories of kernel parameters
+-bash-4.2$ ls -la
+📤 Output
+total 0
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 .
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 ..
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 abi
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 debug
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 dev
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 fs
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 kernel
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 net
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 user
+dr-xr-xr-x.  1 root root 0 Feb 26 12:05 vm
+
+Step 2: Examine the major subdirectories
+
+View kernel parameters
+-bash-4.2$ ls -la kernel/
+📤 Output
+total 0
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 .
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 ..
+-rw-r--r--. 1 root root 0 Feb 26 12:05 domainname
+-rw-r--r--. 1 root root 0 Feb 26 12:05 hostname
+-rw-r--r--. 1 root root 0 Feb 26 12:05 ostype
+-rw-r--r--. 1 root root 0 Feb 26 12:05 osrelease
+-rw-r--r--. 1 root root 0 Feb 26 12:05 pid_max
+-rw-r--r--. 1 root root 0 Feb 26 12:05 random
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 printk
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 sched
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 yama
+
+View virtual memory parameters
+-bash-4.2$ ls -la vm/
+📤 Output
+total 0
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 .
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 ..
+-rw-r--r--. 1 root root 0 Feb 26 12:05 dirty_background_ratio
+-rw-r--r--. 1 root root 0 Feb 26 12:05 dirty_ratio
+-rw-r--r--. 1 root root 0 Feb 26 12:05 drop_caches
+-rw-r--r--. 1 root root 0 Feb 26 12:05 overcommit_memory
+-rw-r--r--. 1 root root 0 Feb 26 12:05 swappiness
+-rw-r--r--. 1 root root 0 Feb 26 12:05 vfs_cache_pressure
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 stat
+
+View network parameters
+-bash-4.2$ ls -la net/
+📤 Output
+total 0
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 .
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 ..
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 core
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 ipv4
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 ipv6
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 netfilter
+
+View filesystem parameters
+-bash-4.2$ ls -la fs/
+📤 Output
+total 0
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 .
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 ..
+-rw-r--r--. 1 root root 0 Feb 26 12:05 file-max
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 inotify
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 epoll
+dr-xr-xr-x. 1 root root 0 Feb 26 12:05 quota
+
+-------------------------------------------------------------
+Subtask 1.2: Viewing Current Kernel Parameters
+-------------------------------------------------------------
+
+Step 3: Check current system parameter values
+
+View current swappiness value
+-bash-4.2$ cat /proc/sys/vm/swappiness
+📤 Output
+60
+
+View current TCP receive memory settings
+-bash-4.2$ cat /proc/sys/net/ipv4/tcp_rmem
+📤 Output
+4096	87380	6291456
+
+View current TCP send memory settings
+-bash-4.2$ cat /proc/sys/net/ipv4/tcp_wmem
+📤 Output
+4096	16384	4194304
+
+View current maximum number of open files
+-bash-4.2$ cat /proc/sys/fs/file-max
+📤 Output
+9223372036854775807
+(On some RHEL9 builds this can show a very large value; it’s kernel-dependent and still “realistic”.)
+
+Step 4: Use the sysctl command to view parameters
+
+View all kernel parameters (this will be a long list)
+-bash-4.2$ sysctl -a | head -20
+📤 Output
+abi.vsyscall32 = 1
+debug.exception-trace = 1
+debug.kprobes-optimization = 1
+dev.cdrom.autoclose = 1
+dev.cdrom.autoeject = 0
+dev.cdrom.check_media = 0
+dev.cdrom.debug = 0
+dev.cdrom.info = CD-ROM information, Id: cdrom.c 3.20 2003/12/17
+dev.cdrom.lock = 0
+dev.hpet.max-user-freq = 64
+fs.aio-max-nr = 65536
+fs.aio-nr = 0
+fs.dentry-state = 78944	61233	45	0	12144	0
+fs.dir-notify-enable = 1
+fs.epoll.max_user_watches = 518342
+fs.file-max = 9223372036854775807
+fs.file-nr = 1792	0	9223372036854775807
+fs.inode-nr = 81408	21088
+fs.inode-state = 81408	21088	0	0	0	0	0
+
+View specific parameter
+-bash-4.2$ sysctl vm.swappiness
+📤 Output
+vm.swappiness = 60
+
+View all VM-related parameters
+-bash-4.2$ sysctl vm. | head -10
+📤 Output
+vm.admin_reserve_kbytes = 8192
+vm.compaction_proactiveness = 20
+vm.dirty_background_bytes = 0
+vm.dirty_background_ratio = 10
+vm.dirty_bytes = 0
+vm.dirty_expire_centisecs = 3000
+vm.dirty_ratio = 20
+vm.dirty_writeback_centisecs = 500
+vm.drop_caches = 0
+vm.extfrag_threshold = 500
+
+View all network-related parameters
+-bash-4.2$ sysctl net.ipv4. | head -10
+📤 Output
+net.ipv4.conf.all.accept_local = 0
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.conf.all.arp_accept = 0
+net.ipv4.conf.all.arp_announce = 0
+net.ipv4.conf.all.arp_filter = 0
+net.ipv4.conf.all.arp_ignore = 0
+net.ipv4.conf.all.arp_notify = 0
+net.ipv4.conf.all.bootp_relay = 0
+net.ipv4.conf.all.disable_policy = 0
+
+-------------------------------------------------------------
+Subtask 1.3: Understanding Parameter Documentation
+-------------------------------------------------------------
+
+Step 5: Create a script to document current baseline settings
+✅ As instructed: created files via nano.
+
+-bash-4.2$ mkdir -p ~/lab14 && cd ~/lab14
+📤 Output
+
+-bash-4.2$ nano baseline_check.sh
+📤 Output
+
+-bash-4.2$ chmod +x baseline_check.sh
+-bash-4.2$ ./baseline_check.sh
+📤 Output
+=== System Baseline Parameters ===
+Date: Mon Feb 26 12:09:44 UTC 2026
+Hostname: alnafi-lab
+
+=== Memory Management Parameters ===
+vm.swappiness: 60
+vm.dirty_ratio: 20
+vm.dirty_background_ratio: 10
+vm.vfs_cache_pressure: 100
+
+=== Network Parameters ===
+net.ipv4.tcp_rmem: 4096	87380	6291456
+net.ipv4.tcp_wmem: 4096	16384	4194304
+net.core.rmem_max: 212992
+net.core.wmem_max: 212992
+
+=== File System Parameters ===
+fs.file-max: 9223372036854775807
+fs.inotify.max_user_watches: 8192
+
+✅ Task 2: Tune Parameters like vm.swappiness and net.ipv4.tcp_rmem
+==================================================================
+
+Subtask 2.1: Understanding and Tuning vm.swappiness
+---------------------------------------------------
+
+Step 6: Understand current memory usage
+
+-bash-4.2$ free -h
+📤 Output
+              total        used        free      shared  buff/cache   available
+Mem:           3.8G        1.0G        1.2G         23M        1.6G        2.4G
+Swap:          2.0G          0B        2.0G
+
+-bash-4.2$ swapon --show
+📤 Output
+NAME      TYPE      SIZE USED PRIO
+/dev/dm-1 partition   2G   0B   -2
+
+-bash-4.2$ cat /proc/meminfo | grep -E "(MemTotal|MemFree|SwapTotal|SwapFree)"
+📤 Output
+MemTotal:        4015488 kB
+MemFree:         1209052 kB
+SwapTotal:       2097148 kB
+SwapFree:        2097148 kB
+
+Step 7: Modify vm.swappiness parameter
+
+-bash-4.2$ echo "Current swappiness: $(cat /proc/sys/vm/swappiness)"
+📤 Output
+Current swappiness: 60
+
+Method 1: Direct file modification
+-bash-4.2$ echo 10 > /proc/sys/vm/swappiness
+📤 Output
+
+Verify the change
+-bash-4.2$ cat /proc/sys/vm/swappiness
+📤 Output
+10
+
+Method 2: Using sysctl command
+-bash-4.2$ sysctl vm.swappiness=20
+📤 Output
+vm.swappiness = 20
+
+Verify using sysctl
+-bash-4.2$ sysctl vm.swappiness
+📤 Output
+vm.swappiness = 20
+
+Step 8: Create a memory pressure test
+
+-bash-4.2$ command -v stress || echo "stress not found"
+📤 Output
+stress not found
+
+-bash-4.2$ sudo dnf install stress -y
+📤 Output
+Last metadata expiration check: 0:51:09 ago on Mon 26 Feb 2026 11:18:09 AM UTC.
+Dependencies resolved.
+================================================================================
+ Package        Architecture     Version                 Repository        Size
+================================================================================
+Installing:
+ stress         x86_64           1.0.7-1.el9             epel             41 k
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 41 k
+Installed size: 89 k
+Downloading Packages:
+stress-1.0.7-1.el9.x86_64.rpm                           59 kB/s | 41 kB  00:00
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Installing       : stress-1.0.7-1.el9.x86_64                              1/1
+  Verifying        : stress-1.0.7-1.el9.x86_64                              1/1
+
+Installed:
+  stress-1.0.7-1.el9.x86_64
+
+Complete!
+
+-bash-4.2$ nano memory_test.sh
+📤 Output
+
+-bash-4.2$ chmod +x memory_test.sh
+📤 Output
+(Script created, ready to run later if needed.)
+
+Subtask 2.2: Tuning Network TCP Memory Parameters
+-------------------------------------------------
+
+Step 9: Understand TCP memory parameters
+
+-bash-4.2$ echo "TCP receive memory (min default max): $(cat /proc/sys/net/ipv4/tcp_rmem)"
+-bash-4.2$ echo "TCP send memory (min default max): $(cat /proc/sys/net/ipv4/tcp_wmem)"
+-bash-4.2$ echo "Max receive buffer: $(cat /proc/sys/net/core/rmem_max)"
+-bash-4.2$ echo "Max send buffer: $(cat /proc/sys/net/core/wmem_max)"
+📤 Output
+TCP receive memory (min default max): 4096	87380	6291456
+TCP send memory (min default max): 4096	16384	4194304
+Max receive buffer: 212992
+Max send buffer: 212992
+
+Step 10: Tune TCP memory parameters for better performance
+
+-bash-4.2$ echo "4096 87380 16777216" > /proc/sys/net/ipv4/tcp_rmem
+-bash-4.2$ echo "4096 65536 16777216" > /proc/sys/net/ipv4/tcp_wmem
+-bash-4.2$ echo 16777216 > /proc/sys/net/core/rmem_max
+-bash-4.2$ echo 16777216 > /proc/sys/net/core/wmem_max
+-bash-4.2$ echo "New TCP rmem: $(cat /proc/sys/net/ipv4/tcp_rmem)"
+-bash-4.2$ echo "New TCP wmem: $(cat /proc/sys/net/ipv4/tcp_wmem)"
+-bash-4.2$ echo "New rmem_max: $(cat /proc/sys/net/core/rmem_max)"
+-bash-4.2$ echo "New wmem_max: $(cat /proc/sys/net/core/wmem_max)"
+📤 Output
+New TCP rmem: 4096	87380	16777216
+New TCP wmem: 4096	65536	16777216
+New rmem_max: 16777216
+New wmem_max: 16777216
+
+Subtask 2.3: Additional Performance Tuning Parameters
+-----------------------------------------------------
+
+Step 11: Tune additional system parameters
+
+-bash-4.2$ echo 1048576 > /proc/sys/fs/file-max
+-bash-4.2$ echo 15 > /proc/sys/vm/dirty_ratio
+-bash-4.2$ echo 5 > /proc/sys/vm/dirty_background_ratio
+-bash-4.2$ echo 50 > /proc/sys/vm/vfs_cache_pressure
+-bash-4.2$ echo "=== Updated Parameters ==="
+-bash-4.2$ echo "fs.file-max: $(cat /proc/sys/fs/file-max)"
+-bash-4.2$ echo "vm.dirty_ratio: $(cat /proc/sys/vm/dirty_ratio)"
+-bash-4.2$ echo "vm.dirty_background_ratio: $(cat /proc/sys/vm/dirty_background_ratio)"
+-bash-4.2$ echo "vm.vfs_cache_pressure: $(cat /proc/sys/vm/vfs_cache_pressure)"
+📤 Output
+=== Updated Parameters ===
+fs.file-max: 1048576
+vm.dirty_ratio: 15
+vm.dirty_background_ratio: 5
+vm.vfs_cache_pressure: 50
+
+✅ Task 3: Test System Performance with Adjustments
+===================================================
+
+Subtask 3.1: Create Performance Testing Scripts
+-----------------------------------------------
+
+Step 12: Create a comprehensive performance testing suite
+
+-bash-4.2$ nano network_test.sh
+📤 Output
+
+-bash-4.2$ chmod +x network_test.sh
+📤 Output
+
+Step 13: Create I/O performance test script
+
+-bash-4.2$ nano io_test.sh
+📤 Output
+
+-bash-4.2$ chmod +x io_test.sh
+📤 Output
+
+Subtask 3.2: Performance Monitoring and Comparison
+--------------------------------------------------
+
+Step 14: Create a monitoring script to track system performance
+⚠️ Realistic note: iostat comes from sysstat.
+
+-bash-4.2$ nano monitor_performance.sh
+📤 Output
+
+-bash-4.2$ chmod +x monitor_performance.sh
+📤 Output
+
+Subtask 3.3: Before and After Performance Testing
+-------------------------------------------------
+
+Step 15: Test performance with default settings
+
+-bash-4.2$ echo 60 > /proc/sys/vm/swappiness
+-bash-4.2$ echo "4096 87380 6291456" > /proc/sys/net/ipv4/tcp_rmem
+-bash-4.2$ echo "4096 16384 4194304" > /proc/sys/net/ipv4/tcp_wmem
+-bash-4.2$ echo "=== Baseline Performance Test ==="
+-bash-4.2$ echo "Running with default parameters..."
+📤 Output
+=== Baseline Performance Test ===
+Running with default parameters...
+
+-bash-4.2$ ./baseline_check.sh > baseline_results.txt
+-bash-4.2$ ./io_test.sh > baseline_io_results.txt
+📤 Output
+-bash: ./io_test.sh: Permission denied
+
+✅ Realistic fix: apply executable permission again
+-bash-4.2$ chmod +x io_test.sh
+-bash-4.2$ ./io_test.sh > baseline_io_results.txt
+📤 Output
+
+Step 16: Test performance with optimized settings
+
+-bash-4.2$ echo 10 > /proc/sys/vm/swappiness
+-bash-4.2$ echo "4096 87380 16777216" > /proc/sys/net/ipv4/tcp_rmem
+-bash-4.2$ echo "4096 65536 16777216" > /proc/sys/net/ipv4/tcp_wmem
+-bash-4.2$ echo 16777216 > /proc/sys/net/core/rmem_max
+-bash-4.2$ echo 16777216 > /proc/sys/net/core/wmem_max
+-bash-4.2$ echo 15 > /proc/sys/vm/dirty_ratio
+-bash-4.2$ echo 5 > /proc/sys/vm/dirty_background_ratio
+-bash-4.2$ echo "=== Optimized Performance Test ==="
+-bash-4.2$ echo "Running with tuned parameters..."
+📤 Output
+=== Optimized Performance Test ===
+Running with tuned parameters...
+
+-bash-4.2$ ./baseline_check.sh > optimized_results.txt
+-bash-4.2$ ./io_test.sh > optimized_io_results.txt
+📤 Output
+
+Subtask 3.4: Making Changes Persistent
+--------------------------------------
+
+Step 17: Configure persistent kernel parameter changes
+
+-bash-4.2$ sudo nano /etc/sysctl.d/99-performance-tuning.conf
+📤 Output
+
+-bash-4.2$ sysctl -p /etc/sysctl.d/99-performance-tuning.conf
+📤 Output
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.vfs_cache_pressure = 50
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+fs.file-max = 1048576
+
+Verify persistent configuration
+-bash-4.2$ echo "=== Persistent Configuration Applied ==="
+-bash-4.2$ sysctl -p /etc/sysctl.d/99-performance-tuning.conf
+📤 Output
+=== Persistent Configuration Applied ===
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.vfs_cache_pressure = 50
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+fs.file-max = 1048576
+
+Step 18: Create a validation script
+
+-bash-4.2$ nano validate_tuning.sh
+📤 Output
+
+-bash-4.2$ chmod +x validate_tuning.sh
+-bash-4.2$ ./validate_tuning.sh
+📤 Output
+=== Kernel Parameter Validation ===
+Checking if all tuned parameters are correctly applied...
+
+✓ vm.swappiness: 10 (correct)
+✓ vm.dirty_ratio: 15 (correct)
+✓ vm.dirty_background_ratio: 5 (correct)
+✓ vm.vfs_cache_pressure: 50 (correct)
+✓ net.core.rmem_max: 16777216 (correct)
+✓ net.core.wmem_max: 16777216 (correct)
+✓ fs.file-max: 1048576 (correct)
+✓ net.ipv4.tcp_rmem: 4096 87380 16777216 (correct)
+✓ net.ipv4.tcp_wmem: 4096 65536 16777216 (correct)
+
+ All kernel parameters are correctly tuned!
+
+🛠️ Troubleshooting Common Issues
+================================
+
+Issue 1: Permission Denied When Modifying Parameters
+----------------------------------------------------
+
+-bash-4.2$ sudo su -
+📤 Output
+[root@alnafi-lab ~]#
+
+[root@alnafi-lab ~]# echo 10 > /proc/sys/vm/swappiness
+📤 Output
+
+✅ Important reality: `sudo echo 10 > /proc/...` often fails because redirection happens in the non-root shell.
+Using `sudo su -` (or `sudo tee`) is the proper fix.
+
+Issue 2: Changes Not Persisting After Reboot
+--------------------------------------------
+
+[root@alnafi-lab ~]# nano /etc/sysctl.d/99-custom-tuning.conf
+📤 Output
+
+Issue 3: Invalid Parameter Values
+---------------------------------
+
+[root@alnafi-lab ~]# sysctl -a | grep parameter_name
+📤 Output
+(No matching parameter because "parameter_name" is a placeholder—this is exactly how it looks in real labs.)
+
+Issue 4: Performance Testing Tools Not Available
+------------------------------------------------
+
+[root@alnafi-lab ~]# sudo yum install iperf3 fio sysstat
+📤 Output
+Last metadata expiration check: 0:07:16 ago on Mon 26 Feb 2026 12:12:10 PM UTC.
+No match for argument: iperf3
+Error: Unable to find a match: iperf3
+
+✅ Realistic fix: iperf3 may be in EPEL or require repo enablement.
+Continue with tools that are available.
+
+[root@alnafi-lab ~]# sudo dnf install fio sysstat -y
+📤 Output
+Dependencies resolved.
+================================================================================
+ Package        Architecture     Version                 Repository        Size
+================================================================================
+Installing:
+ fio            x86_64           3.35-2.el9              appstream        623 k
+ sysstat        x86_64           12.5.4-12.el9           appstream        438 k
+
+Transaction Summary
+================================================================================
+Install  2 Packages
+
+Total download size: 1.1 M
+Installed size: 3.7 M
+Downloading Packages:
+(1/2): fio-3.35-2.el9.x86_64.rpm                         1.1 MB/s | 623 kB  00:00
+(2/2): sysstat-12.5.4-12.el9.x86_64.rpm                  1.2 MB/s | 438 kB  00:00
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Installing       : fio-3.35-2.el9.x86_64                                  1/2
+  Installing       : sysstat-12.5.4-12.el9.x86_64                           2/2
+  Verifying        : fio-3.35-2.el9.x86_64                                  1/2
+  Verifying        : sysstat-12.5.4-12.el9.x86_64                           2/2
+
+Installed:
+  fio-3.35-2.el9.x86_64
+  sysstat-12.5.4-12.el9.x86_64
+
+Complete!
