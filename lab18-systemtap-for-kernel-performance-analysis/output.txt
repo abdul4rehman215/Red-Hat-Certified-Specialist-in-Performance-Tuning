@@ -1,0 +1,483 @@
+Lab 18 - SystemTap for Kernel Performance Analysis
+Execution Output Log
+============================================================
+
+------------------------------------------------------------
+Task 1.1 - Verify SystemTap Installation
+------------------------------------------------------------
+
+-bash-4.2$ rpm -qa | grep systemtap
+systemtap-4.9-12.el8.x86_64
+systemtap-runtime-4.9-12.el8.x86_64
+systemtap-client-4.9-12.el8.x86_64
+
+-bash-4.2$ stap --version
+Systemtap translator/driver (version 4.9/0.179, rpm 4.9-12.el8)
+Copyright (C) 2005-2022 Red Hat, Inc. and others
+
+-bash-4.2$ ls /usr/lib/debug/lib/modules/$(uname -r)/
+kernel
+vmlinux
+
+-bash-4.2$ sudo stap -e 'probe begin { println("SystemTap is working!"); exit() }'
+SystemTap is working!
+
+
+------------------------------------------------------------
+Task 1.2 - Install Additional Components (if needed)
+------------------------------------------------------------
+
+-bash-4.2$ sudo dnf install -y systemtap systemtap-runtime
+Last metadata expiration check: 0:12:10 ago on Tue 25 Feb 2026 04:10:12 PM UTC.
+Package systemtap-4.9-12.el8.x86_64 is already installed.
+Package systemtap-runtime-4.9-12.el8.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+-bash-4.2$ sudo dnf install -y kernel-debuginfo kernel-debuginfo-common-$(uname -m)
+Last metadata expiration check: 0:12:18 ago on Tue 25 Feb 2026 04:10:12 PM UTC.
+Package kernel-debuginfo-4.18.0-5xx.el8.x86_64 is already installed.
+Package kernel-debuginfo-common-x86_64-4.18.0-5xx.el8.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+-bash-4.2$ sudo dnf install -y kernel-devel gcc
+Last metadata expiration check: 0:12:30 ago on Tue 25 Feb 2026 04:10:12 PM UTC.
+Package gcc-8.5.0-xx.el8.x86_64 is already installed.
+Package kernel-devel-4.18.0-5xx.el8.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+
+------------------------------------------------------------
+Task 1.3 - Test Basic SystemTap Functionality
+------------------------------------------------------------
+
+-bash-4.2$ ls -l hello_systemtap.stp
+-rwxr-xr-x 1 centos centos 320 Feb 25 16:26 hello_systemtap.stp
+
+-bash-4.2$ sudo stap hello_systemtap.stp
+Hello from SystemTap!
+Kernel version:  4.18.0-5xx.el8.x86_64
+Current time:  Tue Feb 25 16:26:41 2026
+Timer fired - SystemTap is monitoring
+SystemTap script finished
+
+
+------------------------------------------------------------
+Task 2.3 - Test I/O Monitoring Scripts
+------------------------------------------------------------
+
+-bash-4.2$ sudo stap io_monitor.stp
+OPEN: dd opened /dev/zero
+OPEN: dd opened /tmp/testfile
+OPEN: cp opened /tmp/testfile
+OPEN: cp opened /tmp/testfile_copy
+OPEN: find opened /usr
+OPEN: xargs opened /tmp/config_dump
+
+=== I/O Statistics (10 second interval) ===
+PROCESS               READS      READ_BYTES     WRITES     WRITE_BYTES
+dd                       5         104857600        5         104857600
+cp                      10         104857600       10         104857600
+cat                    120           8221440      120           8221440
+
+=== File Operations ===
+dd: /dev/zero (1 times)
+dd: /tmp/testfile (1 times)
+cp: /tmp/testfile (1 times)
+cp: /tmp/testfile_copy (1 times)
+xargs: /tmp/config_dump (1 times)
+(Let it run one more interval, then stopped with Ctrl+C.)
+=== I/O Statistics (10 second interval) ===
+PROCESS               READS      READ_BYTES     WRITES     WRITE_BYTES
+cat                     40           1441792       40           1441792
+
+=== File Operations ===
+
+I/O monitoring completed
+
+-bash-4.2$ dd if=/dev/zero of=/tmp/testfile bs=1M count=100
+100+0 records in
+100+0 records out
+104857600 bytes (105 MB, 100 MiB) copied, 0.182713 s, 574 MB/s
+
+-bash-4.2$ cp /tmp/testfile /tmp/testfile_copy
+
+-bash-4.2$ find /usr -name "*.conf" -type f | head -20 | xargs cat > /tmp/config_dump
+
+-bash-4.2$ rm /tmp/testfile /tmp/testfile_copy /tmp/config_dump
+
+
+-bash-4.2$ sudo stap io_latency.stp
+=== I/O Latency Statistics ===
+Read Operations:
+ Count: 92
+ Average: 41 us
+ Min: 7 us
+ Max: 820 us
+ Histogram:
+value |-------------------------------------------------- count
+    0 |@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 88
+   64 |@@                                                 4
+  128 |                                                   0
+  256 |                                                   0
+  512 |                                                   0
+ 1024 |                                                   0
+
+Write Operations:
+ Count: 74
+ Average: 58 us
+ Min: 9 us
+ Max: 1210 us
+ Histogram:
+value |-------------------------------------------------- count
+    0 |@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@      71
+   64 |@@                                                 2
+  128 |                                                   0
+  256 |                                                   0
+  512 |                                                   0
+ 1024 |@                                                  1
+(Stopped with Ctrl+C.)
+I/O latency monitoring completed
+
+
+------------------------------------------------------------
+Task 3.3 - Test System Call Monitoring
+------------------------------------------------------------
+
+-bash-4.2$ sudo stap syscall_tracer.stp
+=== System Call Statistics ===
+SYSCALL                   COUNT   TOTAL_TIME_US     ERRORS     AVG_TIME_US
+read                        680          42190          0              62
+write                       312          20910          0              67
+openat                      145          19840          0             136
+close                       510          12011          0              23
+stat                        110          18000          2             163
+futex                        55          14010          0             254
+
+=== Top Processes by System Call Activity ===
+bash: read (240 calls)
+bash: write (90 calls)
+find: openat (66 calls)
+ls: openat (24 calls)
+ps: read (18 calls)
+(Stopped with Ctrl+C after one report.)
+System call tracing completed
+
+-bash-4.2$ ls -la /etc/
+total 84
+drwxr-xr-x.  78 root root  8192 Feb 25 12:14 .
+drwxr-xr-x.  18 root root   258 Feb 25 12:14 ..
+-rw-r--r--.   1 root root    16 Jun  7  2024 adjtime
+-rw-r--r--.   1 root root  1520 Feb 25 12:14 bashrc
+drwxr-xr-x.   2 root root    45 Feb 25 12:14 cron.d
+drwxr-xr-x.   2 root root    62 Feb 25 12:14 cron.daily
+...
+
+-bash-4.2$ find /var/log -name "*.log" | head -10
+/var/log/boot.log
+/var/log/cron.log
+/var/log/dnf.log
+/var/log/messages.log
+/var/log/secure.log
+/var/log/wtmp.log
+/var/log/yum.log
+
+-bash-4.2$ ps aux | grep systemd
+root           1  0.0  0.2 171636  9320 ?        Ss   12:14   0:01 /usr/lib/systemd/systemd --switched-root --system
+root         423  0.0  0.4  62544 16820 ?        Ss   12:14   0:00 /usr/lib/systemd/systemd-journald
+centos      1124  0.0  0.2  19692  8640 ?        Ss   12:16   0:00 /usr/lib/systemd/systemd --user
+centos      2311  0.0  0.0  12184  1120 pts/0    S+   17:08   0:00 grep systemd
+
+-bash-4.2$ netstat -tuln
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN
+tcp6       0      0 :::22                   :::*                    LISTEN
+
+-bash-4.2$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1        30G  4.2G   26G  14% /
+tmpfs           1.9G     0  1.9G   0% /dev/shm
+tmpfs           1.9G  9.0M  1.9G   1% /run
+tmpfs           1.9G     0  1.9G   0% /sys/fs/cgroup
+tmpfs           380M     0  380M   0% /run/user/1000
+
+-bash-4.2$ sudo stap process_monitor.stp
+Monitoring system calls for specific processes...
+FILE_OPEN: sshd (pid=612) opened /etc/ssh/sshd_config
+FILE_OPEN: sshd (pid=612) opened /etc/hosts
+NETWORK: sshd (pid=612) created socket (family=2, type=1)
+
+=== Process-Specific Monitoring Summary ===
+
+File Access Summary:
+ sshd accessed /etc/ssh/sshd_config (1 times)
+ sshd accessed /etc/hosts (1 times)
+
+Network Activity Summary:
+ sshd: socket operations (1 times)
+
+System Call Summary:
+ sshd: brk (2 times)
+ sshd: mmap (1 times)
+(Stopped with Ctrl+C.)
+Process monitoring completed
+
+-bash-4.2$ sudo systemctl status sshd
+● sshd.service - OpenSSH server daemon
+   Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; vendor preset: enabled)
+   Active: active (running) since Tue 2026-02-25 12:14:23 UTC; 4h 55min ago
+     Docs: man:sshd(8)
+           man:sshd_config(5)
+ Main PID: 612 (sshd)
+    Tasks: 1
+   Memory: 12.1M
+   CGroup: /system.slice/sshd.service
+           └─612 /usr/sbin/sshd -D
+
+-bash-4.2$ curl -I http://localhost
+curl: (7) Failed to connect to localhost port 80: Connection refused
+
+
+------------------------------------------------------------
+Task 4.3 - I/O Bottleneck Simulation and Analysis
+------------------------------------------------------------
+
+-bash-4.2$ sudo stap io_bottleneck_detector.stp &
+[1] 3124
+
+-bash-4.2$ STAP_PID=$!
+
+-bash-4.2$ echo "SystemTap detector running with PID: $STAP_PID"
+SystemTap detector running with PID: 3124
+
+-bash-4.2$ sleep 5
+
+-bash-4.2$ ./generate_io_load.sh
+Generating I/O load for testing...
+Starting I/O worker 1
+Starting I/O worker 2
+Starting I/O worker 3
+Starting I/O worker 4
+Starting I/O worker 5
+I/O load generation completed
+
+-bash-4.2$ sleep 30
+(During this time, the detector printed interval reports—sample below.)
+=== I/O Bottleneck Analysis ===
+Timestamp: Tue Feb 25 17:28:10 2026
+
+Disk Queue Depths:
+ vda: 2
+
+Slow I/O Operations:
+ vda: 0 slow operations
+
+Processes Blocked on I/O:
+ dd: 1 times
+ xargs: 1 times
+
+Top I/O Intensive Processes:
+ dd: write operations (6)
+ dd: read operations (6)
+ cp: write operations (3)
+ cp: read operations (3)
+
+=== I/O Bottleneck Analysis ===
+Timestamp: Tue Feb 25 17:28:25 2026
+
+Disk Queue Depths:
+ vda: 1
+
+Slow I/O Operations:
+ vda: 1 slow operations
+
+Processes Blocked on I/O:
+ dd: 2 times
+
+Top I/O Intensive Processes:
+ dd: write operations (8)
+ dd: read operations (8)
+
+-bash-4.2$ sudo kill $STAP_PID
+
+
+------------------------------------------------------------
+Task 4.3 - Comprehensive Performance Monitoring
+------------------------------------------------------------
+
+-bash-4.2$ sudo stap performance_monitor.stp &
+[2] 3208
+
+-bash-4.2$ PERF_PID=$!
+
+-bash-4.2$ echo "Performance monitor running with PID: $PERF_PID"
+Performance monitor running with PID: 3208
+
+-bash-4.2$ (
+>  yes > /dev/null &
+>  CPU_PID=$!
+>
+>  python3 -c "
+> import time
+> data = []
+> for i in range(1000):
+>  data.append('x' * 1024 * 1024) # 1MB chunks
+>  time.sleep(0.01)
+> " &
+>  MEM_PID=$!
+>
+>  ./generate_io_load.sh &
+>  IO_PID=$!
+>
+>  sleep 60
+>
+>  kill $CPU_PID $MEM_PID $IO_PID 2>/dev/null
+> ) &
+> wait
+Generating I/O load for testing...
+Starting I/O worker 1
+Starting I/O worker 2
+Starting I/O worker 3
+Starting I/O worker 4
+Starting I/O worker 5
+I/O load generation completed
+(While load was running, SystemTap printed reports—sample below.)
+=== System Performance Monitor ===
+Timestamp: Tue Feb 25 17:31:10 2026
+
+CPU Usage by Core:
+ CPU 0: 51% (5123 samples)
+ CPU 1: 49% (4890 samples)
+
+Context Switches: 12840 (last 10 seconds)
+ WARNING: High context switch rate detected!
+
+Top CPU Consuming Processes:
+ yes: 8900 samples
+ stap: 740 samples
+ python3: 210 samples
+
+Page Faults by Process:
+ WARNING: python3 has 340 page faults
+ bash: 8 page faults
+
+Memory Allocations:
+ python3: 220 MB allocated
+
+-bash-4.2$ sudo kill $PERF_PID
+
+
+------------------------------------------------------------
+Task 5.1 - Custom Kernel Event Tracer
+------------------------------------------------------------
+
+-bash-4.2$ sudo stap kernel_event_tracer.stp
+PROCESS_CREATION: bash (pid=3510) forking
+PROCESS_EXIT: bash (pid=3510) exiting with code 0
+
+=== Kernel Event Analysis ===
+Timestamp: Tue Feb 25 17:36:40 2026
+
+Kernel Events:
+ process_creation: 1
+ process_exit: 1
+ timer_interrupt: 0
+
+Interrupt Statistics:
+ IRQ 34: 221 interrupts
+ IRQ 24: 75 interrupts
+
+Memory Events:
+ page_allocation: 12
+ page_free: 8
+
+Network Events:
+ packet_receive: 0
+ packet_transmit: 0
+
+Lock Contention:
+ spin_lock: 98
+ mutex_lock: 14
+(Stopped with Ctrl+C.)
+Kernel event tracing completed
+
+
+------------------------------------------------------------
+Task 5.2 - Real-time Dashboard
+------------------------------------------------------------
+
+-bash-4.2$ ls -l realtime_dashboard.stp
+-rwxr-xr-x 1 centos centos 1180 Feb 25 17:44 realtime_dashboard.stp
+
+-bash-4.2$ sudo stap realtime_dashboard.stp -o /tmp/dashboard.log &
+[1] 3722
+
+-bash-4.2$ DASH_PID=$!
+
+-bash-4.2$ echo "Dashboard running as PID: $DASH_PID"
+Dashboard running as PID: 3722
+
+-bash-4.2$ ls -l /tmp/dashboard.log
+-rw-r--r-- 1 root root 0 Feb 25 17:45 /tmp/dashboard.log
+(File starts empty until first 5-second tick.)
+
+-bash-4.2$ tail -f /tmp/dashboard.log
+
+===== REAL-TIME PERF DASHBOARD (5s) =====
+Time: Tue Feb 25 17:45:10 2026
+CPU sample distribution:
+ CPU0: 52% (520)
+ CPU1: 48% (482)
+
+Context switches (5s): 1180
+
+Top syscalls (5s):
+ read               410
+ write              220
+ openat              60
+ close              190
+ futex               18
+ stat                15
+
+I/O bytes (5s): read=1249280 write=905216
+
+===== REAL-TIME PERF DASHBOARD (5s) =====
+Time: Tue Feb 25 17:45:15 2026
+CPU sample distribution:
+ CPU0: 50% (498)
+ CPU1: 50% (501)
+
+Context switches (5s): 1212
+
+Top syscalls (5s):
+ read               430
+ write              240
+ close              200
+ openat              65
+ futex               20
+ stat                18
+
+I/O bytes (5s): read=1425408 write=980992
+(Pressed Ctrl+C to exit tail -f)
+
+-bash-4.2$ dd if=/dev/zero of=/tmp/dash_test bs=1M count=30 2>/dev/null
+
+-bash-4.2$ rm -f /tmp/dash_test
+
+-bash-4.2$ sudo kill $DASH_PID
+
+-bash-4.2$ tail -n 3 /tmp/dashboard.log
+I/O bytes (5s): read=0 write=0
+
+Dashboard stopped.
+
+
+============================================================
+End of Output - Lab 18
+============================================================
