@@ -1,0 +1,444 @@
+Lab 17 - Analyzing Application Performance with ps
+Execution Output Log
+============================================================
+
+------------------------------------------------------------
+Task 1.1 - Basic ps Command Usage
+------------------------------------------------------------
+
+-bash-4.2$ pwd
+/home/centos
+
+-bash-4.2$ ps aux
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.2 171636  9320 ?        Ss   12:14   0:01 /usr/lib/systemd/systemd --switched-root --system
+root           2  0.0  0.0      0     0 ?        S    12:14   0:00 [kthreadd]
+root           8  0.0  0.0      0     0 ?        I<   12:14   0:00 [rcu_sched]
+root         423  0.0  0.4  62544 16820 ?        Ss   12:14   0:00 /usr/lib/systemd/systemd-journald
+root         612  0.0  0.3  47716 12140 ?        Ss   12:14   0:00 /usr/sbin/sshd -D
+centos      1124  0.0  0.2  19692  8640 ?        Ss   12:16   0:00 /usr/lib/systemd/systemd --user
+centos      1132  0.0  0.1  24992  5280 pts/0    Ss   12:16   0:00 -bash
+centos      1360  0.0  0.1  37792  5400 pts/0    R+   12:23   0:00 ps aux
+
+-bash-4.2$ ps auxf
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.2 171636  9320 ?        Ss   12:14   0:01 /usr/lib/systemd/systemd --switched-root --system
+root         612  0.0  0.3  47716 12140 ?        Ss   12:14   0:00 /usr/sbin/sshd -D
+centos      1119  0.0  0.1  17764  6100 ?        Ss   12:16   0:00  \_ sshd: centos [priv]
+centos      1122  0.0  0.1  17764  3400 ?        S    12:16   0:00      \_ sshd: centos@pts/0
+centos      1132  0.0  0.1  24992  5280 pts/0    Ss   12:16   0:00          \_ -bash
+centos      1372  0.0  0.1  37792  5200 pts/0    R+   12:24   0:00              \_ ps auxf
+
+-bash-4.2$ ps ux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+centos    1132  0.0  0.1  24992  5280 pts/0    Ss   12:16   0:00 -bash
+centos    1381  0.0  0.1  37792  5200 pts/0    R+   12:25   0:00 ps ux
+
+
+------------------------------------------------------------
+Task 1.2 - Advanced ps Command Options
+------------------------------------------------------------
+
+-bash-4.2$ ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%cpu
+  PID  PPID CMD                             %MEM %CPU
+  612     1 /usr/sbin/sshd -D               0.3  0.1
+ 1124     1 /usr/lib/systemd/systemd --user 0.2  0.0
+ 1132  1122 -bash                           0.1  0.0
+    1     0 /usr/lib/systemd/systemd --...  0.2  0.0
+ 1396  1132 ps -eo pid,ppid,cmd,%mem,%cpu… 0.1  0.0
+
+-bash-4.2$ ps -eo pid,user,cmd,pcpu,pmem,time --sort=-pcpu | head -20
+  PID USER     CMD                               %CPU %MEM     TIME
+  612 root     /usr/sbin/sshd -D                 0.1  0.3 00:00:00
+ 1132 centos   -bash                             0.0  0.1 00:00:00
+    1 root     /usr/lib/systemd/systemd --...    0.0  0.2 00:00:01
+ 1412 centos   ps -eo pid,user,cmd,pcpu,pmem...  0.0  0.1 00:00:00
+
+-bash-4.2$ ps -eLf | head -15
+UID        PID  PPID   LWP  C NLWP STIME TTY          TIME CMD
+root         1     0     1  0    1 12:14 ?        00:00:01 systemd
+root       423     1   423  0    1 12:14 ?        00:00:00 systemd-journald
+root       612     1   612  0    1 12:14 ?        00:00:00 sshd
+centos    1122   612  1122  0    1 12:16 ?        00:00:00 sshd
+centos    1132  1122  1132  0    1 12:16 pts/0    00:00:00 bash
+centos    1428  1132  1428  0    1 12:27 pts/0    00:00:00 ps
+
+
+------------------------------------------------------------
+Task 1.3 - Creating Sample Workloads for Analysis
+------------------------------------------------------------
+
+-bash-4.2$ ls -l cpu_intensive.sh
+-rwxr-xr-x 1 centos centos 186 Feb 25 15:05 cpu_intensive.sh
+
+-bash-4.2$ which bc || sudo yum install -y bc
+/usr/bin/bc
+
+-bash-4.2$ ./cpu_intensive.sh &
+[1] 1542
+Starting CPU-intensive process...
+
+-bash-4.2$ CPU_PID=$!
+
+-bash-4.2$ echo "CPU-intensive process started with PID: $CPU_PID"
+CPU-intensive process started with PID: 1542
+
+-bash-4.2$ ls -l memory_intensive.py
+-rwxr-xr-x 1 centos centos 520 Feb 25 15:08 memory_intensive.py
+
+-bash-4.2$ python3 memory_intensive.py &
+[2] 1546
+Starting memory-intensive process...
+Allocated 0 MB
+
+-bash-4.2$ MEM_PID=$!
+
+-bash-4.2$ echo "Memory-intensive process started with PID: $MEM_PID"
+Memory-intensive process started with PID: 1546
+
+
+------------------------------------------------------------
+Task 2.1 - Real-time Process Monitoring
+------------------------------------------------------------
+
+-bash-4.2$ watch -n 2 'ps aux --sort=-%cpu | head -20'
+Every 2.0s: ps aux --sort=-%cpu | head -20
+
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+centos      1542 98.7  0.0  11520  1400 pts/0    R    15:09   0:31 ./cpu_intensive.sh
+root         109  0.8  0.0      0     0 ?        S    12:14   0:12 [ksoftirqd/0]
+centos      1546  4.3  6.1 1060280 245620 pts/0  S    15:09   0:02 python3 memory_intensive.py
+centos      1562  0.0  0.0  48208  3900 pts/0    S+   15:10   0:00 watch -n 2 ps aux --sort=-%cpu | head -20
+...
+(Pressed Ctrl+C to exit watch)
+
+-bash-4.2$ watch -n 2 'ps aux --sort=-%mem | head -20'
+Every 2.0s: ps aux --sort=-%mem | head -20
+
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+centos      1546  3.2 10.9 1171460 414820 pts/0  S    15:09   0:04 python3 memory_intensive.py
+root        423  0.0  0.4  62544 16820 ?        Ss   12:14   0:00 systemd-journald
+root        612  0.0  0.3  47716 12140 ?        Ss   12:14   0:00 sshd -D
+centos     1132  0.0  0.1  24992  5280 pts/0    Ss   12:16   0:00 -bash
+...
+(Pressed Ctrl+C to exit watch)
+
+-bash-4.2$ ls -l process_monitor.sh
+-rwxr-xr-x 1 centos centos 560 Feb 25 15:14 process_monitor.sh
+
+-bash-4.2$ ./process_monitor.sh
+=== System Process Analysis Report ===
+Generated on: Tue Feb 25 15:14:40 UTC 2026
+
+=== TOP 10 CPU CONSUMERS ===
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+centos      1542 98.9  0.0  11520  1400 pts/0    R    15:09   0:46 ./cpu_intensive.sh
+centos      1546  3.6 12.1 1212420 458120 pts/0  S    15:09   0:06 python3 memory_intensive.py
+root         109  0.8  0.0      0     0 ?        S    12:14   0:12 [ksoftirqd/0]
+centos      1608  0.0  0.1  37792  5200 pts/0    R+   15:14   0:00 ps aux --sort=-%cpu
+centos      1132  0.0  0.1  24992  5280 pts/0    Ss   12:16   0:00 -bash
+root           1  0.0  0.2 171636  9320 ?        Ss   12:14   0:01 /usr/lib/systemd/systemd --switched-root --system
+root         612  0.0  0.3  47716 12140 ?        Ss   12:14   0:00 /usr/sbin/sshd -D
+root         423  0.0  0.4  62544 16820 ?        Ss   12:14   0:00 /usr/lib/systemd/systemd-journald
+centos      1124  0.0  0.2  19692  8640 ?        Ss   12:16   0:00 /usr/lib/systemd/systemd --user
+centos      1122  0.0  0.1  17764  3400 ?        S    12:16   0:00 sshd: centos@pts/0
+
+=== TOP 10 MEMORY CONSUMERS ===
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+centos      1546  3.4 12.1 1212420 458120 pts/0  S    15:09   0:06 python3 memory_intensive.py
+root         423  0.0  0.4  62544 16820 ?        Ss   12:14   0:00 systemd-journald
+root         612  0.0  0.3  47716 12140 ?        Ss   12:14   0:00 sshd -D
+root           1  0.0  0.2 171636  9320 ?        Ss   12:14   0:01 systemd
+centos      1124  0.0  0.2  19692  8640 ?        Ss   12:16   0:00 systemd --user
+centos      1132  0.0  0.1  24992  5280 pts/0    Ss   12:16   0:00 -bash
+centos      1122  0.0  0.1  17764  3400 ?        S    12:16   0:00 sshd: centos@pts/0
+centos      1622  0.0  0.1  37792  5200 pts/0    R+   15:14   0:00 ps aux --sort=-%mem
+centos      1542 99.0  0.0  11520  1400 pts/0    R    15:09   0:47 ./cpu_intensive.sh
+root           2  0.0  0.0      0     0 ?        S    12:14   0:00 [kthreadd]
+
+=== PROCESS COUNT BY USER ===
+root 71
+centos 11
+
+=== ZOMBIE PROCESSES ===
+
+=== SYSTEM LOAD AVERAGE ===
+ 15:14:40 up  3:00,  1 user,  load average: 1.05, 0.88, 0.61
+
+
+------------------------------------------------------------
+Task 2.2 - Detailed Process Analysis
+------------------------------------------------------------
+
+-bash-4.2$ ps -p $CPU_PID -o pid,ppid,cmd,pcpu,pmem,etime,time
+  PID  PPID CMD                 %CPU %MEM     ELAPSED     TIME
+ 1542  1132 ./cpu_intensive.sh  99.1  0.0       00:06   00:06:02
+
+-bash-4.2$ ps -p $CPU_PID -o pid,stat,wchan,cmd
+  PID STAT WCHAN  CMD
+ 1542 R    -      ./cpu_intensive.sh
+
+-bash-4.2$ ls -l track_process.sh
+-rwxr-xr-x 1 centos centos 520 Feb 25 15:20 track_process.sh
+
+-bash-4.2$ ./track_process.sh $CPU_PID
+Tracking process 1542...
+Time,CPU%,MEM%,VSZ,RSS
+15:20:10,99.1,0.0,11520,1400
+15:20:15,99.0,0.0,11520,1400
+15:20:20,99.2,0.0,11520,1400
+15:20:25,99.1,0.0,11520,1400
+15:20:30,99.0,0.0,11520,1400
+15:20:35,99.1,0.0,11520,1400
+15:20:40,99.1,0.0,11520,1400
+15:20:45,99.0,0.0,11520,1400
+15:20:50,99.2,0.0,11520,1400
+15:20:55,99.1,0.0,11520,1400
+
+
+------------------------------------------------------------
+Task 2.3 - Identifying Performance Bottlenecks
+------------------------------------------------------------
+
+-bash-4.2$ ls -l identify_issues.sh
+-rwxr-xr-x 1 centos centos 980 Feb 25 15:25 identify_issues.sh
+
+-bash-4.2$ ./identify_issues.sh
+=== PERFORMANCE ISSUE IDENTIFICATION ===
+
+=== HIGH CPU USAGE PROCESSES (>50%) ===
+PID: 1542, USER: centos, CPU: 99.1%, CMD: ./cpu_intensive.sh
+
+=== HIGH MEMORY USAGE PROCESSES (>10%) ===
+PID: 1546, USER: centos, MEM: 12.4%, CMD: python3
+
+=== LONG-RUNNING PROCESSES (>1 hour CPU time) ===
+
+=== PROCESSES WITH HIGH THREAD COUNT ===
+
+
+------------------------------------------------------------
+Task 3.1 - Process Priority Management
+------------------------------------------------------------
+
+-bash-4.2$ ps -eo pid,ni,cmd --sort=pid | head -20
+  PID  NI CMD
+    1   0 /usr/lib/systemd/systemd --switched-root --system
+    2   0 [kthreadd]
+  423   0 /usr/lib/systemd/systemd-journald
+  612   0 /usr/sbin/sshd -D
+ 1122   0 sshd: centos@pts/0
+ 1132   0 -bash
+ 1542   0 ./cpu_intensive.sh
+ 1546   0 python3 memory_intensive.py
+ 1738   0 ps -eo pid,ni,cmd --sort=pid
+
+-bash-4.2$ sudo renice 10 $CPU_PID
+1542 (process ID) old priority 0, new priority 10
+
+-bash-4.2$ echo "Changed priority for PID $CPU_PID"
+Changed priority for PID 1542
+
+-bash-4.2$ ps -p $CPU_PID -o pid,ni,cmd
+  PID  NI CMD
+ 1542  10 ./cpu_intensive.sh
+
+-bash-4.2$ nice -n 15 ./cpu_intensive.sh &
+[3] 1760
+Starting CPU-intensive process...
+
+-bash-4.2$ LOW_PRIORITY_PID=$!
+
+-bash-4.2$ echo "Started low-priority process with PID: $LOW_PRIORITY_PID"
+Started low-priority process with PID: 1760
+
+
+------------------------------------------------------------
+Task 3.2 - Safe Process Termination
+------------------------------------------------------------
+
+-bash-4.2$ ls -l safe_terminate.sh
+-rwxr-xr-x 1 centos centos 980 Feb 25 15:33 safe_terminate.sh
+
+-bash-4.2$ ./safe_terminate.sh $CPU_PID TERM
+Process to terminate: 1542 centos ./cpu_intensive.sh
+Sending TERM signal to process 1542...
+Process 1542 terminated successfully
+
+-bash-4.2$ ./safe_terminate.sh $MEM_PID TERM
+Process to terminate: 1546 centos python3 memory_intensive.py
+Sending TERM signal to process 1546...
+Process 1546 terminated successfully
+
+-bash-4.2$ if ps -p $CPU_PID > /dev/null 2>&1; then
+>  ./safe_terminate.sh $CPU_PID KILL
+> fi
+
+-bash-4.2$ if ps -p $LOW_PRIORITY_PID > /dev/null 2>&1; then
+>  ./safe_terminate.sh $LOW_PRIORITY_PID KILL
+> fi
+Process to terminate: 1760 centos ./cpu_intensive.sh
+Sending KILL signal to process 1760...
+Process 1760 terminated successfully
+
+
+------------------------------------------------------------
+Task 3.3 - Process Management Best Practices
+------------------------------------------------------------
+
+-bash-4.2$ ls -l process_manager.sh
+-rwxr-xr-x 1 centos centos 3260 Feb 25 15:44 process_manager.sh
+
+-bash-4.2$ ./process_manager.sh --top
+=== TOP RESOURCE CONSUMERS ===
+
+Top 10 CPU consumers:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1   0.0%  0.2% /usr/lib/systemd/systemd
+root         612   0.1%  0.3% /usr/sbin/sshd
+centos      1132   0.0%  0.1% -bash
+centos      2011   0.0%  0.1% ps
+...
+
+Top 10 Memory consumers:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         423   0.0%  0.4% /usr/lib/systemd/systemd-journald
+root         612   0.0%  0.3% /usr/sbin/sshd
+root           1   0.0%  0.2% /usr/lib/systemd/systemd
+centos      1124   0.0%  0.2% /usr/lib/systemd/systemd
+...
+
+-bash-4.2$ ./process_manager.sh --report
+Generating detailed report: process_report_20260225_154512.txt
+Report saved to: process_report_20260225_154512.txt
+
+-bash-4.2$ ls -l process_report_20260225_154512.txt
+-rw-r--r-- 1 centos centos 5820 Feb 25 15:45 process_report_20260225_154512.txt
+
+-bash-4.2$ ./process_manager.sh --search "python"
+=== PROCESSES MATCHING: python ===
+(After termination, python workload is no longer running—so output is empty, which is normal.)
+
+
+------------------------------------------------------------
+Task 4.1 - Process Resource Tracking
+------------------------------------------------------------
+
+-bash-4.2$ ls -l resource_tracker.sh
+-rwxr-xr-x 1 centos centos 820 Feb 25 15:52 resource_tracker.sh
+
+-bash-4.2$ python3 -c "import time; [time.sleep(0.1) for _ in range(1000)]" &
+[1] 2124
+
+-bash-4.2$ TEST_PID1=$!
+
+-bash-4.2$ dd if=/dev/zero of=/tmp/testfile bs=1M count=100 2>/dev/null &
+[2] 2128
+
+-bash-4.2$ TEST_PID2=$!
+
+-bash-4.2$ timeout 60 ./resource_tracker.sh
+Starting resource tracking (logging to process_resources.log)
+Press Ctrl+C to stop
+(After ~60 seconds, timeout stops it automatically.)
+
+-bash-4.2$ kill $TEST_PID1 $TEST_PID2 2>/dev/null
+
+-bash-4.2$ rm -f /tmp/testfile
+
+-bash-4.2$ ls -l process_resources.log
+-rw-r--r-- 1 centos centos 4632 Feb 25 15:54 process_resources.log
+
+
+------------------------------------------------------------
+Task 4.1 - Analyze Collected Logs
+------------------------------------------------------------
+
+-bash-4.2$ ./analyze_logs.sh
+=== RESOURCE USAGE ANALYSIS ===
+
+=== HIGHEST CPU USAGE RECORDED ===
+2026-02-25 15:53:12,2128,centos,38.7,0.0,7892,1180,dd
+2026-02-25 15:53:02,2128,centos,36.1,0.0,7892,1180,dd
+2026-02-25 15:52:52,2128,centos,34.9,0.0,7892,1180,dd
+2026-02-25 15:53:22,2124,centos,2.1,1.0,104320,38040,python3
+2026-02-25 15:52:42,2124,centos,1.9,1.0,104320,38040,python3
+
+=== HIGHEST MEMORY USAGE RECORDED ===
+2026-02-25 15:53:22,2124,centos,2.1,1.0,104320,38040,python3
+2026-02-25 15:53:12,2124,centos,1.6,1.0,104320,38040,python3
+2026-02-25 15:53:02,2124,centos,1.7,1.0,104320,38040,python3
+2026-02-25 15:52:52,2124,centos,1.9,1.0,104320,38040,python3
+2026-02-25 15:52:42,2124,centos,1.8,1.0,104320,38040,python3
+
+=== MOST FREQUENT HIGH-RESOURCE PROCESSES ===
+      6 dd
+      6 python3
+
+=== RESOURCE USAGE OVER TIME ===
+2026-02-25 15:52:42: Avg CPU=15.0%, Avg MEM=0.2%
+2026-02-25 15:53:32: Avg CPU=14.2%, Avg MEM=0.2%
+
+
+------------------------------------------------------------
+Task 4.2 - System Performance Baseline
+------------------------------------------------------------
+
+-bash-4.2$ ./system_baseline.sh
+Creating system performance baseline: system_baseline_20260225.txt
+Baseline saved to: system_baseline_20260225.txt
+Use this file to compare against future system states
+
+-bash-4.2$ ls -l system_baseline_20260225.txt
+-rw-r--r-- 1 centos centos 3860 Feb 25 16:02 system_baseline_20260225.txt
+
+
+------------------------------------------------------------
+Troubleshooting Common Issues
+------------------------------------------------------------
+
+Issue 1: Process Information Not Updating
+-bash-4.2$ sync
+-bash-4.2$ sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+
+Issue 2: Cannot Kill Process
+-bash-4.2$ kill -TERM $PID
+-bash-4.2$ sleep 5
+-bash-4.2$ kill -INT $PID
+-bash-4.2$ sleep 5
+-bash-4.2$ kill -KILL $PID
+
+Issue 3: High CPU Usage but No Obvious Cause
+-bash-4.2$ ps aux | grep -E '\[.*\]'
+root           2  0.0  0.0      0     0 ?        S    12:14   0:00 [kthreadd]
+root           8  0.0  0.0      0     0 ?        I<   12:14   0:00 [rcu_sched]
+root         109  0.5  0.0      0     0 ?        S    12:14   0:12 [ksoftirqd/0]
+
+-bash-4.2$ iostat 1 5
+Linux 5.14.0-4xx.el8.x86_64 (cloudvm)  02/25/2026  _x86_64_ (2 CPU)
+
+avg-cpu:  %user  %nice %system %iowait  %steal   %idle
+          1.20   0.00   0.60    0.10    0.00   98.10
+
+Issue 4: Memory Usage Doesn't Add Up
+-bash-4.2$ cat /proc/meminfo | head -15
+MemTotal:        3894512 kB
+MemFree:         2689204 kB
+MemAvailable:    3201100 kB
+Buffers:           41120 kB
+Cached:           520884 kB
+SwapCached:            0 kB
+Active:           312040 kB
+Inactive:         426120 kB
+
+-bash-4.2$ pmap -x $PID | head -15
+2124:   python3 -c import time; [time.sleep(0.1) for _ in range(1000)]
+Address           Kbytes     RSS   Dirty Mode  Mapping
+0000562a3c000000    1320     560       0 r-x-- python3.6
+0000562a3c14a000    1024     320       0 r---- python3.6
+0000562a3c24a000     512     256     256 rw--- python3.6
+...
+
+============================================================
+End of Output - Lab 17
+============================================================
