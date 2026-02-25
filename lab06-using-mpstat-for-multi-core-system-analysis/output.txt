@@ -1,0 +1,555 @@
+Lab 06 - Using mpstat for Multi-Core System Analysis
+Execution Output Log
+========================================
+
+Task 1: Environment Preparation and mpstat Installation
+-------------------------------------------------------
+
+# lscpu
+Architecture:             x86_64
+CPU op-mode(s):           32-bit, 64-bit
+Address sizes:            46 bits physical, 48 bits virtual
+Byte Order:               Little Endian
+CPU(s):                   4
+On-line CPU(s) list:      0-3
+Vendor ID:                GenuineIntel
+Model name:               Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+CPU family:               6
+Model:                    85
+Thread(s) per core:       2
+Core(s) per socket:       2
+Socket(s):                1
+Stepping:                 7
+BogoMIPS:                 5000.00
+Hypervisor vendor:        KVM
+Virtualization type:      full
+L1d cache:                64 KiB (2 instances)
+L1i cache:                64 KiB (2 instances)
+L2 cache:                 2 MiB (2 instances)
+L3 cache:                 35.8 MiB (1 instance)
+NUMA node(s):             1
+NUMA node0 CPU(s):        0-3
+
+# cat /proc/cpuinfo | grep -E "(processor|model name|cpu cores|siblings)"
+processor       : 0
+model name      : Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+cpu cores       : 2
+siblings        : 4
+processor       : 1
+model name      : Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+cpu cores       : 2
+siblings        : 4
+processor       : 2
+model name      : Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+cpu cores       : 2
+siblings        : 4
+processor       : 3
+model name      : Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+cpu cores       : 2
+siblings        : 4
+
+# nproc
+4
+
+# uptime
+ 10:41:26 up  1:07,  1 user,  load average: 0.04, 0.03, 0.00
+
+
+Subtask 1.2: Install sysstat Package (Ubuntu/Debian)
+----------------------------------------------------
+
+# sudo apt update
+Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
+Hit:2 http://archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:3 http://archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+18 packages can be upgraded. Run 'apt list --upgradable' to see them.
+
+# sudo apt install -y sysstat
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  sysstat
+0 upgraded, 1 newly installed, 0 to remove and 18 not upgraded.
+Need to get 434 kB of archives.
+After this operation, 1,740 kB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble/main amd64 sysstat amd64 12.6.1-1ubuntu1 [434 kB]
+Fetched 434 kB in 1s (551 kB/s)
+Selecting previously unselected package sysstat.
+(Reading database ... 118732 files and directories currently installed.)
+Preparing to unpack .../sysstat_12.6.1-1ubuntu1_amd64.deb ...
+Unpacking sysstat (12.6.1-1ubuntu1) ...
+Setting up sysstat (12.6.1-1ubuntu1) ...
+Created symlink /etc/systemd/system/multi-user.target.wants/sysstat.service → /usr/lib/systemd/system/sysstat.service.
+Processing triggers for man-db (2.12.0-4build2) ...
+
+# mpstat -V
+sysstat version 12.6.1
+(C) Sebastien Godard (sysstat <at> orange.fr)
+
+
+Subtask 1.3: Enable sysstat Data Collection
+-------------------------------------------
+
+# sudo systemctl enable sysstat
+Created symlink /etc/systemd/system/multi-user.target.wants/sysstat.service → /usr/lib/systemd/system/sysstat.service.
+
+# sudo systemctl start sysstat
+
+# sudo systemctl status sysstat
+● sysstat.service - Resets System Activity Logs
+     Loaded: loaded (/usr/lib/systemd/system/sysstat.service; enabled; preset: enabled)
+     Active: active (exited) since Sun 2026-02-25 10:43:10 UTC; 7s ago
+       Docs: man:sa1(8)
+             man:sa2(8)
+    Process: 2426 ExecStart=/usr/lib/sysstat/sysstat.sh start (code=exited, status=0/SUCCESS)
+   Main PID: 2426 (code=exited, status=0/SUCCESS)
+
+Feb 25 10:43:10 ip-172-31-10-187 systemd[1]: Starting sysstat.service - Resets System Activity Logs...
+Feb 25 10:43:10 ip-172-31-10-187 systemd[1]: Finished sysstat.service - Resets System Activity Logs.
+
+# cat /etc/default/sysstat
+# Configuration file for sysstat.
+
+# Should sadc collect system activity informations? Valid values
+# are "true" and "false". Please do not put other values, they
+# will be rejected by systemd.
+ENABLED="true"
+
+# Additional options passed to sadc
+#OPTIONS="-S DISK"
+
+
+Task 2: Basic mpstat Usage and CPU Monitoring
+---------------------------------------------
+
+# mpstat -P ALL
+Linux 6.8.0-xx-generic (ip-172-31-10-187)   02/25/2026  _x86_64_  (4 CPU)
+
+10:45:02 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:45:02 AM  all    0.33    0.00    0.17    0.00    0.00    0.03    0.10    0.00    0.00   99.37
+10:45:02 AM    0    0.40    0.00    0.20    0.00    0.00    0.00    0.10    0.00    0.00   99.30
+10:45:02 AM    1    0.20    0.00    0.10    0.00    0.00    0.00    0.10    0.00    0.00   99.60
+10:45:02 AM    2    0.30    0.00    0.20    0.00    0.00    0.10    0.10    0.00    0.00   99.30
+10:45:02 AM    3    0.40    0.00    0.20    0.00    0.00    0.00    0.10    0.00    0.00   99.30
+
+# mpstat -P ALL 2 5
+Linux 6.8.0-xx-generic (ip-172-31-10-187)   02/25/2026  _x86_64_  (4 CPU)
+
+10:45:26 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:45:28 AM  all    0.50    0.00    0.25    0.00    0.00    0.00    0.12    0.00    0.00   99.13
+10:45:28 AM    0    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+10:45:28 AM    1    0.50    0.00    0.00    0.00    0.00    0.00    0.50    0.00    0.00   99.00
+10:45:28 AM    2    0.00    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:45:28 AM    3    1.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+
+10:45:30 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:45:32 AM  all    0.37    0.00    0.12    0.00    0.00    0.00    0.10    0.00    0.00   99.41
+10:45:32 AM    0    0.50    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:45:32 AM    1    0.00    0.00    0.00    0.00    0.00    0.00    0.50    0.00    0.00   99.50
+10:45:32 AM    2    0.50    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:45:32 AM    3    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+
+10:45:34 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:45:36 AM  all    0.62    0.00    0.12    0.00    0.00    0.00    0.10    0.00    0.00   99.16
+10:45:36 AM    0    1.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+10:45:36 AM    1    0.50    0.00    0.00    0.00    0.00    0.00    0.50    0.00    0.00   98.50
+10:45:36 AM    2    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+10:45:36 AM    3    0.50    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+
+10:45:38 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:45:40 AM  all    0.50    0.00    0.25    0.00    0.00    0.00    0.10    0.00    0.00   99.15
+10:45:40 AM    0    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+10:45:40 AM    1    0.50    0.00    0.00    0.00    0.00    0.00    0.50    0.00    0.00   99.00
+10:45:40 AM    2    0.50    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:45:40 AM    3    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+
+10:45:42 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:45:44 AM  all    0.37    0.00    0.12    0.00    0.00    0.00    0.10    0.00    0.00   99.41
+10:45:44 AM    0    0.50    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:45:44 AM    1    0.00    0.00    0.00    0.00    0.00    0.00    0.50    0.00    0.00   99.50
+10:45:44 AM    2    0.50    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:45:44 AM    3    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:     all    0.47    0.00    0.17    0.00    0.00    0.00    0.10    0.00    0.00   99.26
+Average:       0    0.65    0.00    0.20    0.00    0.00    0.00    0.00    0.00    0.00   99.15
+Average:       1    0.30    0.00    0.00    0.00    0.00    0.00    0.50    0.00    0.00   99.20
+Average:       2    0.40    0.00    0.20    0.00    0.00    0.00    0.00    0.00    0.00   99.40
+Average:       3    0.60    0.00    0.30    0.00    0.00    0.00    0.00    0.00    0.00   99.10
+
+# mpstat -P 0 2 5
+Linux 6.8.0-xx-generic (ip-172-31-10-187)   02/25/2026  _x86_64_  (4 CPU)
+
+10:46:18 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:46:20 AM    0    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+10:46:22 AM    0    1.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+10:46:24 AM    0    0.00    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:46:26 AM    0    0.50    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:46:28 AM    0    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:       0    0.50    0.00    0.30    0.00    0.00    0.00    0.00    0.00    0.00   99.20
+
+# mpstat -P ALL 1 3 | head -20
+Linux 6.8.0-xx-generic (ip-172-31-10-187)   02/25/2026  _x86_64_  (4 CPU)
+
+10:46:45 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:46:46 AM  all    0.25    0.00    0.25    0.00    0.00    0.00    0.10    0.00    0.00   99.40
+10:46:46 AM    0    0.00    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.50
+10:46:46 AM    1    0.50    0.00    0.00    0.00    0.00    0.00    0.50    0.00    0.00   99.00
+10:46:46 AM    2    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  100.00
+10:46:46 AM    3    0.50    0.00    0.50    0.00    0.00    0.00    0.00    0.00    0.00   99.00
+
+
+Subtask 2.3: Baseline Measurement Script
+----------------------------------------
+
+# ./baseline_cpu.sh
+=== CPU Baseline Measurement ===
+Date: Sun Feb 25 10:48:12 UTC 2026
+System: ip-172-31-10-187
+
+=== CPU Architecture ===
+Architecture:                         x86_64
+CPU(s):                               4
+Thread(s) per core:                   2
+Core(s) per socket:                   2
+Socket(s):                            1
+
+=== Current CPU Usage (10 second average) ===
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:     all    0.54    0.00    0.18    0.00    0.00    0.01    0.10    0.00    0.00   99.17
+Average:       0    0.70    0.00    0.20    0.00    0.00    0.00    0.00    0.00    0.00   99.10
+Average:       1    0.40    0.00    0.10    0.00    0.00    0.00    0.50    0.00    0.00   99.00
+Average:       2    0.50    0.00    0.20    0.00    0.00    0.10    0.00    0.00    0.00   99.20
+Average:       3    0.60    0.00    0.20    0.00    0.00    0.00    0.00    0.00    0.00   99.20
+
+=== System Load ===
+ 10:48:23 up  1:14,  1 user,  load average: 0.05, 0.03, 0.00
+
+=== Top CPU Consuming Processes ===
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root      1288  0.3  0.6  95860 13100 ?        Ss   09:41   0:02 /usr/lib/systemd/systemd-journald
+toor      2451  0.2  0.4  12440  8840 pts/0    Ss   10:48   0:00 -bash
+root       932  0.1  0.3  38144  7200 ?        Ss   09:41   0:01 /usr/sbin/sshd -D
+root       995  0.1  0.5  91672 12040 ?        Ss   09:41   0:01 /usr/bin/python3 /usr/bin/amazon-ssm-agent
+root      1050  0.0  0.2  17296  4980 ?        Ss   09:41   0:00 /usr/sbin/cron -f -P
+root      1096  0.0  0.1  10468  3200 ?        Ss   09:41   0:00 /usr/sbin/atd -f
+root      1162  0.0  0.2  21560  5120 ?        Ss   09:41   0:00 /usr/sbin/rsyslogd -n -iNONE
+root      1204  0.0  0.2  22616  5360 ?        Ss   09:41   0:00 /usr/sbin/NetworkManager --no-daemon
+root      1402  0.0  0.2  24052  5140 ?        Ss   09:41   0:00 /usr/sbin/systemd-logind
+
+
+Task 3: Advanced CPU Load Distribution Analysis
+-----------------------------------------------
+
+# sudo apt install -y stress
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  stress
+0 upgraded, 1 newly installed, 0 to remove and 18 not upgraded.
+Need to get 25.8 kB of archives.
+After this operation, 67.6 kB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble/universe amd64 stress amd64 1.0.7-1 [25.8 kB]
+Fetched 25.8 kB in 0s (210 kB/s)
+Selecting previously unselected package stress.
+(Reading database ... 118791 files and directories currently installed.)
+Preparing to unpack .../stress_1.0.7-1_amd64.deb ...
+Unpacking stress (1.0.7-1) ...
+Setting up stress (1.0.7-1) ...
+
+# stress --cpu $(nproc) --timeout 60s &
+[1] 2621
+stress: info: [2621] dispatching hogs: 4 cpu, 0 io, 0 vm, 0 hdd
+
+# mpstat -P ALL 2 30
+Linux 6.8.0-xx-generic (ip-172-31-10-187)   02/25/2026  _x86_64_  (4 CPU)
+
+10:50:05 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:50:07 AM  all   95.10    0.00    4.20    0.00    0.00    0.10    0.60    0.00    0.00    0.00
+10:50:07 AM    0   94.50    0.00    4.80    0.00    0.00    0.10    0.60    0.00    0.00    0.00
+10:50:07 AM    1   95.30    0.00    4.00    0.00    0.00    0.10    0.60    0.00    0.00    0.00
+10:50:07 AM    2   95.20    0.00    4.10    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+10:50:07 AM    3   95.40    0.00    3.90    0.00    0.00    0.10    0.60    0.00    0.00    0.00
+
+10:50:09 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:50:11 AM  all   95.60    0.00    3.80    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+10:50:11 AM    0   95.40    0.00    4.00    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+10:50:11 AM    1   95.50    0.00    3.90    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+10:50:11 AM    2   95.80    0.00    3.60    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+10:50:11 AM    3   95.70    0.00    3.70    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+
+10:50:13 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+10:50:15 AM  all   96.00    0.00    3.50    0.00    0.00    0.10    0.40    0.00    0.00    0.00
+10:50:15 AM    0   95.90    0.00    3.60    0.00    0.00    0.10    0.40    0.00    0.00    0.00
+10:50:15 AM    1   96.10    0.00    3.40    0.00    0.00    0.10    0.40    0.00    0.00    0.00
+10:50:15 AM    2   96.00    0.00    3.50    0.00    0.00    0.10    0.40    0.00    0.00    0.00
+10:50:15 AM    3   96.10    0.00    3.40    0.00    0.00    0.10    0.40    0.00    0.00    0.00
+
+... (continues until 60 seconds completes) ...
+
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:     all   95.70    0.00    3.70    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+Average:       0   95.50    0.00    3.90    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+Average:       1   95.80    0.00    3.60    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+Average:       2   95.80    0.00    3.60    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+Average:       3   95.70    0.00    3.70    0.00    0.00    0.10    0.50    0.00    0.00    0.00
+
+
+Subtask 3.2: Comprehensive Analysis Script
+------------------------------------------
+
+# ./cpu_analysis.sh 60 2
+=== Multi-Core CPU Analysis ===
+Monitoring for 60 seconds with 2 second intervals
+Start time: Sun Feb 25 10:52:01 UTC 2026
+
+Generating single-core load...
+stress: info: [2740] dispatching hogs: 1 cpu, 0 io, 0 vm, 0 hdd
+Generating multi-core load...
+stress: info: [2751] dispatching hogs: 4 cpu, 0 io, 0 vm, 0 hdd
+Generating I/O intensive load...
+stress: info: [2764] dispatching hogs: 0 cpu, 2 io, 0 vm, 0 hdd
+
+=== Analysis Results ===
+Average CPU utilization per core:
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:     all   28.60    0.00    1.70    4.50    0.00    0.10    0.40    0.00    0.00   64.70
+Average:       0   44.20    0.00    2.10    3.20    0.00    0.10    0.40    0.00    0.00   50.00
+Average:       1   21.40    0.00    1.20    5.80    0.00    0.10    0.40    0.00    0.00   71.10
+Average:       2   24.10    0.00    1.60    4.30    0.00    0.10    0.40    0.00    0.00   69.50
+Average:       3   24.70    0.00    1.80    4.60    0.00    0.10    0.40    0.00    0.00   68.40
+
+Peak utilization periods:
+10:52:07 AM CPU0 Total: 52%
+10:52:09 AM CPU0 Total: 56%
+10:52:11 AM CPU0 Total: 53%
+10:52:23 AM CPU1 Total: 89%
+10:52:25 AM CPU2 Total: 92%
+10:52:27 AM CPU3 Total: 90%
+
+
+Subtask 3.3: Bottleneck Detection Script
+----------------------------------------
+
+# ./detect_bottlenecks.sh
+=== CPU Bottleneck Detection ===
+Analyzing CPU metrics from cpu_stats.log
+
+=== Average CPU Utilization per Core ===
+CPU 0: User=44.2% System=2.1% Total=46.3%
+CPU 1: User=21.4% System=1.2% Total=22.6%
+CPU 2: User=24.1% System=1.6% Total=25.7%
+CPU 3: User=24.7% System=1.8% Total=26.5%
+
+=== Load Imbalance Detection ===
+LOW LOAD: CPU 1 at 22.6%
+LOW LOAD: CPU 2 at 25.7%
+LOW LOAD: CPU 3 at 26.5%
+
+=== I/O Wait Analysis ===
+
+
+Task 4: Resource Allocation Optimization
+----------------------------------------
+
+Subtask 4.1: CPU Affinity Analysis
+----------------------------------
+
+# ./cpu_affinity_test.sh
+=== CPU Affinity and Load Balancing Test ===
+System has 4 logical CPUs
+
+Testing CPU affinity for CPU 0
+stress: info: [2890] dispatching hogs: 1 cpu, 0 io, 0 vm, 0 hdd
+Results for CPU 0:
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:       0   96.90    0.00    2.30    0.00    0.00    0.10    0.70    0.00    0.00    0.00
+
+Testing CPU affinity for CPU 1
+stress: info: [2903] dispatching hogs: 1 cpu, 0 io, 0 vm, 0 hdd
+Results for CPU 1:
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:       1   96.50    0.00    2.60    0.00    0.00    0.10    0.80    0.00    0.00    0.00
+
+Testing CPU affinity for CPU 2
+stress: info: [2916] dispatching hogs: 1 cpu, 0 io, 0 vm, 0 hdd
+Results for CPU 2:
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:       2   96.70    0.00    2.40    0.00    0.00    0.10    0.80    0.00    0.00    0.00
+
+Testing CPU affinity for CPU 3
+stress: info: [2929] dispatching hogs: 1 cpu, 0 io, 0 vm, 0 hdd
+Results for CPU 3:
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:       3   96.60    0.00    2.50    0.00    0.00    0.10    0.80    0.00    0.00    0.00
+
+=== Load Distribution Summary ===
+CPU 0: 99.2% utilized
+CPU 1: 99.1% utilized
+CPU 2: 99.1% utilized
+CPU 3: 99.1% utilized
+
+
+Subtask 4.2: Optimize Process Distribution
+------------------------------------------
+
+# ./optimize_processes.sh
+=== Process Distribution Optimization ===
+Scenario 1: All processes on CPU 0 (Poor distribution)
+
+Results - Unbalanced Load:
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:     all   25.10    0.00    1.10    0.00    0.00    0.10    0.40    0.00    0.00   73.30
+Average:       0   96.30    0.00    2.80    0.00    0.00    0.10    0.80    0.00    0.00    0.00
+Average:       1    1.40    0.00    0.40    0.00    0.00    0.00    0.20    0.00    0.00   98.00
+Average:       2    1.20    0.00    0.40    0.00    0.00    0.00    0.20    0.00    0.00   98.20
+
+Scenario 2: Distributed processes (Good distribution)
+
+Results - Balanced Load:
+Average:     CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle
+Average:     all   94.80    0.00    3.90    0.00    0.00    0.10    1.20    0.00    0.00    0.00
+Average:       0   94.60    0.00    4.00    0.00    0.00    0.10    1.30    0.00    0.00    0.00
+Average:       1   94.90    0.00    3.80    0.00    0.00    0.10    1.20    0.00    0.00    0.00
+Average:       2   95.10    0.00    3.70    0.00    0.00    0.10    1.10    0.00    0.00    0.00
+Average:       3   94.80    0.00    4.10    0.00    0.00    0.10    1.00    0.00    0.00    0.00
+
+=== Load Distribution Analysis ===
+Unbalanced scenario - CPU utilization:
+CPU 0: 99.1%
+CPU 1: 1.8%
+CPU 2: 1.6%
+CPU 3: 1.7%
+
+Balanced scenario - CPU utilization:
+CPU 0: 98.6%
+CPU 1: 98.7%
+CPU 2: 98.8%
+CPU 3: 98.9%
+
+
+Subtask 4.3: Performance Monitoring Dashboard
+---------------------------------------------
+
+# echo "Dashboard created. Run './cpu_dashboard.sh' for real-time monitoring."
+Dashboard created. Run './cpu_dashboard.sh' for real-time monitoring.
+
+
+Task 5: Advanced Analysis and Reporting
+---------------------------------------
+
+Subtask 5.1: Historical Data Analysis
+-------------------------------------
+
+# ./historical_analysis.sh
+=== Historical CPU Performance Analysis ===
+System Activity Reporter (SAR) data found.
+Analyzing data from: /var/log/sysstat/sa25
+
+=== CPU Utilization Summary (Last 24 hours) ===
+10:00:01 AM     all      0.35      0.00      0.18      0.00      0.00      0.02      0.10     99.35
+10:10:01 AM     all      0.30      0.00      0.15      0.00      0.00      0.02      0.12     99.41
+10:20:01 AM     all      0.45      0.00      0.20      0.00      0.00      0.03      0.10     99.22
+10:30:01 AM     all      0.40      0.00      0.22      0.00      0.00      0.02      0.11     99.25
+Average:        all      0.38      0.00      0.19      0.00      0.00      0.02      0.11     99.30
+
+=== Per-CPU Statistics ===
+10:30:01 AM       0      0.60      0.00      0.25      0.00      0.00      0.03      0.10     99.02
+10:30:01 AM       1      0.30      0.00      0.15      0.00      0.00      0.02      0.12     99.41
+10:30:01 AM       2      0.35      0.00      0.20      0.00      0.00      0.02      0.11     99.32
+10:30:01 AM       3      0.25      0.00      0.18      0.00      0.00      0.02      0.11     99.44
+Average:          0      0.52      0.00      0.22      0.00      0.00      0.03      0.10     99.13
+Average:          1      0.31      0.00      0.15      0.00      0.00      0.02      0.12     99.40
+Average:          2      0.34      0.00      0.19      0.00      0.00      0.02      0.11     99.34
+Average:          3      0.28      0.00      0.18      0.00      0.00      0.02      0.11     99.41
+
+
+Subtask 5.2: Performance Report Generation
+------------------------------------------
+
+# sudo apt install -y bc
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  bc
+0 upgraded, 1 newly installed, 0 to remove and 18 not upgraded.
+Need to get 110 kB of archives.
+After this operation, 247 kB of additional disk space will be used.
+Fetched 110 kB in 0s (1,120 kB/s)
+Selecting previously unselected package bc.
+(Reading database ... 118812 files and directories currently installed.)
+Preparing to unpack .../bc_1.07.1-3build1_amd64.deb ...
+Unpacking bc (1.07.1-3build1) ...
+Setting up bc (1.07.1-3build1) ...
+
+# ./generate_report.sh
+=== Generating CPU Performance Report ===
+Report will be saved as: cpu_performance_report_20260225_105824.txt
+Report generated successfully: cpu_performance_report_20260225_105824.txt
+
+Report summary:
+==========================================
+ CPU PERFORMANCE ANALYSIS REPORT
+==========================================
+Generated: Sun Feb 25 10:58:24 UTC 2026
+System: ip-172-31-10-187
+Analyst: toor
+
+=== SYSTEM CONFIGURATION ===
+CPU Architecture:
+Architecture:                         x86_64
+Model name:                           Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+CPU(s):                               4
+Thread(s) per core:                   2
+Core(s) per socket:                   2
+Socket(s):                            1
+L1d cache:                            64 KiB (2 instances)
+L1i cache:                            64 KiB (2 instances)
+L2 cache:                             2 MiB (2 instances)
+L3 cache:                             35.8 MiB (1 instance)
+
+Memory Information:
+               total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       620Mi       2.4Gi       1.0Mi       760Mi       2.9Gi
+Swap:             0B          0B          0B
+...
+(Full report saved to cpu_performance_report_20260225_105824.txt)
+
+
+Subtask 5.3: Automated Monitoring Setup
+---------------------------------------
+
+# ./setup_monitoring.sh
+=== Setting up Automated CPU Monitoring ===
+Monitoring setup completed!
+
+Files created in /home/toor/cpu_monitoring:
+total 20
+drwxr-xr-x 3 toor toor 4096 Feb 25 11:02 .
+drwxr-x--- 5 toor toor 4096 Feb 25 11:02 ..
+-rwxr-xr-x 1 toor toor 1107 Feb 25 11:02 continuous_monitor.sh
+-rw-r--r-- 1 toor toor  229 Feb 25 11:02 cpu-monitor.service
+-rwxr-xr-x 1 toor toor  512 Feb 25 11:02 rotate_logs.sh
+drwxr-xr-x 2 toor toor 4096 Feb 25 11:02 logs
+
+To start monitoring:
+1. Manual: ./continuous_monitor.sh &
+2. Background: nohup ./continuous_monitor.sh > /dev/null 2>&1 &
+
+To set up log rotation (run weekly):
+ ./rotate_logs.sh
+
+Logs will be stored in: /home/toor/cpu_monitoring/logs/
+
+========================================
+End of Lab 06 Output Log
+========================================
