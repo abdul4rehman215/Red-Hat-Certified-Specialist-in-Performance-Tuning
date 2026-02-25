@@ -1,0 +1,334 @@
+sysstat version 12.5.4
+(C) Sebastien Godard (sysstat <at> orange.fr)
+
+sysstat-12.5.4-8.el9.x86_64
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          2.10    0.00    0.78    0.06    0.00   97.06
+
+Device             tps    kB_read/s    kB_wrtn/s    kB_dscd/s    kB_read    kB_wrtn    kB_dscd
+nvme0n1           0.65         0.40        10.50         0.00      65840     145220         0
+nvme1n1           0.00         0.00         0.00         0.00          0          0         0
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          2.08    0.00    0.80    0.05    0.00   97.07
+
+Device            r/s     w/s   rkB/s   wkB/s  rrqm/s  wrqm/s  r_await  w_await  aqu-sz  %util
+nvme0n1          0.01    0.62    0.40   10.50    0.00    0.10     0.70     0.62    0.00   0.18
+nvme1n1          0.00    0.00    0.00    0.00    0.00    0.00     0.00     0.00    0.00   0.00
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+Device            r/s     w/s   rkB/s   wkB/s  r_await  w_await  aqu-sz  %util
+nvme0n1          0.00    0.55    0.00    9.60     0.00     0.58    0.00   0.15
+nvme1n1          0.00    0.00    0.00    0.00     0.00     0.00    0.00   0.00
+^C
+
+iostat: cannot find device "/dev/sda"
+iostat: cannot find device "/dev/sdb"
+
+NAME        MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+nvme0n1     259:0    0  32G  0 disk
+└─nvme0n1p1 259:1    0  32G  0 part /
+nvme1n1     259:2    0  40G  0 disk
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+Device            r/s     w/s   rkB/s   wkB/s  r_await  w_await  aqu-sz  %util
+nvme0n1          0.00    0.40    0.00    6.40     0.00     0.55    0.00   0.12
+nvme1n1          0.00    0.00    0.00    0.00     0.00     0.00    0.00   0.00
+^C
+
+Starting disk performance monitoring...
+Timestamp: Tue Feb 25 15:05:18 UTC 2026
+==================================
+Monitoring started. Check disk_performance_*.log for results.
+Press Ctrl+C to stop monitoring early.
+Monitoring completed.
+
+-rw-r--r-- 1 root root 4892 Feb 25 15:06 disk_performance_20260225_150518.log
+
+IOSTAT KEY METRICS REFERENCE GUIDE
+==================================
+Device Utilization Metrics:
+- %util: Percentage of CPU time during which I/O requests were issued
+- r/s: Read requests per second
+- w/s: Write requests per second
+- rkB/s: Kilobytes read per second
+- wkB/s: Kilobytes written per second
+Latency Metrics:
+- await: Average time for I/O requests (including queue time)
+- r_await: Average time for read requests
+- w_await: Average time for write requests
+- svctm: Average service time (deprecated in newer versions)
+Queue Metrics:
+- avgqu-sz: Average queue length of requests
+- aqu-sz: Average queue size (newer metric name)
+Performance Indicators:
+- High %util (>80%): Potential bottleneck
+- High await (>20ms): Slow response times
+- High avgqu-sz (>2): Queue buildup indicating saturation
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+Device            r/s     w/s   rkB/s   wkB/s  r_await  w_await  aqu-sz  %util
+nvme0n1          2.80   18.40   112.0   1880.0     1.8     5.6    0.14   22.5
+nvme1n1          0.00    0.00     0.0      0.0     0.0     0.0    0.00    0.0
+
+Generating I/O workload patterns...
+Starting mixed I/O workload...
+Workload generation started. Monitor with iostat in another terminal.
+Starting random read workload...
+Starting sequential write workload...
+Workload generation completed.
+
+Device            r/s     w/s   rkB/s   wkB/s  r_await  w_await  aqu-sz  %util
+nvme0n1          4.60   26.10   182.4   2680.8     2.2     7.9    0.22   38.1
+^C
+
+Analysis complete. Results saved to: bottleneck_analysis_20260225_151212.log
+I/O Bottleneck Analysis Report
+Generated: Tue Feb 25 15:12:12 UTC 2026
+================================
+
+BOTTLENECK ANALYSIS RESULTS:
+----------------------------
+Devices with high utilization (>80%):
+
+Devices with high await times (>20ms):
+
+Devices with high average queue sizes (>2):
+
+RECOMMENDATIONS:
+----------------
+1. Consider I/O scheduler optimization for high utilization devices
+2. Investigate storage hardware for devices with high await times
+3. Implement I/O throttling for applications causing queue buildup
+
+-rw-r--r-- 1 root root 636 Feb 25 15:12 bottleneck_analysis_20260225_151212.log
+
+Establishing performance baseline...
+Measurement directory: baseline_20260225_151505
+Collecting idle performance metrics...
+Collecting loaded performance metrics...
+Generating baseline report...
+Baseline measurement completed in: baseline_20260225_151505
+total 196
+drwxr-xr-x 2 root root  4096 Feb 25 15:17 .
+drwx------ 4 root root  4096 Feb 25 15:17 ..
+-rw-r--r-- 1 root root   566 Feb 25 15:17 baseline_report.txt
+-rw-r--r-- 1 root root 83510 Feb 25 15:16 idle_performance.log
+-rw-r--r-- 1 root root 98220 Feb 25 15:17 loaded_performance.log
+-rw-r--r-- 1 root root  1290 Feb 25 15:15 system_info.txt
+
+PERFORMANCE BASELINE REPORT
+===========================
+This baseline measurement captures:
+1. System configuration details
+2. Idle performance characteristics
+3. Performance under synthetic load
+Use this baseline to:
+- Compare before/after optimization results
+- Identify performance degradation over time
+- Establish SLA thresholds
+Files in this baseline:
+- system_info.txt: Hardware and OS details
+- idle_performance.log: Performance without load
+- loaded_performance.log: Performance under test load
+
+Current I/O Schedulers:
+======================
+nvme0n1: mq-deadline [none] kyber bfq
+nvme1n1: mq-deadline [none] kyber bfq
+
+Available schedulers are shown in brackets []
+Current scheduler is shown in square brackets [current]
+
+I/O SCHEDULER COMPARISON GUIDE
+==============================
+1. mq-deadline (Multi-Queue Deadline):
+ - Best for: General purpose, mixed workloads
+ - Characteristics: Good balance of throughput and latency
+ - Use case: Default choice for most scenarios
+2. kyber:
+ - Best for: Latency-sensitive applications
+ - Characteristics: Focuses on response time consistency
+ - Use case: Interactive workloads, databases
+3. bfq (Budget Fair Queueing):
+ - Best for: Desktop systems, interactive workloads
+ - Characteristics: Provides fairness between processes
+ - Use case: Multi-user systems, mixed workloads
+4. none:
+ - Best for: High-performance SSDs, NVMe drives
+ - Characteristics: No scheduling overhead
+ - Use case: Fast storage with hardware queuing
+SELECTION CRITERIA:
+- Rotational drives: mq-deadline or bfq
+- SSDs: mq-deadline, kyber, or none
+- Database servers: kyber or mq-deadline
+- File servers: mq-deadline or bfq
+- High IOPS applications: none or kyber
+
+NAME        MAJ:MIN RM SIZE RO TYPE MOUNTPOINTS
+nvme0n1     259:0    0  32G  0 disk
+└─nvme0n1p1 259:1    0  32G  0 part /
+nvme1n1     259:2    0  40G  0 disk
+
+cat: /sys/block/sda/queue/scheduler: No such file or directory
+
+Testing I/O schedulers for device: nvme0n1
+Available schedulers: mq-deadline none kyber bfq
+Results will be saved in: scheduler_test_20260225_152455
+Testing scheduler: mq-deadline
+Running test workload for mq-deadline...
+Test completed for mq-deadline
+Testing scheduler: none
+Running test workload for none...
+Test completed for none
+Testing scheduler: kyber
+Running test workload for kyber...
+Test completed for kyber
+Testing scheduler: bfq
+Running test workload for bfq...
+Test completed for bfq
+Generating comparison report...
+
+Performance testing completed!
+Results directory: scheduler_test_20260225_152455
+
+Comparison Report:
+==================
+I/O SCHEDULER PERFORMANCE COMPARISON
+====================================
+Test Configuration:
+- Device tested: nvme0n1
+- Test duration: 60 seconds per scheduler
+- Workload: Mixed read/write operations
+Results Summary:
+
+Scheduler: mq-deadline
+Average utilization: 34.62%
+Average await: 6.11ms
+
+Scheduler: none
+Average utilization: 32.40%
+Average await: 5.35ms
+
+Scheduler: kyber
+Average utilization: 33.20%
+Average await: 5.01ms
+
+Scheduler: bfq
+Average utilization: 35.10%
+Average await: 6.80ms
+
+I/O Scheduler Optimization Tool
+===============================
+Scanning block devices...
+
+Device: nvme0n1
+Type: SSD
+Recommended scheduler: kyber
+Apply optimization to nvme0n1? (y/n): y
+Applying optimization to nvme0n1...
+Current scheduler: none
+Recommended scheduler: kyber
+✓ Successfully applied kyber to nvme0n1
+
+Device: nvme1n1
+Type: SSD
+Recommended scheduler: kyber
+Apply optimization to nvme1n1? (y/n): n
+
+Optimization completed!
+Current scheduler configuration:
+Current I/O Schedulers:
+======================
+nvme0n1: mq-deadline none [kyber] bfq
+nvme1n1: mq-deadline [none] kyber bfq
+
+Available schedulers are shown in brackets []
+Current scheduler is shown in square brackets [current]
+
+Creating persistent I/O scheduler configuration...
+Udev rules created at: /etc/udev/rules.d/60-io-schedulers.rules
+Rules will take effect after reboot or udev reload.
+Udev rules reloaded successfully.
+
+# I/O Scheduler optimization rules
+# Generated automatically - modify with care
+# SSD devices - use kyber scheduler
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="kyber"
+ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="kyber"
+# HDD devices - use mq-deadline scheduler
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="mqdeadline"
+# Additional optimizations for SSDs
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/nr_requests}="64"
+ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/nr_requests}="64"
+
+Performance Optimization Validation
+===================================
+Results will be saved in: validation_20260225_153420
+Recording current configuration...
+Running post-optimization performance test...
+Generating validation report...
+
+Validation completed!
+Report location: validation_20260225_153420/validation_report.txt
+
+Validation Summary:
+==================
+PERFORMANCE OPTIMIZATION VALIDATION REPORT
+==========================================
+Test Date: Tue Feb 25 15:35:21 UTC 2026
+Test Duration: 60 seconds
+Workload: Mixed read/write operations
+
+OPTIMIZATION RESULTS:
+--------------------
+Current Scheduler Configuration:
+nvme0n1: mq-deadline none [kyber] bfq
+nvme1n1: mq-deadline [none] kyber bfq
+
+Performance Metrics Summary:
+- Average Utilization: 31.88%
+- Average Await Time: 4.92ms
+- Average Queue Size: 0.19
+
+RECOMMENDATIONS:
+---------------
+1. Compare these results with your baseline measurements
+2. Monitor performance over time to ensure stability
+3. Consider application-specific tuning if needed
+4. Document changes for future reference
+FILES INCLUDED:
+--------------
+- current_schedulers.txt: Active scheduler configuration
+- optimized_performance.log: Detailed iostat output
+- test_workload.log: Workload generation log
+- validation_report.txt: This summary report
+
+total 92
+drwxr-xr-x 2 root root 4096 Feb 25 15:35 .
+drwx------ 6 root root 4096 Feb 25 15:35 ..
+-rw-r--r-- 1 root root  310 Feb 25 15:34 current_schedulers.txt
+-rw-r--r-- 1 root root 7620 Feb 25 15:35 optimized_performance.log
+-rw-r--r-- 1 root root 1524 Feb 25 15:35 test_workload.log
+-rw-r--r-- 1 root root 1460 Feb 25 15:35 validation_report.txt
+
+mq-deadline none [kyber] bfq
+
+Generating I/O workload patterns...
+Starting mixed I/O workload...
+Workload generation started. Monitor with iostat in another terminal.
+Starting random read workload...
+Starting sequential write workload...
+Workload generation completed.
+
+3
+
+3
