@@ -1,0 +1,12 @@
+#!/bin/bash
+DATE=$(date +%Y%m%d)
+REPORT_DIR="/var/log/sosreports"
+mkdir -p "$REPORT_DIR"
+
+echo "Generating monthly sosreport for $DATE"
+sudo sosreport --batch --tmp-dir="$REPORT_DIR" \
+ --only-plugins=kernel,memory,networking,performance,block \
+ --label="monthly-$DATE"
+
+echo "Report generated in $REPORT_DIR"
+ls -la "$REPORT_DIR"/sosreport-*monthly-$DATE*
