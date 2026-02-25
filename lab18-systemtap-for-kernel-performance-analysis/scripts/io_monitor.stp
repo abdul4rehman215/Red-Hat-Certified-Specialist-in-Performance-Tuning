@@ -1,0 +1,59 @@
+#!/usr/bin/env stap
+# Global variables to store statistics
+global read_bytes, write_bytes, read_count, write_count
+global file_operations
+probe syscall.read {
+ if (target() == 0 || target() == pid()) {
+ read_count[execname()]++
+ }
+}
+probe syscall.read.return {
+ if (target() == 0 || target() == pid()) {
+ if ($return > 0) {
+ read_bytes[execname()] += $return
+ }
+ }
+}
+probe syscall.write {
+ if (target() == 0 || target() == pid()) {
+ write_count[execname()]++
+ }
+}
+probe syscall.write.return {
+ if (target() == 0 || target() == pid()) {
+ if ($return > 0) {
+ write_bytes[execname()] += $return
+ }
+ }
+}
+probe syscall.open {
+ if (target() == 0 || target() == pid()) {
+ file_operations[execname(), user_string($filename)]++
+ printf("OPEN: %s opened %s\n", execname(), user_string($filename))
+ }
+}
+probe timer.s(10) {
+ printf("\n=== I/O Statistics (10 second interval) ===\n")
+ printf("%-15s %10s %15s %10s %15s\n",
+ "PROCESS", "READS", "READ_BYTES", "WRITES", "WRITE_BYTES")
+
+ foreach ([proc] in read_count) {
+ printf("%-15s %10d %15d %10d %15d\n",
+ proc, read_count[proc], read_bytes[proc],
+ write_count[proc], write_bytes[proc])
+ }
+
+ printf("\n=== File Operations ===\n")
+ foreach ([proc, file] in file_operations) {
+ printf("%s: %s (%d times)\n", proc, file, file_operations[proc, file])
+ }
+
+ delete read_bytes
+ delete write_bytes
+ delete read_count
+ delete write_count
+ delete file_operations
+}
+probe end {
+ printf("\nI/O monitoring completed\n")
+}
