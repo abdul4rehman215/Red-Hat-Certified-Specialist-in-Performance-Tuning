@@ -1,0 +1,372 @@
+Lab 20 - Comprehensive Performance Tuning Review
+Execution Output Log
+============================================================
+
+Environment: CentOS/RHEL 9 (Cloud Lab)
+Shell: -bash-4.2$
+User: centos (sudo available)
+
+------------------------------------------------------------
+Task 1.1 - Gather Historical Performance Data
+------------------------------------------------------------
+
+-bash-4.2$ sudo mkdir -p /opt/performance-review
+
+-bash-4.2$ cd /opt/performance-review
+
+-bash-4.2$ sudo mkdir -p {cpu-data,memory-data,disk-data,network-data,reports}
+📌 Output
+
+-bash-4.2$ ls -la
+📌 Output
+total 0
+drwxr-xr-x 7 root root  96 Feb 25 19:05 .
+drwxr-xr-x 1 root root  64 Feb 25 19:05 ..
+drwxr-xr-x 2 root root   6 Feb 25 19:05 cpu-data
+drwxr-xr-x 2 root root   6 Feb 25 19:05 disk-data
+drwxr-xr-x 2 root root   6 Feb 25 19:05 memory-data
+drwxr-xr-x 2 root root   6 Feb 25 19:05 network-data
+drwxr-xr-x 2 root root   6 Feb 25 19:05 reports
+
+-bash-4.2$ sudo cp /var/log/sa/sa* ./cpu-data/
+
+-bash-4.2$ ls -la cpu-data/ | head -20
+📌 Output
+total 312
+drwxr-xr-x 2 root root   128 Feb 25 19:06 .
+drwxr-xr-x 7 root root    96 Feb 25 19:05 ..
+-rw-r--r-- 1 root root  48384 Feb 25 00:00 sa23
+-rw-r--r-- 1 root root  49152 Feb 25 00:00 sa24
+-rw-r--r-- 1 root root  49664 Feb 25 00:00 sa25
+-rw-r--r-- 1 root root  48256 Feb 24 00:00 sa24.old
+-rw-r--r-- 1 root root  49152 Feb 23 00:00 sa23.old
+
+-bash-4.2$ sar -u -f /var/log/sa/sa$(date -d "1 day ago" +%d) > cpu-data/cpu-utilization-yesterday.txt
+📌 Output
+
+-bash-4.2$ sar -r -f /var/log/sa/sa$(date -d "1 day ago" +%d) > memory-data/memory-utilization-yesterday.txt
+📌 Output
+
+-bash-4.2$ sar -d -f /var/log/sa/sa$(date -d "1 day ago" +%d) > disk-data/disk-io-yesterday.txt
+📌 Output
+
+-bash-4.2$ sar -n DEV -f /var/log/sa/sa$(date -d "1 day ago" +%d) > network-data/network-stats-yesterday.txt
+📌 Output
+
+-bash-4.2$ ls -la cpu-data/*.txt memory-data/*.txt disk-data/*.txt network-data/*.txt
+📌 Output
+-rw-r--r-- 1 centos centos  9820 Feb 25 19:07 cpu-data/cpu-utilization-yesterday.txt
+-rw-r--r-- 1 centos centos  8450 Feb 25 19:07 disk-data/disk-io-yesterday.txt
+-rw-r--r-- 1 centos centos  7012 Feb 25 19:07 memory-data/memory-utilization-yesterday.txt
+-rw-r--r-- 1 centos centos 10388 Feb 25 19:07 network-data/network-stats-yesterday.txt
+
+
+------------------------------------------------------------
+Task 1.2 - Create Real-Time Performance Baseline
+------------------------------------------------------------
+
+-bash-4.2$ nano monitor-system.sh
+
+-bash-4.2$ chmod +x monitor-system.sh
+
+-bash-4.2$ sudo ./monitor-system.sh
+📌 Output
+Starting comprehensive system monitoring at Tue Feb 25 19:10:12 UTC 2026
+Monitoring started. Data will be collected for 1 hour.
+Log files created with timestamp: 20260225_191012
+
+-bash-4.2$ ls -la cpu-data | grep 20260225_191012
+📌 Output
+-rw-r--r-- 1 root root  5980 Feb 25 19:10 top-baseline-20260225_191012.txt
+-rw-r--r-- 1 root root   210 Feb 25 19:10 sar-cpu-memory-20260225_191012.txt
+
+-bash-4.2$ which stress-ng || sudo dnf install -y stress-ng
+📌 Output
+/usr/bin/stress-ng
+
+-bash-4.2$ nano generate-load.sh
+
+-bash-4.2$ chmod +x generate-load.sh
+
+-bash-4.2$ sudo ./generate-load.sh
+📌 Output
+Generating CPU load...
+Generating memory load...
+Generating disk I/O load...
+Load generation started. Will run for 5 minutes.
+1000+0 records in
+1000+0 records out
+1048576000 bytes (1.0 GB, 1000 MiB) copied, 3.88 s, 270 MB/s
+Load generation completed.
+
+-bash-4.2$ sudo rm -f /tmp/testfile
+📌 Output
+
+
+------------------------------------------------------------
+Task 1.3 - Collect Detailed Process Performance Data
+------------------------------------------------------------
+
+-bash-4.2$ which perf || sudo dnf install -y perf
+📌 Output
+/usr/bin/perf
+
+-bash-4.2$ sudo perf record -g -a sleep 60
+📌 Output
+[ perf record: Woken up 13 times to write data ]
+[ perf record: Captured and wrote 3.212 MB perf.data (45492 samples) ]
+
+-bash-4.2$ sudo perf report --stdio > cpu-data/perf-report-$(date +%Y%m%d_%H%M%S).txt
+📌 Output
+
+-bash-4.2$ sudo perf stat -a -d sleep 30 2> cpu-data/perf-stat-$(date +%Y%m%d_%H%M%S).txt
+📌 Output
+
+-bash-4.2$ ps aux --sort=-%cpu | head -20 > cpu-data/top-cpu-processes.txt
+📌 Output
+
+-bash-4.2$ ps aux --sort=-%mem | head -20 > memory-data/top-memory-processes.txt
+📌 Output
+
+-bash-4.2$ ps aux | grep -E "(zombie|defunct)" > reports/problematic-processes.txt
+📌 Output
+
+-bash-4.2$ wc -l reports/problematic-processes.txt
+📌 Output
+0 reports/problematic-processes.txt
+
+
+------------------------------------------------------------
+Task 2 - Performance Data Analysis and Bottleneck Identification
+------------------------------------------------------------
+
+-bash-4.2$ which bc || sudo dnf install -y bc
+📌 Output
+/usr/bin/bc
+
+-bash-4.2$ nano analyze-cpu.sh
+
+-bash-4.2$ chmod +x analyze-cpu.sh
+
+-bash-4.2$ ./analyze-cpu.sh
+📌 Output
+CPU analysis completed. Report saved to: reports/cpu-analysis-20260225_191845.txt
+
+-bash-4.2$ nano analyze-memory.sh
+
+-bash-4.2$ chmod +x analyze-memory.sh
+
+-bash-4.2$ ./analyze-memory.sh
+📌 Output
+Memory analysis completed. Report saved to: reports/memory-analysis-20260225_192015.txt
+
+-bash-4.2$ nano analyze-disk.sh
+
+-bash-4.2$ chmod +x analyze-disk.sh
+
+-bash-4.2$ ./analyze-disk.sh
+📌 Output
+Disk analysis completed. Report saved to: reports/disk-analysis-20260225_192210.txt
+
+
+------------------------------------------------------------
+Task 3 - Performance Optimization Implementation
+------------------------------------------------------------
+
+-bash-4.2$ nano optimize-cpu.sh
+
+-bash-4.2$ chmod +x optimize-cpu.sh
+
+-bash-4.2$ sudo ./optimize-cpu.sh
+📌 Output
+=== CPU Performance Optimization ===
+Current CPU governor:
+N/A (cpufreq not available in this VM)
+Setting CPU governor to performance mode...
+Could not set governor for /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+Could not set governor for /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
+Optimizing process priorities...
+Checking for unnecessary services...
+CPU optimization completed.
+
+-bash-4.2$ nano optimize-memory.sh
+
+-bash-4.2$ chmod +x optimize-memory.sh
+
+-bash-4.2$ sudo ./optimize-memory.sh
+📌 Output
+=== Memory Performance Optimization ===
+Clearing system caches...
+System caches cleared.
+Current swappiness value:
+30
+Setting optimal swappiness value...
+Configuring memory overcommit...
+Analyzing memory usage by processes...
+Memory optimization completed.
+
+-bash-4.2$ nano optimize-disk.sh
+
+-bash-4.2$ chmod +x optimize-disk.sh
+
+-bash-4.2$ sudo ./optimize-disk.sh
+📌 Output
+=== Disk I/O Performance Optimization ===
+Current I/O schedulers:
+/sys/block/loop0/queue/scheduler: [none]
+/sys/block/vda/queue/scheduler: [mq-deadline] kyber bfq none
+Setting optimal I/O scheduler...
+Checking current mount options...
+/dev/vda1 on / type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+Cleaning up temporary files...
+Configuring log rotation...
+Finding large files (>100MB)...
+/var/log/journal/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/system.journal
+Disk I/O optimization completed.
+
+-bash-4.2$ nano optimize-system.sh
+
+-bash-4.2$ chmod +x optimize-system.sh
+
+-bash-4.2$ sudo ./optimize-system.sh
+📌 Output
+=== Comprehensive System Optimization ===
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.swappiness = 10
+fs.file-max = 2097152
+Optimizing systemd configuration...
+Updating system limits...
+System-wide optimization completed.
+Note: Some changes require a system reboot to take effect.
+
+
+------------------------------------------------------------
+Task 4 - Performance Testing and Validation
+------------------------------------------------------------
+
+-bash-4.2$ sudo dnf install -y sysstat stress-ng
+📌 Output
+Package sysstat-12.xx.el9.x86_64 is already installed.
+Package stress-ng-0.xx.el9.x86_64 is already installed.
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+-bash-4.2$ nano performance-test.sh
+
+-bash-4.2$ chmod +x performance-test.sh
+
+-bash-4.2$ sudo ./performance-test.sh
+📌 Output
+=== Performance Testing Framework ===
+Test duration: 300 seconds
+Running baseline performance test...
+Starting baseline test at Tue Feb 25 19:32:12 UTC 2026
+baseline test completed at Tue Feb 25 19:37:14 UTC 2026
+Performance testing completed.
+Results saved in: /opt/performance-review/test-results
+
+-bash-4.2$ sleep 10
+
+-bash-4.2$ sudo ls -la /opt/performance-review/test-results | head
+📌 Output
+total 84
+drwxr-xr-x 2 root root 4096 Feb 25 19:37 .
+drwxr-xr-x 8 root root  128 Feb 25 19:32 ..
+-rw-r--r-- 1 root root 4920 Feb 25 19:37 baseline-iostat-20260225_193212.txt
+-rw-r--r-- 1 root root 8610 Feb 25 19:37 baseline-sar-20260225_193212.txt
+
+
+------------------------------------------------------------
+Task 4.2 - Generate Performance Comparison Report
+------------------------------------------------------------
+
+-bash-4.2$ nano generate-final-report.sh
+
+-bash-4.2$ chmod +x generate-final-report.sh
+
+-bash-4.2$ ./generate-final-report.sh
+📌 Output
+Report generation completed.
+Final report saved to: reports/final-performance-report-20260225_194030.txt
+
+=== REPORT SUMMARY ===
+=== COMPREHENSIVE PERFORMANCE TUNING REPORT ===
+Generated on: Tue Feb 25 19:40:30 UTC 2026
+System: cloudvm
+Kernel: 5.14.0-4xx.el9.x86_64
+
+1. SYSTEM SPECIFICATIONS:
+CPU: Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+Memory: 3.7Gi
+Storage: 30G
+
+2. PERFORMANCE ANALYSIS SUMMARY:
+
+CPU Performance:
+- Current Load Average: 0.46
+- CPU Cores: 2
+- CPU Governor: N/A
+
+Memory Performance:
+- Memory Usage: 13.22%
+- Swappiness: 10
+- Available Memory: 3.1Gi
+
+Disk Performance:
+- Root Filesystem Usage: 15%
+- I/O Scheduler: mq-deadline
+
+3. OPTIMIZATIONS IMPLEMENTED:
+- CPU governor attempted (VM may not support cpufreq)
+- Memory swappiness optimized to 10
+- I/O scheduler checked (mq-deadline preferred)
+- System limits increased for better performance
+- Network parameters tuned for better throughput
+- Temporary files cleaned up
+
+4. RECOMMENDATIONS:
+- Monitor system performance regularly using sar and iostat
+- Set up automated performance monitoring with cron jobs
+- Review and update performance settings quarterly
+- Consider hardware upgrades if bottlenecks persist
+- Implement application-level optimizations where needed
+
+5. MONITORING COMMANDS FOR ONGOING MAINTENANCE:
+- CPU monitoring: sar -u 5 12
+- Memory monitoring: sar -r 5 12
+- Disk I/O monitoring: iostat -x 5 12
+- Process monitoring: top -b -n 1
+- Network monitoring: sar -n DEV 5 12
+
+
+------------------------------------------------------------
+Task 4.3 - Create Ongoing Monitoring Setup
+------------------------------------------------------------
+
+-bash-4.2$ nano setup-monitoring.sh
+
+-bash-4.2$ chmod +x setup-monitoring.sh
+
+-bash-4.2$ sudo ./setup-monitoring.sh
+📌 Output
+=== Setting up Ongoing Performance Monitoring ===
+Setting up cron jobs for automated monitoring...
+Automated monitoring setup completed.
+Daily reports will be generated at 6:00 AM
+Weekly summaries will be generated at 7:00 AM on Mondays
+
+-bash-4.2$ crontab -l
+📌 Output
+0 6 * * * /opt/performance-monitoring/daily-monitor.sh
+0 7 * * 1 /opt/performance-monitoring/weekly-monitor.sh
+
+
+============================================================
+End of Output - Lab 20
+============================================================
