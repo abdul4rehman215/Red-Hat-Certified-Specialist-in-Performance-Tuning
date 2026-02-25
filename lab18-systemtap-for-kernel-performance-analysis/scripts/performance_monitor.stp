@@ -1,0 +1,89 @@
+#!/usr/bin/env stap
+global cpu_usage, memory_usage, context_switches
+global page_faults, memory_allocations
+global process_cpu_time, process_memory
+# Track CPU usage
+probe timer.profile {
+ cpu_usage[cpu()]++
+ process_cpu_time[execname()]++
+}
+# Track context switches
+probe scheduler.ctxswitch {
+ context_switches++
+ if (prev_priority < 0 || next_priority < 0) {
+ printf("HIGH PRIORITY SWITCH: %s -> %s\n",
+ prev_task_name, next_task_name)
+ }
+}
+# Track memory operations
+probe vm.pagefault {
+ page_faults[execname()]++
+ if (write_access) {
+ printf("PAGE FAULT (WRITE): %s at address 0x%x\n", execname(), address)
+ }
+}
+probe syscall.mmap.return {
+ if ($return > 0) {
+ memory_allocations[execname()] += $length
+ if ($length > 10485760) { # Log large allocations (>10MB)
+ printf("LARGE ALLOCATION: %s allocated %d bytes\n",
+ execname(), $length)
+ }
+ }
+}
+# Monitor system load
+probe timer.s(10) {
+ printf("\n=== System Performance Monitor ===\n")
+ printf("Timestamp: %s\n", ctime(gettimeofday_s()))
+
+ # CPU usage per core
+ printf("\nCPU Usage by Core:\n")
+ total_samples = 0
+ foreach (core in cpu_usage) {
+ total_samples += cpu_usage[core]
+ }
+
+ foreach (core in cpu_usage) {
+ usage_percent = (cpu_usage[core] * 100) / total_samples
+ printf(" CPU %d: %d%% (%d samples)\n", core, usage_percent, cpu_usage[core])
+ }
+
+ # Context switches
+ printf("\nContext Switches: %d (last 10 seconds)\n", context_switches)
+ if (context_switches > 10000) {
+ printf(" WARNING: High context switch rate detected!\n")
+ }
+
+ # Top CPU consuming processes
+ printf("\nTop CPU Consuming Processes:\n")
+ foreach (proc in process_cpu_time- limit 10) {
+ printf(" %s: %d samples\n", proc, process_cpu_time[proc])
+ }
+
+ # Page faults by process
+ printf("\nPage Faults by Process:\n")
+ foreach (proc in page_faults- limit 10) {
+ if (page_faults[proc] > 100) {
+ printf(" WARNING: %s has %d page faults\n", proc, page_faults[proc])
+ } else {
+ printf(" %s: %d page faults\n", proc, page_faults[proc])
+ }
+ }
+
+ # Memory allocations
+ printf("\nMemory Allocations:\n")
+ foreach (proc in memory_allocations- limit 10) {
+ mb_allocated = memory_allocations[proc] / 1048576
+ printf(" %s: %d MB allocated\n", proc, mb_allocated)
+ }
+
+ # Reset counters
+ delete cpu_usage
+ delete process_cpu_time
+ delete page_faults
+ delete memory_allocations
+ context_switches = 0
+}
+probe end {
+ printf("\nPerformance monitoring completed\n")
+}
