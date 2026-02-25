@@ -1,0 +1,334 @@
+top - 13:10:25 up  2:05,  1 user,  load average: 0.06, 0.04, 0.02
+Tasks:  82 total,   1 running,  81 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  2.0 us,  0.8 sy,  0.0 ni, 97.0 id,  0.1 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3790.7 total,   1534.5 free,   1250.1 used,   1006.1 buff/cache
+MiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   2328.4 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   1124 root      20   0   14728  13120  10540 S   0.0   0.3   0:00.10 bash
+   1262 root      20   0   98344  20440  18660 S   0.0   0.5   0:00.22 systemd-journald
+      1 root      20   0  173920  12380   8460 S   0.0   0.3   0:01.28 systemd
+
+Help for Interactive Commands - procps-ng 3.3.x
+  h ? - Help
+  1 - Toggle single/separate CPU states
+  m - Toggle memory display
+  t - Toggle CPU/task summary display
+  q - Quit
+
+Fields Management for window 1:Def
+Current Fields:  PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND
+
+-bash: stress: command not found
+
+Loaded plugins: subscription-manager
+No such command: yum. Please use dnf instead.
+
+Last metadata expiration check: 0:18:22 ago on Tue Feb 25 12:55:01 2026.
+Dependencies resolved.
+================================================================================
+ Package       Architecture  Version                Repository           Size
+================================================================================
+Installing:
+ stress        x86_64        1.0.7-1.el9            epel                27 k
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 27 k
+Installed size: 62 k
+Downloading Packages:
+stress-1.0.7-1.el9.x86_64.rpm                   235 kB/s |  27 kB     00:00
+Running transaction
+  Installing : stress-1.0.7-1.el9.x86_64                               1/1
+  Verifying  : stress-1.0.7-1.el9.x86_64                               1/1
+Complete!
+
+[1] 3461
+stress: info: [3461] dispatching hogs: 4 cpu, 0 io, 0 vm, 0 hdd
+
+top - 13:18:41 up  2:13,  1 user,  load average: 3.85, 1.21, 0.38
+Tasks:  89 total,   5 running,  84 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 95.8 us,  3.1 sy,  0.0 ni,  0.9 id,  0.0 wa,  0.0 hi,  0.2 si,  0.0 st
+MiB Mem :   3790.7 total,   1510.2 free,   1275.1 used,   1005.4 buff/cache
+MiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   2301.9 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   3465 root      20   0   11556   1088    780 R  99.3   0.0   0:12.91 stress
+   3466 root      20   0   11556   1088    780 R  98.7   0.0   0:12.84 stress
+   3467 root      20   0   11556   1088    780 R  98.7   0.0   0:12.80 stress
+   3468 root      20   0   11556   1088    780 R  98.0   0.0   0:12.72 stress
+
+[2] 3520
+stress: info: [3520] dispatching hogs: 0 cpu, 0 io, 2 vm, 0 hdd
+
+top - 13:20:12 up  2:15,  1 user,  load average: 3.90, 1.35, 0.46
+Tasks:  91 total,   7 running,  84 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 94.9 us,  3.5 sy,  0.0 ni,  1.2 id,  0.0 wa,  0.0 hi,  0.4 si,  0.0 st
+MiB Mem :   3790.7 total,    520.3 free,   2260.5 used,   1009.9 buff/cache
+MiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   1198.4 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   3522 root      20   0  537760 524320    740 R   0.0  13.5   0:03.12 stress
+   3521 root      20   0  537760 524296    740 R   0.0  13.5   0:03.08 stress
+   3465 root      20   0   11556   1088    780 R  98.7   0.0   0:18.20 stress
+   3466 root      20   0   11556   1088    780 R  99.3   0.0   0:18.12 stress
+
+[3] 3610
+Starting CPU intensive task...
+
+CPU hog PID: 3610
+
+[4] 3621
+Starting memory intensive task...
+Allocated 0 bytes
+Allocated 10000000 bytes
+Allocated 20000000 bytes
+Allocated 30000000 bytes
+Allocated 40000000 bytes
+Allocated 50000000 bytes
+Allocated 60000000 bytes
+Allocated 70000000 bytes
+Allocated 80000000 bytes
+Allocated 90000000 bytes
+Allocated 100000000 bytes
+Allocated 110000000 bytes
+Allocated 120000000 bytes
+Allocated 130000000 bytes
+Allocated 140000000 bytes
+Allocated 150000000 bytes
+Allocated 160000000 bytes
+Allocated 170000000 bytes
+Allocated 180000000 bytes
+Allocated 190000000 bytes
+Allocated 200000000 bytes
+
+Memory hog PID: 3621
+
+[5] 3660
+Starting I/O intensive task...
+
+I/O hog PID: 3660
+
+top - 13:24:51 up  2:19,  1 user,  load average: 6.12, 2.41, 0.95
+Tasks: 102 total,   8 running,  94 sleeping,   0 stopped,   0 zombie
+%Cpu(s): 98.2 us,  1.4 sy,  0.0 ni,  0.2 id,  0.1 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3790.7 total,    410.5 free,   2395.3 used,    984.9 buff/cache
+MiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   1050.2 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   3610 root      20   0   14784   3332   3032 R  99.7   0.1   0:45.12 bash
+   3465 root      20   0   11556   1088    780 R  98.7   0.0   0:30.20 stress
+   3466 root      20   0   11556   1088    780 R  99.3   0.0   0:30.10 stress
+   3621 root      20   0  684320 412560   6512 S   0.7  10.9   0:07.44 python3
+   3660 root      20   0   15276   4976   4100 D   0.0   0.1   0:00.52 dd
+
+System Performance Analysis
+==========================
+Date: Tue Feb 25 13:28:01 UTC 2026
+
+CPU Information:
+Cores: 2
+Load Average:  5.72, 2.55, 1.02
+
+Memory Information:
+               total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       2.4Gi       410Mi       9.0Mi       990Mi       1.1Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+Top 10 CPU Consuming Processes:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        3610 99.7  0.1  14784  3332 pts/0    R    13:23   0:52 ./resource_test.sh cpu
+root        3465 98.7  0.0  11556  1088 pts/0    R    13:18   0:36 stress
+root        3466 99.3  0.0  11556  1088 pts/0    R    13:18   0:36 stress
+root        3467 98.7  0.0  11556  1088 pts/0    R    13:18   0:36 stress
+root        3468 98.0  0.0  11556  1088 pts/0    R    13:18   0:36 stress
+root        3660  0.0  0.1  15276  4976 pts/0    D    13:24   0:00 dd
+root        3621  0.7 10.9 684320 412560 pts/0  S    13:24   0:09 python3
+...
+
+Top 10 Memory Consuming Processes:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        3621  0.7 10.9 684320 412560 pts/0   S    13:24   0:09 python3
+root        1262  0.0  0.5  98344  20440 ?       Ss   12:09   0:00 systemd-journald
+...
+
+Disk Usage:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1   32G  4.7G   28G  15% /
+
+Active Network Connections:
+Total connections: 18
+
+Package net-tools-2.0-0.62.20160912git.el9.x86_64 is already installed.
+Nothing to do.
+Complete!
+
+  PID  PPID  NI COMMAND
+ 3660  1124  10 dd
+ 3610  1124   0 bash
+ 3621  1124   0 python3
+ 3465  1124   0 stress
+ 3466  1124   0 stress
+ 3467  1124   0 stress
+ 3468  1124   0 stress
+    1     0   0 systemd
+ 1262     1   0 systemd-journald
+
+[6] 3812
+Starting CPU intensive task...
+
+Low priority PID: 3812
+
+[7] 3824
+Starting CPU intensive task...
+
+High priority PID: 3824
+
+[8] 3836
+Starting CPU intensive task...
+
+Normal priority PID: 3836
+
+  PID  NI %CPU COMMAND
+ 3812  19  8.3 bash
+ 3824 -10 44.7 bash
+ 3836   0 25.8 bash
+
+root        3610 99.7  0.1  14784  3332 pts/0    R    13:23   1:12 ./resource_test.sh cpu
+root        3621  0.7 10.9 684320 412560 pts/0   S    13:24   0:15 ./resource_test.sh memory
+root        3812  8.3  0.1  14784  3350 pts/0    R    13:30   0:10 ./resource_test.sh cpu
+root        3824 44.7  0.1  14784  3350 pts/0    R    13:30   0:11 ./resource_test.sh cpu
+root        3836 25.8  0.1  14784  3350 pts/0    R    13:30   0:09 ./resource_test.sh cpu
+root        3961  0.0  0.0  12184  1080 pts/0    S+   13:31   0:00 grep --color=auto resource_test
+
+3836 (process ID) old priority 0, new priority 15
+
+3812 (process ID) old priority 19, new priority -5
+
+  PID  PPID  NI COMMAND
+ 3610  1124   0 bash
+ 3812  1124  -5 bash
+ 3824  1124 -10 bash
+ 3836  1124  15 bash
+
+Current Process Priorities:
+PID PPID NI COMMAND
+==========================
+ 3812 1124  -5 bash
+ 3824 1124 -10 bash
+ 3836 1124  15 bash
+ 3610 1124   0 bash
+ 3621 1124   0 python3
+ 3465 1124   0 stress
+ 3466 1124   0 stress
+ 3467 1124   0 stress
+ 3468 1124   0 stress
+    1    0   0 systemd
+ 1262    1   0 systemd-journald
+...
+
+Process Priority Monitor - Tue Feb 25 13:36:41 UTC 2026
+==================================
+  PID  PPID  NI %CPU %MEM COMMAND
+ 3610  1124   0 99.6  0.1 bash
+ 3824  1124 -10 44.3  0.1 bash
+ 3812  1124  -5 30.5  0.1 bash
+ 3836  1124  15  6.4  0.1 bash
+ 3621  1124   0  0.7 10.9 python3
+...
+^C
+
+Performance Impact Test
+======================
+Running Normal Priority test (nice: 0)...
+Normal Priority completed in: 8.742153612 seconds
+
+Running Low Priority test (nice: 10)...
+Low Priority completed in: 11.903402118 seconds
+
+Running High Priority test (nice: -10)...
+High Priority completed in: 6.420115224 seconds
+
+Performance test completed.
+
+-rw-r--r-- 1 root root 2648 Feb 25 13:41 /root/.toprc
+
+Starting comprehensive system monitoring...
+Capturing top output for 60 seconds...
+Output saved to system_performance.log
+Analysis of system_performance.log:
+========================
+Load Average Trends:
+3.95, 1.42, 0.51
+5.88, 2.31, 0.94
+6.10, 2.41, 0.98
+
+Top CPU Consumers:
+   3610 root      20   0   14784   3332   3032 R  99.7   0.1   1:45.12 bash
+   3824 root      10 -10   14784   3350   3032 R  44.1   0.1   0:52.08 bash
+   3812 root      15  -5   14784   3350   3032 R  30.7   0.1   0:48.62 bash
+   3836 root      35  15   14784   3350   3032 R   6.2   0.1   0:21.44 bash
+   3465 root      20   0   11556   1088    780 R  98.6   0.0   0:58.20 stress
+
+Memory Usage Patterns:
+MiB Mem :   3790.7 total,    408.7 free,   2402.1 used,    979.9 buff/cache
+MiB Mem :   3790.7 total,    415.4 free,   2395.3 used,    980.0 buff/cache
+
+Monitoring complete. Check system_performance.log for detailed data.
+
+3836 (process ID) old priority 15, new priority -10
+
+  PID TTY          TIME CMD
+ 3836 pts/0    00:00:28 bash
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+         94.10    0.00    4.80    0.60    0.00    0.50
+
+Device            r/s     w/s   rkB/s   wkB/s  await  %util
+nvme0n1          0.00    1.80    0.00   28.80   0.75   0.55
+...
+
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1   32G  4.9G   28G  15% /
+
+root        4201  0.0  0.0  12184  1080 pts/0    S+   13:47   0:00 grep -i zombie
+
+               total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       2.4Gi       405Mi       9.2Mi       990Mi       1.1Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+MemTotal:        3881696 kB
+MemFree:          414920 kB
+MemAvailable:    1148120 kB
+Buffers:           26120 kB
+Cached:           842340 kB
+SwapCached:            0 kB
+Active:          1012480 kB
+Inactive:         629220 kB
+...
+
+System Performance Best Practices
+=================================
+1. Setting up regular monitoring...
+2. Process Priority Guidelines:
+ - Interactive applications: nice 0 to -5
+ - Background tasks: nice 10 to 19
+ - System critical: nice -10 to -20 (root only)
+
+3. Resource Alert Thresholds:
+ - CPU Load > Number of cores: Investigation needed
+ - Memory usage > 80%: Monitor closely
+ - Memory usage > 90%: Take action
+
+4. Setting up automated monitoring...
+Best practices scripts created in /tmp/
+Consider adding system_check.sh to crontab for regular monitoring
+
+-rwxr-xr-x 1 root root  216 Feb 25 13:52 /tmp/resource_alert.sh
+-rwxr-xr-x 1 root root  243 Feb 25 13:52 /tmp/system_check.sh
+
+Lab cleanup completed.
