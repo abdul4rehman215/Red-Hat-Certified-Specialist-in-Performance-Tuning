@@ -1,0 +1,90 @@
+#!/usr/bin/env stap
+global io_queue_depth, io_wait_times, blocked_processes
+global disk_utilization, slow_io_operations
+global process_io_stats
+# Track I/O queue depth and wait times
+probe ioblock.request {
+ io_queue_depth[devname]++
+ io_wait_times[tid()] = gettimeofday_us()
+}
+probe ioblock.end {
+ io_queue_depth[devname]--
+
+ start_time = io_wait_times[tid()]
+ if (start_time) {
+ wait_time = gettimeofday_us() - start_time
+ delete io_wait_times[tid()]
+
+ # Track slow I/O operations (>50ms)
+ if (wait_time > 50000) {
+ slow_io_operations[devname]++
+ printf("SLOW I/O: Device %s, wait time %d us, size %d bytes\n",
+ devname, wait_time, size)
+ }
+
+ disk_utilization[devname] += wait_time
+ }
+}
+# Track processes waiting for I/O
+probe scheduler.wakeup {
+ if (task_state == 2) { # TASK_UNINTERRUPTIBLE (waiting for I/O)
+ blocked_processes[task_execname(task)]++
+ }
+}
+# Monitor file system operations that might cause bottlenecks
+probe vfs.read {
+ process_io_stats[execname(), "read"]++
+ if (size > 1048576) { # Large reads (>1MB)
+ printf("LARGE READ: %s reading %d bytes from %s\n",
+ execname(), size, file_name)
+ }
+}
+probe vfs.write {
+ process_io_stats[execname(), "write"]++
+ if (size > 1048576) { # Large writes (>1MB)
+ printf("LARGE WRITE: %s writing %d bytes to %s\n",
+ execname(), size, file_name)
+ }
+}
+# Check for I/O bottlenecks every 15 seconds
+probe timer.s(15) {
+ printf("\n=== I/O Bottleneck Analysis ===\n")
+ printf("Timestamp: %s\n", ctime(gettimeofday_s()))
+
+ printf("\nDisk Queue Depths:\n")
+ foreach (device in io_queue_depth) {
+ if (io_queue_depth[device] > 10) {
+ printf(" WARNING: %s has high queue depth: %d\n",
+ device, io_queue_depth[device])
+ } else {
+ printf(" %s: %d\n", device, io_queue_depth[device])
+ }
+ }
+
+ printf("\nSlow I/O Operations:\n")
+ foreach (device in slow_io_operations) {
+ printf(" %s: %d slow operations\n", device, slow_io_operations[device])
+ }
+
+ printf("\nProcesses Blocked on I/O:\n")
+ foreach (process in blocked_processes) {
+ if (blocked_processes[process] > 5) {
+ printf(" WARNING: %s blocked %d times\n", process, blocked_processes[process])
+ } else {
+ printf(" %s: %d times\n", process, blocked_processes[process])
+ }
+ }
+
+ printf("\nTop I/O Intensive Processes:\n")
+ foreach ([proc, op] in process_io_stats- limit 10) {
+ printf(" %s: %s operations (%d)\n", proc, op, process_io_stats[proc, op])
+ }
+
+ # Reset counters
+ delete slow_io_operations
+ delete blocked_processes
+ delete process_io_stats
+}
+probe end {
+ printf("\nI/O bottleneck detection completed\n")
+}
