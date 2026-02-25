@@ -1,0 +1,61 @@
+#!/bin/bash
+SOSREPORT_DIR="$1"
+
+if [ -z "$SOSREPORT_DIR" ] || [ ! -d "$SOSREPORT_DIR" ]; then
+ echo "Usage: $0 <sosreport_directory>"
+ exit 1
+fi
+
+cd "$SOSREPORT_DIR"
+
+echo "SOSREPORT ANALYSIS SUMMARY"
+echo "=========================="
+echo "Report Directory: $(pwd)"
+echo "Analysis Time: $(date)"
+echo ""
+
+# Function to check if file exists and is readable
+check_file() {
+ [ -f "$1" ] && [ -r "$1" ]
+}
+
+# System Information
+echo "SYSTEM INFORMATION:"
+check_file hostname && echo " Hostname: $(cat hostname)"
+check_file etc/os-release && echo " OS: $(grep PRETTY_NAME etc/os-release | cut -d'"' -f2)"
+check_file uname && echo " Kernel: $(cat uname)"
+echo ""
+
+# Performance Metrics
+echo "PERFORMANCE METRICS:"
+if check_file proc/loadavg; then
+ LOAD=$(awk '{print $1}' proc/loadavg)
+ CPU_COUNT=$(grep -c processor proc/cpuinfo 2>/dev/null || echo 1)
+ echo " Load Average: $LOAD (CPUs: $CPU_COUNT)"
+fi
+
+if check_file proc/meminfo; then
+ TOTAL=$(grep MemTotal proc/meminfo | awk '{print $2}')
+ AVAILABLE=$(grep MemAvailable proc/meminfo | awk '{print $2}')
+ USED_PERCENT=$(echo "scale=1; (($TOTAL - $AVAILABLE) * 100) / $TOTAL" | bc 2>/dev/null || echo "0")
+ echo " Memory Usage: ${USED_PERCENT}% of $((TOTAL/1024/1024))GB"
+fi
+echo ""
+
+# Disk Usage
+echo "DISK USAGE:"
+if check_file df; then
+ grep -v "tmpfs\|devtmpfs" df | while read line; do
+  if echo "$line" | grep -q "%"; then
+   echo " $line"
+  fi
+ done
+fi
+echo ""
+
+# Recent Errors
+echo "RECENT SYSTEM ERRORS:"
+if check_file var/log/messages; then
+ ERROR_COUNT=$(grep -i "error\|critical\|fail" var/log/messages 2>/dev/null | wc -l)
+ echo " Found $ERROR_COUNT error entries in system log"
+fi
