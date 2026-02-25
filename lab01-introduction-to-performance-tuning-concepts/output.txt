@@ -1,0 +1,495 @@
+CentOS Stream 9 - BaseOS                           7.8 MB/s |  16 MB     00:02
+CentOS Stream 9 - AppStream                        8.1 MB/s |  20 MB     00:02
+CentOS Stream 9 - Extras packages                  1.2 MB/s | 1.3 MB     00:01
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+Last metadata expiration check: 0:06:12 ago on Tue Feb 25 11:08:01 2026.
+Dependencies resolved.
+================================================================================
+ Package         Arch   Version                          Repo            Size
+================================================================================
+Installing:
+ htop            x86_64 3.2.2-2.el9                      appstream       111 k
+ iotop           noarch 0.6-31.el9                       appstream        62 k
+ sysstat         x86_64 12.5.4-8.el9                     baseos          433 k
+ perf            x86_64 5.14.0-XXXX.el9                  baseos          2.0 M
+ stress-ng       x86_64 0.15.09-2.el9                    epel            1.3 M
+ bc              x86_64 1.07.1-13.el9                    baseos          129 k
+ lsof            x86_64 4.95.0-2.el9                     baseos          247 k
+
+Transaction Summary
+================================================================================
+Install  7 Packages
+
+Total download size: 4.3 M
+Installed size: 12 M
+Downloading Packages:
+(1/7): htop-3.2.2-2.el9.x86_64.rpm            1.4 MB/s | 111 kB     00:00
+(2/7): iotop-0.6-31.el9.noarch.rpm            1.0 MB/s |  62 kB     00:00
+(3/7): sysstat-12.5.4-8.el9.x86_64.rpm        2.4 MB/s | 433 kB     00:00
+(4/7): perf-5.14.0-XXXX.el9.x86_64.rpm        5.8 MB/s | 2.0 MB     00:00
+(5/7): stress-ng-0.15.09-2.el9.x86_64.rpm     3.9 MB/s | 1.3 MB     00:00
+(6/7): bc-1.07.1-13.el9.x86_64.rpm            1.5 MB/s | 129 kB     00:00
+(7/7): lsof-4.95.0-2.el9.x86_64.rpm           2.1 MB/s | 247 kB     00:00
+--------------------------------------------------------------------------------
+Total                                            8.3 MB/s | 4.3 MB     00:00
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                        1/1
+  Installing       : bc-1.07.1-13.el9.x86_64                                 1/7
+  Installing       : lsof-4.95.0-2.el9.x86_64                                2/7
+  Installing       : sysstat-12.5.4-8.el9.x86_64                             3/7
+  Installing       : perf-5.14.0-XXXX.el9.x86_64                             4/7
+  Installing       : iotop-0.6-31.el9.noarch                                 5/7
+  Installing       : htop-3.2.2-2.el9.x86_64                                 6/7
+  Installing       : stress-ng-0.15.09-2.el9.x86_64                          7/7
+  Verifying        : htop-3.2.2-2.el9.x86_64                                 1/7
+  Verifying        : iotop-0.6-31.el9.noarch                                 2/7
+  Verifying        : sysstat-12.5.4-8.el9.x86_64                             3/7
+  Verifying        : perf-5.14.0-XXXX.el9.x86_64                             4/7
+  Verifying        : stress-ng-0.15.09-2.el9.x86_64                          5/7
+  Verifying        : bc-1.07.1-13.el9.x86_64                                 6/7
+  Verifying        : lsof-4.95.0-2.el9.x86_64                                7/7
+
+Installed:
+  bc.x86_64 1.07.1-13.el9      htop.x86_64 3.2.2-2.el9      iotop.noarch 0.6-31.el9
+  lsof.x86_64 4.95.0-2.el9     perf.x86_64 5.14.0-XXXX.el9  stress-ng.x86_64 0.15.09-2.el9
+  sysstat.x86_64 12.5.4-8.el9
+
+Complete!
+
+Created symlink /etc/systemd/system/multi-user.target.wants/sysstat.service → /usr/lib/systemd/system/sysstat.service.
+
+● sysstat.service - Resets System Activity Logs
+     Loaded: loaded (/usr/lib/systemd/system/sysstat.service; enabled; preset: disabled)
+     Active: active (exited) since Tue 2026-02-25 11:10:41 UTC; 6s ago
+    Process: 1482 ExecStart=/usr/libexec/sysstat/sa1 --boot (code=exited, status=0/SUCCESS)
+   Main PID: 1482 (code=exited, status=0/SUCCESS)
+
+=== SYSTEM PERFORMANCE BASELINE ===
+Date: Tue Feb 25 11:12:02 UTC 2026
+
+=== CPU Information ===
+CPU(s):                          2
+Model name:                      Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+Thread(s) per core:              1
+Core(s) per socket:              2
+
+=== Memory Information ===
+              total        used        free      shared  buff/cache   available
+Mem:           3.6Gi       1.1Gi       1.7Gi       8.0Mi       1.0Gi       2.3Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+=== Disk Information ===
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1   32G  4.2G   28G  14% /
+tmpfs           1.8G     0  1.8G   0% /dev/shm
+tmpfs           720M  1.2M  719M   1% /run
+tmpfs           1.8G     0  1.8G   0% /tmp
+
+=== Current Load Average ===
+ 11:12:02 up  1:03,  1 user,  load average: 0.03, 0.05, 0.02
+
+=== Top 5 CPU Consuming Processes ===
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        1629  1.2  0.7  15436  9780 pts/0    R+   11:12   0:00 ps aux --sort=-%cpu
+root        1262  0.2  1.4  98464 20380 ?        Ss   11:09   0:00 /usr/lib/systemd/systemd-journald
+root           1  0.0  0.3 173828 12352 ?        Ss   10:09   0:01 /usr/lib/systemd/systemd
+root        1120  0.0  0.6  70408 24800 ?        Ss   11:08   0:00 sshd: root@pts/0
+root        1124  0.0  0.3  14388 13108 pts/0    Ss   11:08   0:00 -bash
+
+=== Top 5 Memory Consuming Processes ===
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        1262  0.2  1.4  98464 20380 ?        Ss   11:09   0:00 /usr/lib/systemd/systemd-journald
+root        1120  0.0  0.6  70408 24800 ?        Ss   11:08   0:00 sshd: root@pts/0
+root        1007  0.0  0.5  59804 21400 ?        Ss   11:08   0:00 /usr/bin/python3 -s /usr/sbin/firewalld --nofork --nopid
+root           1  0.0  0.3 173828 12352 ?        Ss   10:09   0:01 /usr/lib/systemd/systemd
+root        1124  0.0  0.3  14388 13108 pts/0    Ss   11:08   0:00 -bash
+
+  1  [||||||||||||||||||||||||||||            62.7%]   Tasks: 64,  82 thr; 1 running
+  2  [|||||||||||||||||||||||||||             58.2%]   Load average: 0.90 0.28 0.10
+  Mem[|||||||||||||                     1.11G/3.58G]
+  Swp[                               0K/1.00G]
+
+stress-ng: info:  [1740] setting to a 60 second run per stressor
+stress-ng: info:  [1740] dispatching hogs: 4 cpu
+stress-ng: info:  [1740] successful run completed in 60.02s
+stress-ng: info:  [1740] cpu              4     60.02s  118.54%  71110.08 bogo ops/s  (bogo ops: 4268680)
+
+Linux 5.14.0-XXXX.el9.x86_64 (ip-10-0-2-81)  02/25/2026  _x86_64_  (2 CPU)
+
+11:14:30 AM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+11:14:31 AM     all     66.00      0.00     33.50      0.10      0.00      0.40
+11:14:32 AM     all     64.80      0.00     35.10      0.00      0.00      0.10
+11:14:33 AM     all     67.20      0.00     32.60      0.00      0.00      0.20
+11:14:34 AM     all     63.90      0.00     36.00      0.00      0.00      0.10
+11:14:35 AM     all     68.10      0.00     31.70      0.10      0.00      0.10
+11:14:36 AM     all     65.70      0.00     34.20      0.00      0.00      0.10
+11:14:37 AM     all     66.80      0.00     33.10      0.00      0.00      0.10
+11:14:38 AM     all     64.10      0.00     35.80      0.00      0.00      0.10
+11:14:39 AM     all     67.50      0.00     32.40      0.00      0.00      0.10
+11:14:40 AM     all     12.10      0.00      5.20      0.00      0.00     82.70
+Average:        all     57.63      0.00     27.76      0.02      0.00     14.59
+
+=== CPU BOTTLENECK DETECTION ===
+System has 2 CPU cores
+Current load average: 1min=0.08, 5min=0.06
+CPU load is within normal range
+
+Top 5 CPU consuming processes:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        1801  1.4  0.3  16604 11460 pts/0    R+   11:15   0:00 ps aux --sort=-%cpu
+root        1120  0.0  0.6  70408 24800 ?        Ss   11:08   0:00 sshd: root@pts/0
+root        1124  0.0  0.3  14388 13108 pts/0    Ss   11:08   0:00 -bash
+root        1262  0.0  1.4  98464 20380 ?        Ss   11:09   0:00 /usr/lib/systemd/systemd-journald
+root           1  0.0  0.3 173828 12352 ?        Ss   10:09   0:01 /usr/lib/systemd/systemd
+
+              total        used        free      shared  buff/cache   available
+Mem:           3.6Gi       1.2Gi       1.6Gi       8.2Mi       1.0Gi       2.2Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+NAME      TYPE SIZE USED PRIO
+/dev/zram0 partition 1G   0B 100
+
+Linux 5.14.0-XXXX.el9.x86_64 (ip-10-0-2-81)  02/25/2026  _x86_64_  (2 CPU)
+
+11:16:10 AM kbmemfree   kbavail kbmemused  %memused kbbuffers  kbcached  kbcommit   %commit  kbactive   kbinact   kbdirty
+11:16:11 AM   1667320   2358040  1216840     33.9     25684    824120   1155020     24.6    612300    540200       368
+11:16:12 AM   1667204   2357900  1216956     33.9     25684    824180   1155040     24.6    612420    540210       380
+11:16:13 AM   1666980   2357700  1217180     34.0     25684    824300   1155052     24.6    612540    540250       392
+11:16:14 AM   1666900   2357600  1217260     34.0     25684    824340   1155070     24.6    612560    540290       404
+11:16:15 AM   1666812   2357500  1217348     34.0     25684    824390   1155076     24.6    612580    540320       416
+Average:      1667043   2357748  1217117     34.0     25684    824266   1155051     24.6    612480    540254       392
+
+=== MEMORY BOTTLENECK DETECTION ===
+Total Memory: 3660MB
+Used Memory: 1250MB (34%)
+Available Memory: 2305MB
+Swap Used: 0MB
+Memory usage is within normal range
+
+Top 5 memory consuming processes:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        1262  0.0  1.4  98464 20380 ?        Ss   11:09   0:00 /usr/lib/systemd/systemd-journald
+root        1120  0.0  0.6  70408 24800 ?        Ss   11:08   0:00 sshd: root@pts/0
+root        1007  0.0  0.5  59804 21400 ?        Ss   11:08   0:00 /usr/bin/python3 -s /usr/sbin/firewalld --nofork --nopid
+root        1955  0.0  0.4  54156 16840 ?        Ss   11:16   0:00 /usr/sbin/crond -n
+root           1  0.0  0.3 173828 12352 ?        Ss   10:09   0:01 /usr/lib/systemd/systemd
+
+Total DISK READ:         0.00 B/s | Total DISK WRITE:        12.34 K/s
+Actual DISK READ:        0.00 B/s | Actual DISK WRITE:       14.10 K/s
+  TID  PRIO  USER     DISK READ  DISK WRITE  SWAPIN  IO>  COMMAND
+ 2103 be/4 root      0.00 B/s   12.34 K/s   0.00 %  0.01%  journald
+
+Linux 5.14.0-XXXX.el9.x86_64 (ip-10-0-2-81)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          3.12    0.00    1.75    0.20    0.00   94.93
+
+Device            r/s     w/s   rkB/s   wkB/s  rrqm/s  wrqm/s  %util
+nvme0n1          0.10    1.22    1.60   18.40    0.00    0.12   0.30
+...
+
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1   32G  4.2G   28G  14% /
+tmpfs           1.8G     0  1.8G   0% /dev/shm
+tmpfs           720M  1.2M  719M   1% /run
+tmpfs           1.8G     0  1.8G   0% /tmp
+
+=== DISK I/O BOTTLENECK DETECTION ===
+Disk Space Usage:
+/dev/nvme0n1p1   32G  4.2G   28G  14% /
+
+Disk I/O Statistics (5-second average):
+Device            r/s     w/s   rkB/s   wkB/s  await  svctm  %util
+nvme0n1          0.05    0.70    0.80   10.50   0.80   0.25   0.20
+
+Current I/O Wait: 0%
+I/O wait is within normal range
+
+Top I/O intensive processes:
+Total DISK READ: 0.00 B/s | Total DISK WRITE: 0.00 B/s
+  TID PRIO USER DISK READ DISK WRITE SWAPIN IO> COMMAND
+  1 be/4 root 0.00 B/s 0.00 B/s 0.00 % 0.00% systemd
+  1262 be/4 root 0.00 B/s 0.00 B/s 0.00 % 0.00% systemd-journald
+
+cat: /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor: No such file or directory
+cat: /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors: No such file or directory
+
+Last metadata expiration check: 0:20:11 ago on Tue Feb 25 11:08:01 2026.
+Dependencies resolved.
+================================================================================
+ Package            Arch   Version                          Repo          Size
+================================================================================
+Installing:
+ kernel-tools       x86_64 5.14.0-XXXX.el9                  baseos        1.5 M
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 1.5 M
+Installed size: 4.8 M
+Running transaction
+  Installing : kernel-tools-5.14.0-XXXX.el9.x86_64                           1/1
+  Verifying  : kernel-tools-5.14.0-XXXX.el9.x86_64                           1/1
+Complete!
+
+analyzing CPU 0:
+  driver: intel_pstate
+  CPUs which run at the same hardware frequency: 0 1
+  hardware limits: 800 MHz - 2500 MHz
+  available cpufreq governors: performance powersave
+  current policy: frequency should be within 800 MHz and 2500 MHz.
+                  The governor "powersave" may decide which speed to use
+  current CPU frequency: 2398 MHz (asserted by call to kernel)
+
+Setting cpu: 0
+Setting cpu: 1
+
+  current policy: frequency should be within 800 MHz and 2500 MHz.
+                  The governor "performance" may decide which speed to use
+
+=== CPU GOVERNOR CONFIGURATION ===
+Server/Desktop system - Setting performance governor
+Setting cpu: 0
+Setting cpu: 1
+Current CPU governor:
+  current policy: frequency should be within 800 MHz and 2500 MHz.
+                  The governor "performance" may decide which speed to use
+
+[1] 2521
+
+  PID  NI COMMAND
+ 2521   0 stress-ng
+
+2521 (process ID) old priority 0, new priority 10
+
+  PID  NI COMMAND
+ 2521  10 stress-ng
+
+pid 2521's current affinity list: 0-1
+pid 2521's new affinity list: 0,1
+
+pid 2521's current affinity list: 0,1
+
+
+=== CPU PERFORMANCE MONITORING ===
+Logging to: /var/log/cpu_performance.log
+Monitoring interval: 5 seconds
+Press Ctrl+C to stop monitoring
+[2026-02-25 11:22:10] CPU: 4.00% | Load: 0.03,0.05,0.02
+[2026-02-25 11:22:15] CPU: 3.00% | Load: 0.02,0.04,0.02
+[2026-02-25 11:22:20] CPU: 6.00% | Load: 0.01,0.03,0.02
+
+Timestamp,CPU_Usage,Load_1min,Load_5min,Load_15min,Context_Switches,Interrupts
+2026-02-25 11:22:10,4.00,0.03,0.05,0.02,1452.00,234.00
+2026-02-25 11:22:15,3.00,0.02,0.04,0.02,1408.00,220.00
+2026-02-25 11:22:20,6.00,0.01,0.03,0.02,1502.00,240.00
+
+vm.swappiness = 30
+vm.dirty_ratio = 20
+vm.dirty_background_ratio = 10
+vm.vfs_cache_pressure = 100
+
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.vfs_cache_pressure = 50
+vm.overcommit_memory = 0
+vm.overcommit_ratio = 50
+
+Updated memory settings:
+vm.swappiness = 10
+vm.dirty_ratio = 15
+vm.dirty_background_ratio = 5
+vm.vfs_cache_pressure = 50
+
+=== MEMORY USAGE ANALYSIS ===
+Memory Overview:
+              total        used        free      shared  buff/cache   available
+Mem:           3.6Gi       1.2Gi       1.6Gi       8.1Mi       1.0Gi       2.2Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+Memory Usage by Type:
+MemTotal:        3747840 kB
+MemFree:         1671020 kB
+MemAvailable:    2349100 kB
+Buffers:           25684 kB
+Cached:           824520 kB
+SwapTotal:       1048572 kB
+SwapFree:        1048572 kB
+
+Top 10 Memory Consuming Processes:
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        1262  0.0  1.4  98464 20380 ?        Ss   11:09   0:00 /usr/lib/systemd/systemd-journald
+root        1120  0.0  0.6  70408 24800 ?        Ss   11:08   0:00 sshd: root@pts/0
+root        1007  0.0  0.5  59804 21400 ?        Ss   11:08   0:00 /usr/bin/python3 -s /usr/sbin/firewalld --nofork --nopid
+root           1  0.0  0.3 173828 12352 ?        Ss   10:09   0:01 /usr/lib/systemd/systemd
+root        1124  0.0  0.3  14388 13108 pts/0    Ss   11:08   0:00 -bash
+root        1955  0.0  0.4  54156 16840 ?        Ss   11:16   0:00 /usr/sbin/crond -n
+
+Memory Usage by User:
+root 119MB
+
+Shared Memory Segments:
+
+------ Shared Memory Segments --------
+key        shmid      owner      perms      bytes      nattch     status
+
+Memory Fragmentation Info:
+Node 0, zone      DMA      0      0      0      0      0      0      0      0      1      1      2
+Node 0, zone    DMA32    220    148     92     41     14      6      2      1      0      0      0
+Node 0, zone   Normal   1120    880    520    210     65     12      3      1      0      0      0
+
+Slab Memory Usage (top 10):
+ Active / Total Objects (% used)    : 185432 / 204910 (90.5%)
+ Active / Total Slabs (% used)      : 6124 / 6124 (100.0%)
+ Active / Total Caches (% used)     : 88 / 111 (79.3%)
+ Active / Total Size (% used)       : 22144.10K / 25110.55K (88.2%)
+ Minimum / Average / Maximum Object : 0.01K / 0.12K / 8.00K
+
+  OBJS ACTIVE  USE OBJ SIZE  SLABS OBJ/SLAB CACHE SIZE NAME
+  9216   9012  97%    1.00K    576       16      9216K kmalloc-1k
+  7168   6940  96%    0.50K    224       32      3584K kmalloc-512
+...
+
+=== MEMORY CLEANUP SCRIPT ===
+Memory usage before cleanup:
+              total        used        free      shared  buff/cache   available
+Mem:           3.6Gi       1.2Gi       1.6Gi       8.1Mi       1.0Gi       2.2Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+Clearing page cache, dentries, and inodes...
+Cache clearing complete
+
+Memory usage after cleanup:
+              total        used        free      shared  buff/cache   available
+Mem:           3.6Gi       1.1Gi       1.8Gi       8.1Mi     900Mi       2.4Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+Checking for memory leaks in running processes...
+High memory usage detected: /usr/lib/systemd/systemd-journald (PID: 1262) using 1.4% memory
+
+/dev/nvme0n1p1 on / type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+
+[mq-deadline] none kyber bfq
+
+=== DISK I/O OPTIMIZATION ===
+Optimizing disk: nvme0n1
+Setting none scheduler for nvme0n1
+none
+Current scheduler for nvme0n1:
+mq-deadline [none] kyber bfq
+Setting read-ahead for nvme0n1 to 128KB
+128
+
+Disk optimization complete
+
+=== DISK I/O ANALYSIS ===
+Current I/O Statistics:
+Linux 5.14.0-XXXX.el9.x86_64 (ip-10-0-2-81)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          2.30    0.00    1.10    0.15    0.00   96.45
+
+Device            r/s     w/s   rkB/s   wkB/s  await  %util
+nvme0n1          0.05    0.80    0.80   12.20   0.70   0.25
+
+Top I/O Intensive Processes:
+Total DISK READ: 0.00 B/s | Total DISK WRITE: 0.00 B/s
+  TID PRIO USER DISK READ DISK WRITE SWAPIN IO> COMMAND
+  1 be/4 root 0.00 B/s 0.00 B/s 0.00 % 0.00% systemd
+  1262 be/4 root 0.00 B/s 0.00 B/s 0.00 % 0.00% systemd-journald
+  2103 be/4 root 0.00 B/s 0.00 B/s 0.00 % 0.00% (iotop)
+
+Disk Usage by Mount Point:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1   32G  4.3G   28G  14% /
+
+Inode Usage:
+Filesystem      Inodes  IUsed   IFree IUse% Mounted on
+/dev/nvme0n1p1     16M  162K     16M    1% /
+
+Files with High I/O Activity:
+      8 1262
+      5 1
+      4 1120
+      3 1007
+      2 1955
+
+Block Device Information:
+NAME        FSTYPE FSVER LABEL UUID                                 FSAVAIL FSUSE% MOUNTPOINTS
+nvme0n1
+└─nvme0n1p1  xfs          root  2d1c2a54-9c18-4b0b-a6f1-xxxxxxxxxxxx   27.7G    14% /
+
+=== FILE SYSTEM TUNING ===
+Analyzing mounted file systems:
+
+Processing: /dev/nvme0n1p1 (xfs) mounted on /
+XFS file system detected on /dev/nvme0n1p1
+XFS is already well-optimized by default
+meta-data=/dev/nvme0n1p1        isize=512    agcount=4, agsize=2097024 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1    bigtime=1 inobtcount=1
+
+File system tuning complete
+
+=== COMPREHENSIVE PERFORMANCE TEST SUITE ===
+Test duration: 60 seconds
+Results directory: /root/performance_results
+Starting performance test suite at Tue Feb 25 11:34:01 UTC 2026
+Running CPU performance test...
+CPU test completed
+
+Running memory performance test...
+Memory test completed
+
+Running disk I/O performance test...
+Disk I/O test completed
+
+=== PERFORMANCE TEST SUMMARY ===
+All tests completed at Tue Feb 25 11:37:10 UTC 2026
+Results saved in: /root/performance_results
+
+Test files created:
+-rw-r--r-- 1 root root  2.7K Feb 25 11:35 cpu_monitoring_20260225_113401.log
+-rw-r--r-- 1 root root  1.1K Feb 25 11:35 cpu_test_20260225_113401.log
+-rw-r--r-- 1 root root  1.3K Feb 25 11:36 memory_monitoring_20260225_113401.log
+-rw-r--r-- 1 root root  1.0K Feb 25 11:36 memory_test_20260225_113401.log
+-rw-r--r-- 1 root root  3.9K Feb 25 11:37 disk_monitoring_20260225_113401.log
+-rw-r--r-- 1 root root  1.4K Feb 25 11:37 disk_test_20260225_113401.log
+-rw-r--r-- 1 root root  2.2K Feb 25 11:37 performance_summary_20260225_113401.txt
+
+=== PERFORMANCE SUMMARY REPORT ===
+Generated: Tue Feb 25 11:37:10 UTC 2026
+
+[CPU TEST]
+CPU cores: 2
+CPU model: Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+stress-ng summary (cpu):
+cpu              2     60.01s  101.84%  61240.17 bogo ops/s  (bogo ops: 3675530)
+
+[MEMORY TEST]
+Mem: total=3.6Gi used=1.2Gi free=1.6Gi available=2.2Gi
+stress-ng summary (vm):
+vm               2     60.02s   98.20%   2159.24 bogo ops/s  (bogo ops: 129590)
+
+[DISK TEST]
+Sequential write test (dd): 1024MB
+Write: 1.0 GB copied, 1.46 s, 700 MB/s
+Read: 1.0 GB copied, 0.88 s, 1.1 GB/s
+stress-ng summary (hdd):
+hdd              2     60.02s   99.10%    135.50 bogo ops/s  (bogo ops: 8130)
+
+[NOTES]
+- CPU test used stress-ng with all available cores.
+- Memory test used ~80% of available memory to avoid OOM.
+- Disk test used direct I/O flags to reduce caching impact.
+- Monitor logs contain periodic sar/iostat samples.
