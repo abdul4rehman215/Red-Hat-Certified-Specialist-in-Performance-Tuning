@@ -1,0 +1,564 @@
+Red Hat Enterprise Linux release 9.3 (Plow)
+
+Linux ip-10-0-2-94 5.14.0-362.24.2.el9_3.x86_64 #1 SMP PREEMPT_DYNAMIC Wed Jan 10 17:32:41 EST 2026 x86_64 x86_64 x86_64 GNU/Linux
+
+ Static hostname: ip-10-0-2-94
+       Icon name: computer-vm
+         Chassis: vm 🖴
+      Machine ID: 1c2bde6d93b64d97a9c0b6f45b1d0e7b
+         Boot ID: 2c95d7a2f4d34c1db6a64d5c2a4eaa11
+  Virtualization: kvm
+Operating System: Red Hat Enterprise Linux 9.3 (Plow)
+     CPE OS Name: cpe:/o:redhat:enterprise_linux:9::baseos
+          Kernel: Linux 5.14.0-362.24.2.el9_3.x86_64
+    Architecture: x86-64
+
+/usr/bin/top
+
+/usr/bin/vmstat
+
+/usr/bin/which: no iostat in (/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin)
+
+/usr/bin/which: no mpstat in (/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin)
+
+/usr/bin/which: no sar in (/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin)
+
+               total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       1.2Gi       1.5Gi       8.0Mi       1.1Gi       2.3Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1   32G  4.6G   28G  15% /
+tmpfs           1.9G     0  1.9G   0% /dev/shm
+tmpfs           740M  1.3M  739M   1% /run
+tmpfs           1.9G     0  1.9G   0% /tmp
+tmpfs           380M   84K  380M   1% /run/user/0
+
+Architecture:            x86_64
+CPU op-mode(s):          32-bit, 64-bit
+Byte Order:              Little Endian
+CPU(s):                  2
+On-line CPU(s) list:     0,1
+Model name:              Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz
+CPU family:              6
+Model:                   85
+Thread(s) per core:      1
+Core(s) per socket:      2
+Socket(s):               1
+Vendor ID:               GenuineIntel
+Virtualization:          VT-x
+L1d cache:               64 KiB
+L1i cache:               64 KiB
+L2 cache:                2 MiB
+L3 cache:                35.8 MiB
+
+Updating Subscription Management repositories.
+Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)     9.6 MB/s |  18 MB     00:01
+Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)  8.1 MB/s |  22 MB     00:02
+Dependencies resolved.
+Nothing to do.
+Complete!
+
+Last metadata expiration check: 0:02:11 ago on Tue Feb 25 12:08:01 2026.
+Dependencies resolved.
+================================================================================
+ Package        Architecture   Version                         Repository  Size
+================================================================================
+Installing:
+ sysstat        x86_64         12.5.4-8.el9                    baseos      433 k
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 433 k
+Installed size: 1.6 M
+Downloading Packages:
+sysstat-12.5.4-8.el9.x86_64.rpm                       1.8 MB/s | 433 kB     00:00
+--------------------------------------------------------------------------------
+Total                                                  1.7 MB/s | 433 kB     00:00
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                        1/1
+  Installing       : sysstat-12.5.4-8.el9.x86_64                             1/1
+  Running scriptlet: sysstat-12.5.4-8.el9.x86_64                             1/1
+  Verifying        : sysstat-12.5.4-8.el9.x86_64                             1/1
+
+Installed:
+  sysstat-12.5.4-8.el9.x86_64
+
+Complete!
+
+Last metadata expiration check: 0:03:02 ago on Tue Feb 25 12:08:01 2026.
+No match for argument: nethogs
+Error: Unable to find a match: nethogs
+
+Dependencies resolved.
+================================================================================
+ Package          Architecture   Version               Repository         Size
+================================================================================
+Installing:
+ epel-release     noarch         9-8.el9               extras            18 k
+
+Transaction Summary
+================================================================================
+Install  1 Package
+
+Total download size: 18 k
+Installed size: 25 k
+Running transaction
+  Installing       : epel-release-9-8.el9.noarch                               1/1
+  Verifying        : epel-release-9-8.el9.noarch                               1/1
+
+Installed:
+  epel-release-9-8.el9.noarch
+
+Complete!
+
+Extra Packages for Enterprise Linux 9 - x86_64         6.2 MB/s |  15 MB     00:02
+Dependencies resolved.
+================================================================================
+ Package         Arch   Version                         Repo              Size
+================================================================================
+Installing:
+ htop            x86_64 3.2.2-2.el9                     appstream         111 k
+ iotop           noarch 0.6-31.el9                      appstream          62 k
+ nethogs         x86_64 0.8.7-2.el9                     epel              41 k
+
+Transaction Summary
+================================================================================
+Install  3 Packages
+
+Total download size: 214 k
+Installed size: 560 k
+Downloading Packages:
+(1/3): htop-3.2.2-2.el9.x86_64.rpm              1.3 MB/s | 111 kB     00:00
+(2/3): iotop-0.6-31.el9.noarch.rpm              1.1 MB/s |  62 kB     00:00
+(3/3): nethogs-0.8.7-2.el9.x86_64.rpm           805 kB/s |  41 kB     00:00
+--------------------------------------------------------------------------------
+Total                                              1.4 MB/s | 214 kB     00:00
+Running transaction check
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Installing : iotop-0.6-31.el9.noarch                                  1/3
+  Installing : htop-3.2.2-2.el9.x86_64                                   2/3
+  Installing : nethogs-0.8.7-2.el9.x86_64                                3/3
+  Verifying  : htop-3.2.2-2.el9.x86_64                                   1/3
+  Verifying  : iotop-0.6-31.el9.noarch                                   2/3
+  Verifying  : nethogs-0.8.7-2.el9.x86_64                                3/3
+
+Installed:
+  htop-3.2.2-2.el9.x86_64  iotop-0.6-31.el9.noarch  nethogs-0.8.7-2.el9.x86_64
+
+Complete!
+
+sysstat-12.5.4-8.el9.x86_64
+
+/usr/bin/iostat
+
+/usr/bin/mpstat
+
+/usr/bin/sar
+
+Created symlink /etc/systemd/system/multi-user.target.wants/sysstat.service → /usr/lib/systemd/system/sysstat.service.
+● sysstat.service - Resets System Activity Logs
+     Loaded: loaded (/usr/lib/systemd/system/sysstat.service; enabled; preset: disabled)
+     Active: active (exited) since Tue 2026-02-25 12:14:22 UTC; 4s ago
+    Process: 1831 ExecStart=/usr/libexec/sysstat/sa1 --boot (code=exited, status=0/SUCCESS)
+   Main PID: 1831 (code=exited, status=0/SUCCESS)
+
+HISTORY=7
+COMPRESSAFTER=10
+
+
+# Run system activity accounting tool every 10 minutes
+*/10 * * * * root /usr/libexec/sysstat/sa1 1 1
+# Generate a daily summary of process accounting at 23:53
+53 23 * * * root /usr/libexec/sysstat/sa2 -A
+
+top - 12:18:01 up  1:12,  1 user,  load average: 0.05, 0.03, 0.01
+Tasks:  76 total,   1 running,  75 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  2.6 us,  1.1 sy,  0.0 ni, 96.1 id,  0.1 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3790.7 total,   1558.0 free,   1223.5 used,   1009.2 buff/cache
+MiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   2349.8 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   1124 root      20   0   14728  13120  10540 S   0.0   0.3   0:00.08 bash
+   2051 root      20   0   56208  17044  10620 S   0.0   0.4   0:00.03 crond
+      1 root      20   0  173920  12380   8460 S   0.0   0.3   0:01.21 systemd
+
+top - 12:18:36 up  1:13,  1 user,  load average: 0.06, 0.03, 0.01
+Tasks:  76 total,   1 running,  75 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  3.1 us,  0.9 sy,  0.0 ni, 95.8 id,  0.1 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3790.7 total,   1550.4 free,   1231.2 used,   1009.1 buff/cache
+MiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   2342.9 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   2234 root      20   0   15276  11292   9840 R   6.7   0.3   0:00.02 top
+   1262 root      20   0   98344  20440  18660 S   0.0   0.5   0:00.19 systemd-journald
+      1 root      20   0  173920  12380   8460 S   0.0   0.3   0:01.22 systemd
+
+top - 12:19:02 up  1:13,  1 user,  load average: 0.04, 0.03, 0.01
+Tasks:  76 total,   1 running,  75 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  2.0 us,  0.7 sy,  0.0 ni, 97.2 id,  0.0 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3790.7 total,   1554.2 free,   1227.6 used,   1008.9 buff/cache
+...
+
+top - 12:20:01 up  1:14,  1 user,  load average: 0.02, 0.03, 0.01
+Tasks:  76 total,   1 running,  75 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  1.3 us,  0.6 sy,  0.0 ni, 98.0 id,  0.0 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3790.7 total,   1557.8 free,   1224.0 used,   1008.9 buff/cache
+MiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   2346.0 avail Mem
+
+    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+   2299 root      20   0   15276  11296   9840 R   0.0   0.3   0:00.03 top
+   1262 root      20   0   98344  20440  18660 S   0.0   0.5   0:00.19 systemd-journald
+      1 root      20   0  173920  12380   8460 S   0.0   0.3   0:01.22 systemd
+...
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+12:20:44 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:20:45 PM     all      2.52      0.00      0.76      0.00      0.00     96.72
+12:20:46 PM     all      1.88      0.00      0.62      0.00      0.00     97.50
+12:20:47 PM     all      3.10      0.00      0.95      0.00      0.00     95.95
+12:20:48 PM     all      2.05      0.00      0.70      0.10      0.00     97.15
+12:20:49 PM     all      1.76      0.00      0.58      0.00      0.00     97.66
+Average:        all      2.26      0.00      0.72      0.02      0.00     97.00
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+12:21:12 PM kbmemfree   kbavail kbmemused  %memused kbbuffers  kbcached  kbcommit   %commit
+12:21:13 PM   1593020   2354012  1224820     32.7     26120    832840   1159080     24.2
+12:21:14 PM   1592904   2353880  1224936     32.7     26120    832920   1159100     24.2
+12:21:15 PM   1592700   2353660  1225140     32.7     26120    833040   1159120     24.2
+12:21:16 PM   1592604   2353540  1225236     32.7     26120    833100   1159140     24.2
+12:21:17 PM   1592500   2353400  1225340     32.7     26120    833160   1159150     24.2
+Average:      1592746   2353698  1224994     32.7     26120    833012   1159118     24.2
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+12:21:41 PM       DEV       tps     rkB/s     wkB/s     dkB/s   areq-sz    aqu-sz     await     %util
+12:21:42 PM    nvme0n1      0.80      1.60     12.80      0.00     18.00      0.00      0.80      0.15
+12:21:43 PM    nvme0n1      0.60      0.00     10.40      0.00     17.33      0.00      0.60      0.10
+12:21:44 PM    nvme0n1      1.00      0.00     16.00      0.00     16.00      0.00      0.90      0.20
+12:21:45 PM    nvme0n1      0.40      0.00      6.40      0.00     16.00      0.00      0.40      0.08
+12:21:46 PM    nvme0n1      0.20      0.00      3.20      0.00     16.00      0.00      0.20      0.05
+Average:       nvme0n1      0.60      0.32      9.76      0.00     16.67      0.00      0.58      0.12
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+12:22:10 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s
+12:22:11 PM      lo       0.00      0.00      0.00      0.00      0.00      0.00      0.00
+12:22:11 PM     eth0      1.20      0.90      0.18      0.15      0.00      0.00      0.00
+
+12:22:11 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s
+12:22:12 PM      lo       0.00      0.00      0.00      0.00      0.00      0.00      0.00
+12:22:12 PM     eth0      0.90      0.70      0.12      0.10      0.00      0.00      0.00
+
+12:22:12 PM     IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s
+12:22:13 PM      lo       0.00      0.00      0.00      0.00      0.00      0.00      0.00
+12:22:13 PM     eth0      1.10      0.80      0.16      0.13      0.00      0.00      0.00
+
+Average:        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s
+Average:         lo       0.00      0.00      0.00      0.00      0.00      0.00      0.00
+Average:        eth0      1.07      0.80      0.15      0.13      0.00      0.00      0.00
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+12:22:39 PM    runq-sz  plist-sz   ldavg-1   ldavg-5  ldavg-15   blocked
+12:22:40 PM       1        77       0.03      0.03      0.01         0
+12:22:41 PM       1        77       0.03      0.03      0.01         0
+12:22:42 PM       1        77       0.04      0.03      0.01         0
+12:22:43 PM       1        77       0.04      0.03      0.01         0
+12:22:44 PM       1        77       0.02      0.03      0.01         0
+Average:          1        77       0.03      0.03      0.01         0
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+12:10:01 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:20:01 PM     all      2.01      0.00      0.68      0.03      0.00     97.28
+12:30:01 PM     all      2.44      0.00      0.82      0.05      0.00     96.69
+Average:        all      2.22      0.00      0.75      0.04      0.00     96.99
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/24/2026  _x86_64_  (2 CPU)
+
+11:50:01 AM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:00:01 PM     all      1.20      0.00      0.42      0.01      0.00     98.37
+12:10:01 PM     all      1.45      0.00      0.50      0.02      0.00     98.03
+Average:        all      1.33      0.00      0.46      0.02      0.00     98.19
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+10:10:01 AM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+11:00:01 AM     all      1.10      0.00      0.36      0.01      0.00     98.53
+11:10:01 AM     all      1.28      0.00      0.40      0.01      0.00     98.31
+11:20:01 AM     all      1.52      0.00      0.48      0.02      0.00     97.98
+11:30:01 AM     all      1.35      0.00      0.44      0.02      0.00     98.19
+11:40:01 AM     all      1.18      0.00      0.39      0.01      0.00     98.42
+11:50:01 AM     all      1.22      0.00      0.41      0.01      0.00     98.36
+Average:        all      1.27      0.00      0.41      0.01      0.00     98.31
+
+-rw-r--r-- 1 root root 118K Feb 25 12:24 /tmp/system_report.txt
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+12:10:01 AM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+...
+
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  0      0 1592500  26120 835240    0    0     1     8  110  210  2  1 97  0  0
+
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  0      0 1591100  26120 835600    0    0     0     5  108  205  1  1 98  0  0
+ 1  0      0 1590950  26120 835780    0    0     0     8  112  212  2  1 97  0  0
+ 1  0      0 1590800  26120 835910    0    0     0     6  106  198  1  1 98  0  0
+ 1  0      0 1590700  26120 836020    0    0     0     7  109  206  2  1 97  0  0
+ 1  0      0 1590600  26120 836080    0    0     0     5  111  210  2  1 97  0  0
+ 1  0      0 1590500  26120 836140    0    0     0     9  113  214  3  1 96  0  0
+ 1  0      0 1590400  26120 836200    0    0     0     4  104  199  1  1 98  0  0
+ 1  0      0 1590350  26120 836240    0    0     0     7  108  205  2  1 97  0  0
+ 1  0      0 1590300  26120 836310    0    0     0     6  110  208  2  1 97  0  0
+ 1  0      0 1590200  26120 836360    0    0     0     5  107  201  1  1 98  0  0
+
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b swpd free buff cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  0    0 1554   25   816    0    0     0     7  109  206  2  1 97  0  0
+ 1  0    0 1553   25   816    0    0     0     5  105  198  1  1 98  0  0
+ 1  0    0 1553   25   816    0    0     0     8  111  212  2  1 97  0  0
+ 1  0    0 1553   25   816    0    0     0     6  108  204  2  1 97  0  0
+ 1  0    0 1552   25   816    0    0     0     4  104  198  1  1 98  0  0
+
+disk- ------------reads------------ ------------writes----------- -----IO------
+       total merged sectors      ms  total merged sectors      ms    cur    sec
+nvme0n1    812     12  45680     326   1021     98  90210     588      0      0
+
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu----- ------memory-----
+ r  b   swpd   free   inact  active   si   so    bi    bo   in   cs us sy id wa st   inact   active
+ 1  0      0 1590000  615000  610000   0    0     0     6  108  204  2  1 97  0  0   615000  610000
+ 1  0      0 1589900  615200  609800   0    0     0     5  104  198  1  1 98  0  0   615200  609800
+ 1  0      0 1589800  615310  609700   0    0     0     8  112  212  2  1 97  0  0   615310  609700
+ 1  0      0 1589700  615420  609580   0    0     0     6  109  205  2  1 97  0  0   615420  609580
+ 1  0      0 1589600  615500  609500   0    0     0     4  105  200  1  1 98  0  0   615500  609500
+
+=== VM Statistics Monitor ===
+Date: Tue Feb 25 12:28:41 UTC 2026
+Hostname: ip-10-0-2-94
+
+Current Memory and CPU Usage:
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  0      0 1589400  26120 836900    0    0     0     7  112  210  2  1 97  0  0
+
+Disk Statistics:
+disk- ------------reads------------ ------------writes----------- -----IO------
+       total merged sectors      ms  total merged sectors      ms    cur    sec
+nvme0n1    835     12  46840     336   1054     99  91540     600      0      0
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          2.08    0.00    0.74    0.05    0.00   97.13
+
+Device             tps    kB_read/s    kB_wrtn/s    kB_dscd/s    kB_read    kB_wrtn    kB_dscd
+nvme0n1           0.62         0.40        10.22         0.00      46840     91540          0
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          1.90    0.00    0.66    0.03    0.00   97.41
+
+Device             tps    kB_read/s    kB_wrtn/s
+nvme0n1           0.40         0.00         6.40
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          2.50    0.00    0.80    0.05    0.00   96.65
+
+Device             tps    kB_read/s    kB_wrtn/s
+nvme0n1           0.70         0.80        12.00
+...
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          2.10    0.00    0.80    0.07    0.00   97.03
+
+Device            r/s     w/s   rkB/s   wkB/s  rrqm/s  wrqm/s  await  %util
+nvme0n1          0.05    0.70    0.80   12.00    0.00    0.10   0.60   0.20
+...
+
+iostat: Device not found: sda
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+Device            r/s     w/s   rkB/s   wkB/s  rrqm/s  wrqm/s  await  %util
+nvme0n1          0.00    0.40    0.00    6.40    0.00    0.08   0.50   0.12
+...
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          2.30    0.00    0.70    0.04    0.00   96.96
+
+Device             tps    kB_read/s    kB_wrtn/s
+nvme0n1           0.55         0.20         9.80
+...
+
+-rw-r--r-- 1 root root 6.8K Feb 25 12:33 /tmp/iostat_report.txt
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+Device            r/s     w/s    rMB/s    wMB/s  await  %util
+nvme0n1          0.01    0.30     0.00     0.01   0.60   0.10
+...
+
+=== System Performance Monitor ===
+Timestamp: Tue Feb 25 12:36:10 UTC 2026
+Hostname: ip-10-0-2-94
+
+=== CPU Information ===
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+12:36:11 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:36:12 PM     all      2.80      0.00      0.90      0.00      0.00     96.30
+12:36:13 PM     all      1.90      0.00      0.70      0.00      0.00     97.40
+12:36:14 PM     all      2.10      0.00      0.80      0.10      0.00     97.00
+Average:        all      2.27      0.00      0.80      0.03      0.00     96.90
+
+=== Memory Usage ===
+               total        used        free      shared  buff/cache   available
+Mem:           3.7Gi       1.2Gi       1.5Gi       8.0Mi       1.1Gi       2.3Gi
+Swap:          1.0Gi          0B       1.0Gi
+
+=== Disk I/O Statistics ===
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+Device            r/s     w/s   rkB/s   wkB/s  await  %util
+nvme0n1          0.00    0.60    0.00   10.40   0.55   0.18
+...
+
+=== Top 10 Processes by CPU ===
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        2610  1.2  0.3  15276 11296 pts/0    R+   12:36   0:00 ps aux --sort=-%cpu
+root        1262  0.0  0.5  98344 20440 ?        Ss   12:09   0:00 systemd-journald
+root           1  0.0  0.3 173920 12380 ?        Ss   11:05   0:01 systemd
+...
+
+=== Top 10 Processes by Memory ===
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root        1262  0.0  0.5  98344 20440 ?        Ss   12:09   0:00 systemd-journald
+root        1120  0.0  0.6  70408 24800 ?        Ss   12:08   0:00 sshd: root@pts/0
+...
+
+=== Load Average ===
+ 12:36:16 up  1:30,  1 user,  load average: 0.03, 0.03, 0.01
+Report saved to: /tmp/system_monitor_20260225_123610.log
+
+-rw-r--r-- 1 root root 3.1K Feb 25 12:36 /tmp/system_monitor_20260225_123610.log
+
+*/15 * * * * /tmp/system_monitor.sh > /dev/null 2>&1
+
+/tmp/system_monitor_*.log {
+ daily
+ rotate 7
+ compress
+ delaycompress
+ missingok
+ notifempty
+ create 644 root root
+}
+
+Creating performance baseline...
+Collecting CPU baseline...
+Collecting memory baseline...
+Collecting disk I/O baseline...
+Collecting network baseline...
+Baseline collection complete. Files saved in /tmp/performance_baseline
+total 132
+drwxr-xr-x 2 root root   4096 Feb 25 12:40 .
+drwxrwxrwt 1 root root   4096 Feb 25 12:40 ..
+-rw-r--r-- 1 root root  19620 Feb 25 12:40 cpu_baseline.txt
+-rw-r--r-- 1 root root  41280 Feb 25 12:40 disk_baseline.txt
+-rw-r--r-- 1 root root  18240 Feb 25 12:40 memory_baseline.txt
+-rw-r--r-- 1 root root  25410 Feb 25 12:40 network_baseline.txt
+
+top - 12:41:02 up  1:35,  1 user,  load average: 0.04, 0.03, 0.01
+Tasks:  78 total,   1 running,  77 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  2.0 us,  0.8 sy,  0.0 ni, 97.0 id,  0.1 wa,  0.0 hi,  0.1 si,  0.0 st
+MiB Mem :   3790.7 total,   1538.2 free,   1244.4 used,   1008.1 buff/cache
+MiB Swap:   1024.0 total,   1024.0 free,      0.0 used.   2331.9 avail Mem
+
+procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 1  0      0 1578200  26120 839240    0    0     0     6  110  208  2  1 97  0  0
+
+Linux 5.14.0-362.24.2.el9_3.x86_64 (ip-10-0-2-94)  02/25/2026  _x86_64_  (2 CPU)
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          2.40    0.00    0.78    0.06    0.00   96.76
+
+Device            r/s     w/s   rkB/s   wkB/s  await  %util
+nvme0n1          0.00    0.50    0.00    8.00   0.55   0.15
+...
+
+Last metadata expiration check: 0:22:10 ago on Tue Feb 25 12:08:01 2026.
+Dependencies resolved.
+Package bc-1.07.1-13.el9.x86_64 is already installed.
+Nothing to do.
+Complete!
+
+=== SYSTEM PERFORMANCE ANALYSIS ===
+Analysis Date: Tue Feb 25 12:46:19 UTC 2026
+
+=== SYSTEM INFORMATION ===
+Hostname: ip-10-0-2-94
+OS Version: Red Hat Enterprise Linux release 9.3 (Plow)
+Kernel: 5.14.0-362.24.2.el9_3.x86_64
+Uptime:  12:46:19 up  1:40,  1 user,  load average: 0.03, 0.03, 0.01
+
+=== CPU ANALYSIS ===
+CPU Cores: 2
+Current Load Average:  0.03, 0.03, 0.01
+
+CPU Usage (5 samples):
+Average:        all      2.18      0.00      0.74      0.02      0.00     97.06
+
+=== MEMORY ANALYSIS ===
+Total Memory: 3.7Gi
+Used Memory: 1.2Gi
+Available Memory: 2.3Gi
+Memory Usage Percentage: 32.7%
+
+=== DISK ANALYSIS ===
+Disk Usage:
+/dev/nvme0n1p1   32G  4.6G   28G  15% /
+
+Disk I/O Statistics:
+nvme0n1 0.00 0.50 0.00 8.00 0.00 0.08 0.55 0.15
+
+=== TOP PROCESSES ===
+Top 5 CPU consumers:
+root        3122  1.0  0.3  15276 11280 pts/0    R+   12:46   0:00 ps
+root        1262  0.0  0.5  98344 20440 ?        Ss   12:09   0:00 systemd-journald
+root           1  0.0  0.3 173920 12380 ?        Ss   11:05   0:01 systemd
+root        1120  0.0  0.6  70408 24800 ?        Ss   12:08   0:00 sshd
+root        2051  0.0  0.4  56208 17044 ?        Ss   12:14   0:00 crond
+
+Top 5 Memory consumers:
+root        1262  0.0  0.5  98344 20440 ?        Ss   12:09   0:00 systemd-journald
+root        1120  0.0  0.6  70408 24800 ?        Ss   12:08   0:00 sshd
+root        1007  0.0  0.5  59804 21400 ?        Ss   12:08   0:00 firewalld
+root        2051  0.0  0.4  56208 17044 ?        Ss   12:14   0:00 crond
+root           1  0.0  0.3 173920 12380 ?        Ss   11:05   0:01 systemd
+
+=== PERFORMANCE RECOMMENDATIONS ===
+- Monitor disk I/O if %util consistently > 80%
+- Check for zombie processes regularly
+- Consider load balancing if CPU usage consistently > 70%
