@@ -1,0 +1,88 @@
+#!/usr/bin/env stap
+global target_processes, monitored_pids
+global syscall_stats, file_access, network_activity
+# Define processes to monitor (can be modified)
+probe begin {
+ target_processes["httpd"] = 1
+ target_processes["nginx"] = 1
+ target_processes["mysql"] = 1
+ target_processes["postgres"] = 1
+ target_processes["sshd"] = 1
+ printf("Monitoring system calls for specific processes...\n")
+}
+function is_target_process() {
+ return (execname() in target_processes)
+}
+# Monitor file operations
+probe syscall.open, syscall.openat {
+ if (is_target_process()) {
+ filename = user_string($filename)
+ file_access[execname(), filename]++
+ printf("FILE_OPEN: %s (pid=%d) opened %s\n",
+ execname(), pid(), filename)
+ }
+}
+# Monitor network operations
+probe syscall.socket {
+ if (is_target_process()) {
+ network_activity[execname(), "socket"]++
+ printf("NETWORK: %s (pid=%d) created socket (family=%d, type=%d)\n",
+ execname(), pid(), $family, $type)
+ }
+}
+probe syscall.connect {
+ if (is_target_process()) {
+ network_activity[execname(), "connect"]++
+ printf("NETWORK: %s (pid=%d) attempting connection\n",
+ execname(), pid())
+ }
+}
+probe syscall.bind {
+ if (is_target_process()) {
+ network_activity[execname(), "bind"]++
+ printf("NETWORK: %s (pid=%d) binding socket\n",
+ execname(), pid())
+ }
+}
+# Monitor memory operations
+probe syscall.mmap {
+ if (is_target_process()) {
+ syscall_stats[execname(), "mmap"]++
+ if ($length > 1048576) { # Log large allocations (>1MB)
+ printf("MEMORY: %s (pid=%d) large mmap %d bytes\n",
+ execname(), pid(), $length)
+ }
+ }
+}
+probe syscall.brk {
+ if (is_target_process()) {
+ syscall_stats[execname(), "brk"]++
+ }
+}
+# Print summary every 30 seconds
+probe timer.s(30) {
+ printf("\n=== Process-Specific Monitoring Summary ===\n")
+
+ printf("\nFile Access Summary:\n")
+ foreach ([proc, file] in file_access) {
+ printf(" %s accessed %s (%d times)\n", proc, file, file_access[proc, file])
+ }
+
+ printf("\nNetwork Activity Summary:\n")
+ foreach ([proc, activity] in network_activity) {
+ printf(" %s: %s operations (%d times)\n", proc, activity, network_activity[proc, activity])
+ }
+
+ printf("\nSystem Call Summary:\n")
+ foreach ([proc, syscall] in syscall_stats) {
+ printf(" %s: %s (%d times)\n", proc, syscall, syscall_stats[proc, syscall])
+ }
+
+ # Clear statistics
+ delete file_access
+ delete network_activity
+ delete syscall_stats
+}
+probe end {
+ printf("\nProcess monitoring completed\n")
+}
