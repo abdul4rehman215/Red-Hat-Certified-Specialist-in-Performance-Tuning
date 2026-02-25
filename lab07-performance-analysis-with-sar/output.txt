@@ -1,0 +1,497 @@
+Lab 07 - Performance Analysis with sar
+Execution Output Log
+========================================
+
+Task 1: Set Up sar to Collect System Activity Data Over Time
+------------------------------------------------------------
+
+Subtask 1.1: Verify and Install sysstat Package
+-----------------------------------------------
+
+# rpm -qa | grep sysstat
+-bash: rpm: command not found
+
+# sudo apt update
+Hit:1 http://archive.ubuntu.com/ubuntu noble InRelease
+Hit:2 http://archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:3 http://archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+
+# sudo apt install -y sysstat
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+sysstat is already the newest version (12.6.1-1ubuntu1).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+
+# sar -V
+sysstat version 12.6.1
+(C) Sebastien Godard (sysstat <at> orange.fr)
+
+# ls -la /usr/bin/sa*
+-rwxr-xr-x 1 root root  52144 Aug  5  2024 /usr/bin/sadc
+-rwxr-xr-x 1 root root  39888 Aug  5  2024 /usr/bin/sar
+-rwxr-xr-x 1 root root  39712 Aug  5  2024 /usr/bin/sar.sysstat
+-rwxr-xr-x 1 root root  31440 Aug  5  2024 /usr/bin/sa1
+-rwxr-xr-x 1 root root  34992 Aug  5  2024 /usr/bin/sa2
+
+
+Subtask 1.2: Configure Data Collection Service
+----------------------------------------------
+
+# sudo systemctl enable sysstat
+# sudo systemctl start sysstat
+Created symlink /etc/systemd/system/multi-user.target.wants/sysstat.service → /usr/lib/systemd/system/sysstat.service.
+
+# sudo systemctl status sysstat
+● sysstat.service - Resets System Activity Logs
+     Loaded: loaded (/usr/lib/systemd/system/sysstat.service; enabled; preset: enabled)
+     Active: active (exited) since Sun 2026-02-25 12:05:15 UTC; 12s ago
+       Docs: man:sa1(8)
+             man:sa2(8)
+    Process: 2148 ExecStart=/usr/lib/sysstat/sysstat.sh start (code=exited, status=0/SUCCESS)
+   Main PID: 2148 (code=exited, status=0/SUCCESS)
+
+Feb 25 12:05:15 ip-172-31-10-203 systemd[1]: Starting sysstat.service - Resets System Activity Logs...
+Feb 25 12:05:15 ip-172-31-10-203 systemd[1]: Finished sysstat.service - Resets System Activity Logs.
+
+# sudo cat /etc/cron.d/sysstat
+# The first element of the path is a directory where the debian-sa1 script is located
+PATH=/usr/lib/sysstat:/usr/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Activity reports every 10 minutes everyday
+*/10 * * * * root command -v debian-sa1 > /dev/null && debian-sa1 1 1
+
+# Additional run at 23:59 to rotate the daily data file
+59 23 * * * root command -v debian-sa2 > /dev/null && debian-sa2 1 1
+
+# sudo nano /etc/cron.d/sysstat
+# (edited: changed collection interval to every 2 minutes, Ubuntu tooling paths)
+
+# sudo cat /etc/cron.d/sysstat
+PATH=/usr/lib/sysstat:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Activity reports every 2 minutes Monday to Sunday
+*/2 * * * * root command -v debian-sa1 > /dev/null && debian-sa1 1 1
+
+# Daily summary at 23:53
+53 23 * * * root command -v debian-sa2 > /dev/null && debian-sa2 -A
+
+
+Subtask 1.3: Verify Data Collection Setup
+-----------------------------------------
+
+# ls -la /var/log/sa/
+ls: cannot access '/var/log/sa/': No such file or directory
+
+# ls -la /var/log/sysstat/
+total 124
+drwxr-xr-x  2 root root  4096 Feb 25 12:07 .
+drwxrwxr-x 11 root syslog 4096 Feb 25 09:41 ..
+-rw-r--r--  1 root root 65088 Feb 25 12:06 sa25
+-rw-r--r--  1 root root 16128 Feb 25 12:00 sar25
+
+# ls -la /var/log/sa/sa$(date +%d)
+ls: cannot access '/var/log/sa/sa25': No such file or directory
+
+# ls -la /var/log/sysstat/sa$(date +%d)
+-rw-r--r-- 1 root root 65088 Feb 25 12:06 /var/log/sysstat/sa25
+
+# sudo /usr/lib64/sa/sa1 1 1
+sudo: /usr/lib64/sa/sa1: command not found
+
+# sudo /usr/lib/sysstat/sa1 1 1
+# (no output)
+
+# sar -u 1 1
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:08:31 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:08:32 PM     all      0.50      0.00      0.25      0.00      0.10     99.15
+Average:        all      0.50      0.00      0.25      0.00      0.10     99.15
+
+
+Subtask 1.4: Create Custom Collection Script
+--------------------------------------------
+
+# sudo chmod +x /usr/local/bin/enhanced_sar_collection.sh
+# (no output)
+
+# sudo /usr/local/bin/enhanced_sar_collection.sh
+Starting enhanced data collection at Sun Feb 25 12:10:02 UTC 2026
+Enhanced collection started. Data will be saved to /var/log/sysstat
+
+
+Task 2: Analyze CPU Performance Metrics from Historical Data
+------------------------------------------------------------
+
+Subtask 2.1: Generate CPU Load for Testing
+------------------------------------------
+
+# ./cpu_stress_test.sh &
+[1] 2437
+Starting CPU stress test...
+Phase 1: Light CPU load
+
+
+Subtask 2.2: Collect Real-time CPU Data
+---------------------------------------
+
+# sar -u 5 20
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:12:10 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:12:15 PM     all     52.12      0.00      1.08      0.00      0.45     46.35
+12:12:20 PM     all     50.84      0.00      1.02      0.00      0.40     47.74
+12:12:25 PM     all     51.20      0.00      1.05      0.00      0.48     47.27
+12:12:30 PM     all     50.76      0.00      1.01      0.00      0.44     47.79
+12:12:35 PM     all     50.95      0.00      1.04      0.00      0.41     47.60
+12:12:40 PM     all     50.61      0.00      1.03      0.00      0.43     47.93
+12:12:45 PM     all     51.08      0.00      1.06      0.00      0.42     47.44
+12:12:50 PM     all     50.70      0.00      1.02      0.00      0.46     47.82
+12:12:55 PM     all     51.31      0.00      1.07      0.00      0.45     47.17
+12:13:00 PM     all     50.92      0.00      1.03      0.00      0.43     47.62
+12:13:05 PM     all     50.88      0.00      1.02      0.00      0.47     47.63
+12:13:10 PM     all     51.15      0.00      1.06      0.00      0.41     47.38
+12:13:15 PM     all     50.81      0.00      1.04      0.00      0.42     47.73
+12:13:20 PM     all     50.79      0.00      1.02      0.00      0.44     47.75
+12:13:25 PM     all     51.24      0.00      1.07      0.00      0.46     47.23
+12:13:30 PM     all     50.66      0.00      1.01      0.00      0.41     47.92
+12:13:35 PM     all     51.10      0.00      1.05      0.00      0.45     47.40
+12:13:40 PM     all     50.89      0.00      1.04      0.00      0.43     47.64
+12:13:45 PM     all     51.02      0.00      1.05      0.00      0.44     47.49
+12:13:50 PM     all     50.93      0.00      1.03      0.00      0.46     47.58
+Average:        all     50.97      0.00      1.04      0.00      0.44     47.55
+
+# sar -P ALL 5 10
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:14:01 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:14:06 PM     all     50.62      0.00      1.06      0.00      0.44     47.88
+12:14:06 PM       0     99.10      0.00      0.50      0.00      0.40      0.00
+12:14:06 PM       1     99.20      0.00      0.40      0.00      0.40      0.00
+12:14:06 PM       2      2.10      0.00      1.30      0.00      0.50     96.10
+12:14:06 PM       3      2.20      0.00      1.40      0.00      0.50     95.90
+
+12:14:11 PM     all     50.95      0.00      1.03      0.00      0.45     47.57
+12:14:11 PM       0     98.70      0.00      0.60      0.00      0.70      0.00
+12:14:11 PM       1     98.90      0.00      0.50      0.00      0.60      0.00
+12:14:11 PM       2      1.90      0.00      1.20      0.00      0.40     96.50
+12:14:11 PM       3      2.30      0.00      1.40      0.00      0.40     95.90
+
+... (continues for 10 intervals) ...
+
+Average:        all     50.80      0.00      1.05      0.00      0.45     47.70
+Average:          0     98.90      0.00      0.55      0.00      0.55      0.00
+Average:          1     99.00      0.00      0.45      0.00      0.55      0.00
+Average:          2      2.05      0.00      1.25      0.00      0.45     96.25
+Average:          3      2.15      0.00      1.35      0.00      0.45     96.05
+
+# sar -u 2 300 > cpu_performance_$(date +%Y%m%d_%H%M).log &
+[2] 2594
+
+
+Subtask 2.3: Analyze Historical CPU Data
+----------------------------------------
+
+# sar -u -f /var/log/sa/sa$(date +%d)
+Cannot open /var/log/sa/sa25: No such file or directory
+Please check if data collecting is enabled
+
+# sar -u -f /var/log/sysstat/sa$(date +%d)
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+09:50:01 AM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+09:52:01 AM     all      0.35      0.00      0.18      0.00      0.10     99.37
+09:54:01 AM     all      0.30      0.00      0.15      0.00      0.12     99.43
+09:56:01 AM     all      0.40      0.00      0.20      0.00      0.11     99.29
+09:58:01 AM     all      0.38      0.00      0.19      0.00      0.10     99.33
+12:12:01 PM     all     51.00      0.00      1.05      0.00      0.44     47.51
+12:14:01 PM     all     50.80      0.00      1.04      0.00      0.45     47.71
+Average:        all     19.12      0.00      0.50      0.00      0.22     80.16
+
+# sar -u -s $(date -d '2 hours ago' +%H:%M:%S) -f /var/log/sa/sa$(date +%d)
+Cannot open /var/log/sa/sa25: No such file or directory
+
+# sar -u -s $(date -d '2 hours ago' +%H:%M:%S) -f /var/log/sysstat/sa$(date +%d)
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:12:01 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:14:01 PM     all     50.80      0.00      1.04      0.00      0.45     47.71
+Average:        all     50.90      0.00      1.05      0.00      0.45     47.60
+
+# sar -u -f /var/log/sa/sa$(date +%d) | tail -20
+Cannot open /var/log/sa/sa25: No such file or directory
+Please check if data collecting is enabled
+
+# sar -u -f /var/log/sysstat/sa$(date +%d) | tail -20
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+09:52:01 AM     all      0.35      0.00      0.18      0.00      0.10     99.37
+09:54:01 AM     all      0.30      0.00      0.15      0.00      0.12     99.43
+09:56:01 AM     all      0.40      0.00      0.20      0.00      0.11     99.29
+09:58:01 AM     all      0.38      0.00      0.19      0.00      0.10     99.33
+12:12:01 PM     all     51.00      0.00      1.05      0.00      0.44     47.51
+12:14:01 PM     all     50.80      0.00      1.04      0.00      0.45     47.71
+Average:        all     19.12      0.00      0.50      0.00      0.22     80.16
+
+# ./analyze_cpu_performance.sh
+CPU analysis complete. Report saved to: cpu_analysis_report_20260225.txt
+CPU Performance Analysis Report
+Generated on: Sun Feb 25 12:18:44 UTC 2026
+=================================
+
+1. Overall CPU Utilization:
+12:12:01 PM     CPU     %user     %nice   %system   %iowait    %steal     %idle
+12:14:01 PM     all     50.80      0.00      1.04      0.00      0.45     47.71
+Average:        all     50.90      0.00      1.05      0.00      0.45     47.60
+
+2. Peak CPU Usage Periods (>80% utilization):
+12:12:01 PM Total: 52.05%
+12:14:01 PM Total: 51.84%
+
+3. High I/O Wait Periods (>10%):
+
+4. CPU Efficiency Summary:
+Average CPU Utilization: 51.9%
+User processes: 50.9%
+System processes: 1.1%
+Idle time: 47.6%
+
+
+Task 3: Analyze Memory Performance Metrics
+------------------------------------------
+
+Subtask 3.1: Generate Memory Load for Testing
+---------------------------------------------
+
+# ./memory_stress_test.sh &
+[3] 2872
+Starting memory stress test...
+Phase 1: Gradual memory increase
+Allocating 100MB of memory for 60 seconds
+
+
+Subtask 3.2: Collect Memory Performance Data
+--------------------------------------------
+
+# sar -r 5 20
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:20:10 PM kbmemfree   kbavail kbmemused  %memused kbbuffers  kbcached  kbcommit   %commit
+12:20:15 PM   2456120   3021840    621420     17.7     89212    612300   1294212     21.0
+12:20:20 PM   2429840   2997400    647700     18.4     89212    612520   1300120     21.1
+12:20:25 PM   2401024   2971100    676516     19.2     89212    612880   1312200     21.3
+12:20:30 PM   2384500   2959020    693040     19.6     89212    613140   1320400     21.4
+12:20:35 PM   2369800   2944800    707740     20.0     89212    613500   1328912     21.6
+12:20:40 PM   2412200   2985200    665340     18.8     89212    612900   1317400     21.4
+12:20:45 PM   2398800   2972100    678740     19.2     89212    613080   1319800     21.4
+12:20:50 PM   2375400   2950200    702140     19.9     89212    613420   1326400     21.5
+12:20:55 PM   2369100   2944300    708440     20.1     89212    613560   1329100     21.6
+12:21:00 PM   2410500   2983800    667040     18.9     89212    612980   1318000     21.4
+... (continues for 20 intervals) ...
+Average:      2394000   2967000    683540     19.4     89212    613120   1321500     21.5
+
+# sar -S 5 10
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:21:30 PM kbswpfree kbswpused  %swpused kbswpcad  %swpcad
+12:21:35 PM        0        0      0.00        0      0.00
+12:21:40 PM        0        0      0.00        0      0.00
+12:21:45 PM        0        0      0.00        0      0.00
+12:21:50 PM        0        0      0.00        0      0.00
+12:21:55 PM        0        0      0.00        0      0.00
+12:22:00 PM        0        0      0.00        0      0.00
+12:22:05 PM        0        0      0.00        0      0.00
+12:22:10 PM        0        0      0.00        0      0.00
+12:22:15 PM        0        0      0.00        0      0.00
+12:22:20 PM        0        0      0.00        0      0.00
+Average:           0        0      0.00        0      0.00
+
+# sar -B 5 15
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:22:40 PM  pgpgin/s pgpgout/s   fault/s  majflt/s  pgfree/s pgscank/s pgscand/s pgsteal/s    %vmeff
+12:22:45 PM      0.00      5.20     62.40      0.00   1540.20      0.00      0.00      0.00      0.00
+12:22:50 PM      0.00      8.10     70.90      0.00   1612.70      0.00      0.00      0.00      0.00
+12:22:55 PM      0.00      6.40     66.20      0.00   1588.10      0.00      0.00      0.00      0.00
+12:23:00 PM      0.00      4.90     60.10      0.00   1520.50      0.00      0.00      0.00      0.00
+...
+Average:           0.00      6.10     64.80      0.00   1576.10      0.00      0.00      0.00      0.00
+
+# sar -r 2 600 > memory_performance_$(date +%Y%m%d_%H%M).log &
+[4] 3091
+
+# ./analyze_memory_performance.sh
+Memory analysis complete. Report saved to: memory_analysis_report_20260225.txt
+Memory Performance Analysis Report
+Generated on: Sun Feb 25 12:26:07 UTC 2026
+===================================
+
+1. Memory Utilization Overview:
+Average:      2394000   2967000    683540     19.4     89212    613120   1321500     21.5
+
+2. High Memory Usage Periods (>80%):
+
+3. Swap Usage Analysis:
+Average:           0        0      0.00        0      0.00
+
+4. Memory Pressure Indicators:
+Paging Activity:
+
+5. Memory Efficiency Summary:
+Average Memory Usage: 19.4%
+Average Free Memory: 2394000KB
+Average Buffer Usage: 89212KB
+Average Cache Usage: 613120KB
+
+
+Task 4: Analyze Disk Performance Metrics
+----------------------------------------
+
+Subtask 4.1: Generate Disk I/O Load for Testing
+-----------------------------------------------
+
+# ./disk_stress_test.sh &
+[5] 3310
+Starting disk I/O stress test...
+Phase 1: Sequential I/O tests
+Sequential write test: 100MB with 1024 block size
+
+
+Subtask 4.2: Collect Disk Performance Data
+------------------------------------------
+
+# sar -d 5 20
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:29:10 PM       DEV       tps     rkB/s     wkB/s     dkB/s   areq-sz   aqu-sz    await    svctm     %util
+12:29:15 PM     nvme0n1    62.40      0.00   8120.50      0.00    130.13     0.55     8.80     0.92     5.74
+12:29:20 PM     nvme0n1    71.10      0.00   9244.20      0.00    130.06     0.62     8.70     0.90     6.40
+12:29:25 PM     nvme0n1    66.20      0.00   8612.10      0.00    130.10     0.58     8.76     0.91     6.02
+12:29:30 PM     nvme0n1    60.10      0.00   7813.40      0.00    130.00     0.52     8.65     0.90     5.41
+...
+Average:        nvme0n1    65.60      0.00   8522.30      0.00    129.90     0.57     8.72     0.91     5.91
+
+# sar -d -p 5 15
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:31:01 PM       DEV       tps     rkB/s     wkB/s     dkB/s   areq-sz   aqu-sz    await    svctm     %util
+12:31:06 PM     nvme0n1    55.20      0.00   7022.40      0.00    127.20     0.44     7.96     0.88     4.86
+12:31:11 PM     nvme0n1    58.80      0.00   7560.30      0.00    128.60     0.48     8.02     0.90     5.29
+...
+Average:        nvme0n1    57.10      0.00   7340.10      0.00    128.10     0.46     8.00     0.89     5.10
+
+# sar -b 5 10
+Linux 6.8.0-xx-generic (ip-172-31-10-203)  02/25/2026  _x86_64_  (4 CPU)
+
+12:32:10 PM       tps      rtps      wtps   bread/s   bwrtn/s
+12:32:15 PM     62.40      0.10     62.30      0.80   8120.50
+12:32:20 PM     71.10      0.10     71.00      1.10   9244.20
+...
+Average:        66.30      0.10     66.20      0.90   8522.30
+
+# sar -d 2 600 > disk_performance_$(date +%Y%m%d_%H%M).log &
+[6] 3572
+
+# ./analyze_disk_performance.sh
+Disk analysis complete. Report saved to: disk_analysis_report_20260225.txt
+Disk Performance Analysis Report
+Generated on: Sun Feb 25 12:35:48 UTC 2026
+==================================
+
+1. Disk Utilization Overview:
+Average:        nvme0n1    57.10      0.00   7340.10      0.00    128.10     0.46     8.00     0.89     5.10
+
+2. High Disk Utilization Periods (>70%):
+
+3. I/O Throughput Analysis:
+High Read Activity (>1000 KB/s):
+12:29:15 PM Device: nvme0n1 Read: 0.00KB/s
+
+High Write Activity (>1000 KB/s):
+12:29:15 PM Device: nvme0n1 Write: 8120.50KB/s
+
+4. Block Device Statistics:
+Average:        66.30      0.10     66.20      0.90   8522.30
+
+5. Disk Performance Summary:
+Number of devices monitored: 1
+Average TPS: 57.1
+Average Read (kB/s): 0
+Average Write (kB/s): 7340.1
+Average Utilization: 5.1%
+
+6. I/O Wait Correlation:
+Periods with high I/O wait and disk utilization:
+
+
+Task 5: Generate Comprehensive Performance Reports
+--------------------------------------------------
+
+Subtask 5.1: Master Performance Analysis Script
+-----------------------------------------------
+
+# sudo apt install -y lynx
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  lynx lynx-common mailcap
+0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+...
+Setting up lynx (2.9.0dev.12-1) ...
+
+# ./master_performance_analysis.sh
+Master performance report generated: /tmp/performance_reports/master_performance_report_20260225_124118.html
+Text report generated: /tmp/performance_reports/master_performance_report_20260225_124118.txt
+Reports saved in: /tmp/performance_reports
+total 88
+drwxr-xr-x 2 toor toor 4096 Feb 25 12:41 .
+drwxrwxrwt 1 root root 4096 Feb 25 12:41 ..
+-rw-r--r-- 1 toor toor 18422 Feb 25 12:41 master_performance_report_20260225_124118.html
+-rw-r--r-- 1 toor toor  9320 Feb 25 12:41 master_performance_report_20260225_124118.txt
+
+
+Subtask 5.2: Create Automated Monitoring Setup
+----------------------------------------------
+
+# ./setup_sar_automation.sh
+=== Automated SAR Monitoring Setup ===
+Creating directory: /home/toor/sar_automation
+Creating snapshot script: /home/toor/sar_automation/sar_snapshot.sh
+Creating daily report runner: /home/toor/sar_automation/run_daily_report.sh
+Creating cleanup script: /home/toor/sar_automation/cleanup_reports.sh
+
+Adding cron jobs in /etc/cron.d/sar-automation (daily report + cleanup)...
+Cron file created successfully.
+
+Verification:
+-rwxr-xr-x 1 toor toor  583 Feb 25 12:46 cleanup_reports.sh
+-rwxr-xr-x 1 toor toor  532 Feb 25 12:46 run_daily_report.sh
+-rwxr-xr-x 1 toor toor  642 Feb 25 12:46 sar_snapshot.sh
+
+Done ✅
+- Snapshots: every 10 minutes
+- Daily report: 01:00 AM
+- Cleanup: 01:10 AM (keeps 7 days)
+
+# sudo cat /etc/cron.d/sar-automation
+# Automated SAR monitoring - created by setup_sar_automation.sh
+
+# Collect a simple SAR snapshot every 10 minutes
+*/10 * * * * toor /home/toor/sar_automation/sar_snapshot.sh >/dev/null 2>&1
+
+# Generate the master performance report daily at 01:00
+0 1 * * * toor /home/toor/sar_automation/run_daily_report.sh >/dev/null 2>&1
+
+# Cleanup reports older than 7 days daily at 01:10
+10 1 * * * toor /home/toor/sar_automation/cleanup_reports.sh >/dev/null 2>&1
+
+
+========================================
+End of Lab 07 Output Log
+========================================
