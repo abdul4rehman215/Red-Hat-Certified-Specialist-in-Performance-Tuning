@@ -2,9 +2,9 @@
 
 > Enterprise Monitoring • Kernel Optimization • Observability Engineering • Performance Validation
 
-**20 Hands-On Linux Performance Engineering Labs**
+### **20 Hands-On Linux Performance Engineering Labs**
 
-Real-world CPU, memory, disk I/O, kernel tuning, and observability workflows aligned with Red Hat performance engineering standards.
+### Real-world CPU, memory, disk I/O, kernel tuning, and observability workflows aligned with Red Hat performance engineering standards.
 
 ---
 
