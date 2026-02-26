@@ -1,0 +1,138 @@
+# =========================================================
+# Linux Performance Engineering – Labs 1–20
+# Unified .gitignore
+# =========================================================
+
+# =========================
+# OS / Editor Junk
+# =========================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# =========================
+# Temporary / Test Artifacts
+# =========================
+/tmp/
+disk_test/
+iostest/
+io_test/
+storage_test/
+cpu-data/
+memory-data/
+disk-data/
+network-data/
+test-results/
+
+memtest_*
+iotest_*
+ioload_*
+leak_*
+test_file*
+random_test
+*.dd
+*.img
+
+# =========================
+# Stress / Benchmark Artifacts
+# =========================
+stress-ng*
+dd_output*
+perf.data
+perf.data.old
+
+# =========================
+# Monitoring Logs & Runtime Outputs
+# =========================
+*.log
+*.out
+*.pid
+*.trace
+process_resources.log
+dns_latency.log
+syscount_output.txt
+
+# =========================
+# Baseline & Generated Folders
+# =========================
+baseline_*/
+perf_baseline_*/
+hardware_baseline_*/
+validation_*/
+
+# =========================
+# sosreport & Diagnostics Bundles
+# =========================
+sosreport-*.tar.xz
+sosreport-*.tar.gz
+sosreport-*/
+**/sosreport-*/
+**/sosreports/
+
+# =========================
+# PCP / sysstat Archives (Large System Data)
+# =========================
+/var/log/pcp/
+/var/log/sa/
+/var/log/sysstat/
+
+# =========================
+# Generated Hardware / Performance Reports
+# (Remove specific patterns if you want to version reports)
+# =========================
+hardware_profile_*.txt
+hardware_inventory_*.txt
+system_health_report*.txt
+*_report_*.txt
+*_report_*.html
+*_performance.log
+*baseline_results*.txt
+*optimized*_results*.txt
+
+# Optional: ignore generated report directories
+# reports/
+# performance_reports/
+# pcp_reports/
+
+# =========================
+# Kernel / Sysctl Backup Files
+# =========================
+*.backup.*
+*.orig
+network_sysctl_backup.txt
+storage_baseline.txt
+sysctl_validation.log
+
+# =========================
+# eBPF / SystemTap Temp Files
+# =========================
+*.stp~
+*.btf
+
+# =========================
+# Archives / Compressed Files
+# =========================
+*.gz
+*.tar
+*.tar.gz
+
+# =========================
+# Python Cache
+# =========================
+__pycache__/
+*.pyc
+
+# =========================
+# Sensitive / Environment Files
+# =========================
+.env
+.env.*
+secrets/
+private/
+*credentials*
+*.key
+*.pem
