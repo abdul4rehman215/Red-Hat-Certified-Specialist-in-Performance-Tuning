@@ -145,7 +145,7 @@ This portfolio reflects hands-on capability across the full performance lifecycl
 |  04 | [Exploring `vmstat` for Memory & CPU Insights](./lab04-exploring-vmstat-for-memory-and-cpu-...) | Memory pressure + run queue + iowait   |
 |  05 | [Analyzing Disk Performance with `iostat`](./lab05-analyzing-disk-performance-with-iostat)      | Storage bottlenecks + scheduler tuning |
 
-**Skills demonstrated**
+**🧠 Skills demonstrated**
 
 * Baseline-driven tuning methodology
 * CPU / memory / disk bottleneck classification
@@ -173,7 +173,7 @@ This portfolio reflects hands-on capability across the full performance lifecycl
 |  09 | [Power Consumption Monitoring with `powertop`](./lab09-power-consumption-monitoring-with-p...)     | Power efficiency + governor profiles    |
 |  10 | [Advanced Distributed Monitoring with PCP](./lab10-advanced-performance-analysis-with-pcp)         | Multi-host monitoring + alerts          |
 
-**Skills demonstrated**
+**🧠 Skills demonstrated**
 
 * Core-level CPU analysis & load balancing
 * Long-term trending, regression detection
@@ -202,7 +202,7 @@ This portfolio reflects hands-on capability across the full performance lifecycl
 |  14 | [Kernel Parameter Tuning via `/proc/sys`](./lab14-kernel-parameter-tuning-proc-sys)     | Runtime tuning + persistence         |
 |  15 | [Modifying Kernel Parameters with `sysctl`](./lab15-modifying-kernel-parameters-sysctl) | Profiles + validation + rollback     |
 
-**Skills demonstrated**
+**🧠 Skills demonstrated**
 
 * Hardware + boot-time performance clue extraction
 * Structured inventories for capacity planning
@@ -231,7 +231,7 @@ This portfolio reflects hands-on capability across the full performance lifecycl
 |  19 | [eBPF Performance Analysis](./lab19-using-ebpf-for-system-performance-an...)               | Modern tracing + syscall analytics  |
 |  20 | [Comprehensive Performance Tuning Review](./lab20-comprehensive-performance-tuning-rev...) | End-to-end optimization workflow    |
 
-**Skills demonstrated**
+**🧠 Skills demonstrated**
 
 * Kernel-aware tuning with safe persistence
 * Process-level performance debugging at scale
